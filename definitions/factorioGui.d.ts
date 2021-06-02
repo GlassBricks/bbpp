@@ -195,3 +195,5 @@ type GuiElementSpec =
   | MinimapGuiElementSpec
   | TabGuiElementSpec
   | SwitchGuiElementSpec
+
+type GuiElementType = GuiElementSpec["type"]

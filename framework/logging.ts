@@ -1,9 +1,4 @@
-import { settingNames } from "../constants"
-
-export const DEBUG = settings.startup[settingNames.debug]
-
-log("Debug mode is: " + (DEBUG ? "ON" : "OFF"))
-
+import { DEBUG } from "./debug"
 
 export function dlog(...args: any[]) {
   const tick = game ? game.tick : 0

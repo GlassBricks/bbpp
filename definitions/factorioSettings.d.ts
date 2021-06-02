@@ -42,7 +42,7 @@ declare module "Settings" {
   }
 
   type SettingDefinition =
-    BoolSettingDefinition
+    | BoolSettingDefinition
     | IntSettingDefinition
     | DoubleSettingDefinition
     | StringSettingDefinition

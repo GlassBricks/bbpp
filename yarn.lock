@@ -1033,7 +1033,7 @@ typedarray@^0.0.6:
   resolved "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typescript-to-lua@^0.39.0, typescript-to-lua@^0.39.3:
+typescript-to-lua@^0.39.0:
   version "0.39.3"
   resolved "https://registry.npmjs.org/typescript-to-lua/-/typescript-to-lua-0.39.3.tgz"
   integrity sha512-a9unziEbOc+sDT6ZeKLQV538WhX+rOaOCVjA/pvcjUs0oIESjEGM0HJnz/B3e1sUk/EtgU+b6bZKBcqKX1q4VQ==

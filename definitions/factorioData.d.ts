@@ -4,5 +4,4 @@ declare module "Data" {
 
     extend(data: Record<string, any>[]): void
   }
-
 }

@@ -1,4 +1,3 @@
-import { registerHandlers } from "../framework/eventHandlers"
 import { dlog } from "../framework/logging"
 
 function createSurface() {

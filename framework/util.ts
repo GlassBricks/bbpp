@@ -2,5 +2,5 @@
 
 
 export function isValid(a: any): boolean {
-    return typeof a === "object" && a.valid
+  return typeof a === "object" && a.valid
 }
