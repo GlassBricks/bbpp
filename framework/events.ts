@@ -4,9 +4,9 @@
  * some currently hardcoded customEvents
  */
 
-import { dlog } from "./logging"
-
-export const customEvents = {}
+export const customEvents = {
+  ugg_toggle_interface: "ugg_toggle_interface",
+}
 
 type ScriptEvents = "on_init" | "on_load" | "on_configuration_changed"
 
@@ -45,7 +45,6 @@ export function registerHandler(
   if (!eventInfo) {
     throw `no event named ${eventName}`
   }
-  dlog("event", eventName)
   if (!eventHandlers[eventName]) {
     eventHandlers[eventName] = []
     const handlers: EventHandler[] = (eventHandlers[eventName] = [])

@@ -1,19 +1,19 @@
-import { createPlayerData } from "../framework/playerData"
-import { buildGui, GuiTemplate, updateGui } from "../framework/gui"
+import { PlayerData } from "../framework/playerData"
+import { GuiComponent } from "../framework/gui"
+import { registerHandlers } from "../framework/events"
 
 interface UGGPlayerState {
   controlsActive: boolean
   buttonCount: number
   selectedItem?: string
+
+  mainFrame?: LuaGuiElement
 }
 
-const guiState = createPlayerData<UGGPlayerState>(
-  "guiState",
-  () => ({ controlsActive: true, buttonCount: 5 }),
-  (player, data) => {
-    buildGui(player.gui.screen, guiTemplate, data)
-  }
-)
+const guiState = PlayerData<UGGPlayerState>("guiState", () => ({
+  controlsActive: true,
+  buttonCount: 5,
+}))
 
 const itemSprites = [
   "inserter",
@@ -26,192 +26,145 @@ const itemSprites = [
   "laser-turret",
 ]
 
-// TODO: make more integrated
-function updateRootGui(player: LuaPlayer) {
-  updateGui(
-    player.gui.screen.ugg_main_frame!,
-    guiTemplate,
-    guiState[player.index]
-  )
-}
-
-const guiTemplate: GuiTemplate<UGGPlayerState> = {
+const uggComponent = GuiComponent<UGGPlayerState>("UGG_Tutorial", {
   type: "frame",
-  name: "ugg_main_frame",
   caption: ["ugg.hello_world"],
   onCreated() {
     this.style.size = [385, 165]
     this.auto_center = true
+
+    game.get_player(this.player_index).opened = this
   },
-  children: [
-    {
+  on_gui_closed(event) {
+    toggleInterface(game.get_player(event.player_index))
+  },
+
+  children: {
+    content_frame: {
       type: "frame",
-      name: "content_frame",
       direction: "vertical",
       style: "ugg_content_frame",
-      children: [
-        {
+      children: {
+        controls_flow: {
           type: "flow",
-          name: "controls_flow",
           direction: "horizontal",
           style: "ugg_controls_flow",
-          children: [
-            {
+          children: {
+            ugg_controls_toggle: {
               type: "button",
-              name: "ugg_controls_toggle",
-              onDataUpdate(state) {
+              onUpdate(state) {
                 this.caption = state.controlsActive
                   ? ["ugg.deactivate"]
                   : ["ugg.activate"]
               },
-              onAction(event) {
-                const player = game.get_player(event.player_index)
-                const state = guiState[event.player_index]
+              onAction(event, component) {
+                const state = guiState(event.player_index)
                 state.controlsActive = !state.controlsActive
-                updateRootGui(player)
+                component.update(this, state)
               },
             },
-            {
+            ugg_controls_slider: {
               type: "slider",
-              name: "ugg_controls_slider",
               minimum_value: 0,
               maximum_value: itemSprites.length,
               style: "notched_slider",
-              onDataUpdate(state) {
+              onUpdate(state) {
                 this.enabled = state.controlsActive
                 this.slider_value = state.buttonCount
               },
-              onAction(e) {
-                const player = game.get_player(e.player_index)
-                const state = guiState[e.player_index]
+              onAction(e, component) {
+                const state = guiState(e.player_index)
                 state.buttonCount = e.element.slider_value
-                updateRootGui(player)
+                component.update(this, state)
               },
             },
-            {
+            ugg_controls_textfield: {
               type: "textfield",
-              name: "ugg_controls_textfield",
               numeric: true,
               allow_decimal: false,
               allow_negative: false,
               style: "ugg_controls_textfield",
-              onDataUpdate(state) {
+              onUpdate(state) {
                 this.enabled = state.controlsActive
                 this.text = tostring(state.buttonCount)
               },
-              onAction(e) {
-                const player = game.get_player(e.player_index)
-                const state = guiState[e.player_index]
+              onAction(e, component) {
+                const state = guiState(e.player_index)
 
-                const new_button_count = tonumber(e.element.text) || 0
-                state.buttonCount = math.min(
-                  new_button_count,
-                  itemSprites.length
-                )
-
-                updateRootGui(player)
+                const newButtonCount = tonumber(e.element.text) || 0
+                state.buttonCount = math.min(newButtonCount, itemSprites.length)
+                component.update(this, state)
               },
             },
-          ],
+          },
         },
-        {
+        button_frame: {
           type: "frame",
-          name: "button_frame",
           direction: "horizontal",
           style: "ugg_deep_frame",
-          children: [
-            {
+          children: {
+            button_table: {
               type: "table",
-              name: "button_table",
               column_count: itemSprites.length,
               style: "filter_slot_table",
-              onDataUpdate(state) {
+              onUpdate(state) {
                 buildSpriteButtons(this, state)
               },
             },
-          ],
+          },
         },
-      ],
+      },
     },
-  ],
-}
+  },
+})
+const spriteButton = GuiComponent<[UGGPlayerState, string]>(
+  "UGG_spriteButton",
+  {
+    type: "sprite-button",
+    onCreated([state, spriteName]) {
+      this.sprite = "item/" + spriteName
+      this.style = (
+        spriteName === state.selectedItem
+          ? "yellow_slot_button"
+          : "recipe_slot_button"
+      ) as any
+      this.tags = { ...this.tags, spriteName }
+    },
+    onAction() {
+      const state = guiState(this.player_index)
+      state.selectedItem = this.tags.spriteName as string
+      uggComponent.update(this.parent, state)
+    },
+  }
+)
 
-function buildSpriteButtons(
-  button_table: LuaGuiElement,
-  state: UGGPlayerState
-) ,{
-  button_table.clear()
+function buildSpriteButtons(buttonTable: LuaGuiElement, state: UGGPlayerState) {
+  buttonTable.clear()
   const numButtons = state.buttonCount
   for (let i = 0; i < numButtons; i++) {
     const spriteName = itemSprites[i]
-    const style =
-      spriteName === state.selectedItem
-        ? "yellow_slot_button"
-        : "recipe_slot_button"
-    button_table.add({
-      type: "sprite-button",
-      sprite: "item/" + spriteName,
-      style: style,
-      tags: {
-        action: "ugg_select_button",
-        item_name: spriteName,
-      },
-    })
+    spriteButton.addTo(buttonTable, null, [state, spriteName])
   }
 }
 
-//
-// function on_gui_click(e: OnGuiClickPayload) {
-//   const player = game.get_player(e.player_index)
-//   const state = guiState[e.player_index]
-//
-//   if (e.element.name == "ugg_controls_toggle") {
-//     state.controlsActive = !state.controlsActive
-//
-//     const element = e.element
-//     element.caption = state.controlsActive
-//       ? ["ugg.deactivate"]
-//       : ["ugg.activate"]
-//
-//     const controls_flow =
-//       player.gui.screen.ugg_main_frame.content_frame.controls_flow
-//     controls_flow.ugg_controls_slider.enabled = state.controlsActive
-//     controls_flow.ugg_controls_textfield.enabled = state.controlsActive
-//   } else if (e.element.tags.action == "ugg_select_button") {
-//     state.selectedItem = e.element.tags.item_name as string
-//     buildSpriteButtons(player)
-//   }
-// }
-//
-// function on_gui_value_changed(e: OnGuiValueChangedPayload) {
-//   if (e.element.name == "ugg_controls_slider") {
-//     const player = game.get_player(e.player_index)
-//     const state = guiState[e.player_index]
-//
-//     const new_button_count = e.element.slider_value
-//     state.buttonCount = new_button_count
-//
-//     const controls_flow =
-//       player.gui.screen.ugg_main_frame.content_frame.controls_flow
-//     controls_flow.ugg_controls_textfield.text = tostring(new_button_count)
-//
-//     buildSpriteButtons(player)
-//   }
-// }
-//
-// function on_gui_text_changed(e: OnGuiTextChangedPayload) {
-//   if (e.element.name == "ugg_controls_textfield") {
-//     const player = game.get_player(e.player_index)
-//     const state = guiState[e.player_index]
-//
-//     const new_button_count = tonumber(e.element.text) || 0
-//     const capped_button_count = math.min(new_button_count, itemSprites.length)
-//     state.buttonCount = capped_button_count
-//
-//     const controls_flow =
-//       player.gui.screen.ugg_main_frame.content_frame.controls_flow
-//     controls_flow.ugg_controls_slider.slider_value = capped_button_count
-//
-//     buildSpriteButtons(player)
-//   }
-// }
+function toggleInterface(player: LuaPlayer) {
+  const state = guiState(player.index)
+  const frame = state.mainFrame
+  if (!frame || !frame.valid) {
+    state.mainFrame = uggComponent.addTo(
+      player.gui.screen,
+      "ugg_main_frame",
+      state
+    )
+  } else {
+    frame.destroy()
+    state.mainFrame = undefined
+  }
+}
+
+registerHandlers({
+  ugg_toggle_interface: (e: OnCustomInputPayload) => {
+    const player = game.get_player(e.player_index)
+    toggleInterface(player)
+  },
+})

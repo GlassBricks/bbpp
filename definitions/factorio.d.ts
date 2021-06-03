@@ -1465,6 +1465,13 @@ interface NthTickEvent {
 }
 
 /** @noSelf **/
+interface SelectedPrototypeData {
+  base_type: string
+  derived_type: string
+  name: string
+}
+
+/** @noSelf **/
 interface ScriptRenderTarget {
   entity: null | LuaEntity
   entity_offset: null | Vector
@@ -5202,6 +5209,12 @@ interface LuaVoidEnergySourcePrototype {
  */
 type OnTickPayload /** @noSelf **/ = {}
 
+type OnCustomInputPayload /** @noSelf **/ = {
+  player_index: number
+  input_name: string
+  cursor_position: Position
+  selected_prototype?: SelectedPrototypeData
+}
 /**
  *  Called when a unit/group completes a command.
 

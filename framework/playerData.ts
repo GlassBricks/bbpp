@@ -1,38 +1,39 @@
 import { registerHandlers } from "./events"
-import { dlog } from "./logging"
 
 declare global {
   // noinspection JSUnusedGlobalSymbols
   interface Global {
-    __playerData: PRecord<string, PlayerData<any>>
+    __playerData: PRecord<string, PRecord<number, any>>
   }
 }
 
-type PlayerData<T> = Record<number, T>
+type PlayerData<T> = (playerIndex: number) => T
 
 // TODO: migrations and stuff
-export function createPlayerData<T>(
+export function PlayerData<T>(
   name: string,
-  initData: (this: void, player: LuaPlayer) => T,
-  onInit?: (this: void, player: LuaPlayer, data: T) => void
+  initData: (this: void, player: LuaPlayer) => T
 ): PlayerData<T> {
-  if (!global.__playerData) {
-    global.__playerData = {}
+  let playerDatum: PRecord<number, T>
+
+  function loadData() {
+    if (!global.__playerData) {
+      global.__playerData = {}
+    }
+    if (!global.__playerData[name]) {
+      global.__playerData[name] = {}
+    }
+    playerDatum = global.__playerData[name]!
   }
-  dlog("creating player data:", name)
-  const playerDatum: PRecord<number, T> =
-    global.__playerData[name] || (global.__playerData[name] = {})
 
   function initPlayer(player: LuaPlayer) {
-    const data = initData(player)
-    playerDatum[player.index] = data
-    if (onInit) {
-      onInit(player, data)
-    }
+    playerDatum[player.index] = initData(player)
   }
 
   registerHandlers({
+    on_load: loadData,
     on_init: () => {
+      loadData()
       for (const [, player] of pairs(game.players)) {
         initPlayer(player)
       }
@@ -44,5 +45,5 @@ export function createPlayerData<T>(
       playerDatum[e.player_index] = undefined
     },
   })
-  return playerDatum as PlayerData<T>
+  return (index: number) => playerDatum[index]!
 }

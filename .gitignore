@@ -1,6 +1,5 @@
 node_modules/
-.idea
-workspace.code-workspace
-
+.idea/
+.vscode/
 
 **/*.lua
