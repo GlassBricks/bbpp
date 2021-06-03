@@ -10,7 +10,7 @@ export type GuiTemplate<TData> = GuiElementSpec &
 
 interface ProcessedGuiTemplate<TData> extends CommonGuiTemplateFields<TData> {
   spec: GuiElementSpec
-  children: Record<string, ProcessedGuiTemplate<TData>>
+  children?: Record<string, ProcessedGuiTemplate<TData>>
 }
 
 interface CommonGuiTemplateFields<TData> {
@@ -26,7 +26,7 @@ type GuiTemplateFields<TData> = {
   readonly children?: Record<string, GuiTemplate<TData>>
   onAction?: GuiEventHandler<TData>
 } & {
-  [n in GuiEventName]?: GuiEventHandler<TData>
+  [N in GuiEventName]?: GuiEventHandler<TData>
 }
 
 export type GuiEventHandler<TData> = (
@@ -34,6 +34,7 @@ export type GuiEventHandler<TData> = (
   event: GuiEventPayload,
   component: GuiComponent<TData>
 ) => void
+
 // Typescript hack to make sure all fields are done, and correctly
 const templateFieldsRaw: Required<
   {
@@ -74,30 +75,30 @@ function isTemplateField(k: string): k is keyof GuiTemplateFields<any> {
 
 // -- component --
 
-const guiComponents: Record<string, GuiComponentInternal<any>> = {}
+const guiComponents: Record<string, GuiComponentImpl<any>> = {}
 
 declare global {
   interface Tags {
     "#componentInfo"?: {
       /** the component this is part of */
       componentName: string
-      /** the path of this rootElement, from root.
-       * Uniquely identifies rootElement in component.
+      /** the path of this element, from root.
+       * Uniquely identifies element in component.
        */
       path: string
-      /** the depth of this rootElement. Root has depth 0. */
+      /** the depth of this element. Root has depth 0. */
       depth: number
     }
   }
 }
 
 /**
- * A gui component. Use addTo to add an instance.
+ * A gui component. Use [create] to add an instance.
  */
 export interface GuiComponent<TData> {
   readonly componentName: string
 
-  addTo(parent: LuaGuiElement, name: string | null, data: TData): LuaGuiElement
+  create(parent: LuaGuiElement, name: string | null, data: TData): LuaGuiElement
 
   update(elementOfComponent: LuaGuiElement, data: TData): void
 }
@@ -107,14 +108,14 @@ export interface GuiComponent<TData> {
  *
  * A mod-wide unique [componentName] must be given.
  */
-export function GuiComponent<TData>(
+export function GuiComponent<TData = undefined>(
   componentName: string,
   template: GuiTemplate<TData>
 ): GuiComponent<TData> {
-  return new GuiComponentInternal(componentName, template)
+  return new GuiComponentImpl(componentName, template)
 }
 
-class GuiComponentInternal<TData> implements GuiComponent<TData> {
+class GuiComponentImpl<TData> implements GuiComponent<TData> {
   // actionHandlers[path][guiEventName] = handler
   readonly actionHandlers: Record<
     string,
@@ -151,6 +152,7 @@ class GuiComponentInternal<TData> implements GuiComponent<TData> {
         ;(spec as any)[key] = value
       }
     }
+
     // record handlers
     for (const guiEvent of guiEvents) {
       const handler = template[guiEvent]
@@ -166,17 +168,18 @@ class GuiComponentInternal<TData> implements GuiComponent<TData> {
       this.recordHandler(path, eventName, template.onAction)
     }
 
+    // set extra spec fields
     spec.name = elementName
     spec.tags = spec.tags || {}
-    const tags = spec.tags
-    tags["#componentInfo"] = {
+    spec.tags["#componentInfo"] = {
       componentName: this.componentName,
       depth,
       path,
     }
 
-    const children: ProcessedGuiTemplate<TData>["children"] = {}
+    let children: ProcessedGuiTemplate<TData>["children"] | undefined
     if (template.children) {
+      children = {}
       for (const [childName, childTemplate] of pairs(template.children)) {
         children[childName] = this.processTemplate(
           childTemplate,
@@ -206,12 +209,12 @@ class GuiComponentInternal<TData> implements GuiComponent<TData> {
     this.actionHandlers[path][eventName] = handler
   }
 
-  addTo(
+  create(
     parent: LuaGuiElement,
     name: string | null,
     data: TData
   ): LuaGuiElement {
-    const element = GuiComponentInternal.createRecursive(
+    const element = GuiComponentImpl.createRecursive(
       parent,
       name,
       this.template,
@@ -272,7 +275,7 @@ class GuiComponentInternal<TData> implements GuiComponent<TData> {
     for (const child of element.children) {
       const childInfo = child.tags["#componentInfo"]
       if (childInfo && childInfo.depth === depth + 1) {
-        const childTemplate = template.children[child.name]
+        const childTemplate = template.children![child.name]
         this.doUpdate(child, childTemplate, depth + 1, data)
       }
     }

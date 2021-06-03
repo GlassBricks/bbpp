@@ -3,7 +3,7 @@ import { registerHandlers } from "./events"
 declare global {
   // noinspection JSUnusedGlobalSymbols
   interface Global {
-    __playerData: PRecord<string, PRecord<number, any>>
+    "#playerData": PRecord<string, PRecord<number, any>>
   }
 }
 
@@ -17,13 +17,13 @@ export function PlayerData<T>(
   let playerDatum: PRecord<number, T>
 
   function loadData() {
-    if (!global.__playerData) {
-      global.__playerData = {}
+    if (!global["#playerData"]) {
+      global["#playerData"] = {}
     }
-    if (!global.__playerData[name]) {
-      global.__playerData[name] = {}
+    if (!global["#playerData"][name]) {
+      global["#playerData"][name] = {}
     }
-    playerDatum = global.__playerData[name]!
+    playerDatum = global["#playerData"][name]!
   }
 
   function initPlayer(player: LuaPlayer) {
@@ -46,4 +46,18 @@ export function PlayerData<T>(
     },
   })
   return (index: number) => playerDatum[index]!
+}
+
+// todo: maybe move to custom event?
+export function onPlayerCreated(action: (player: LuaPlayer) => void): void {
+  registerHandlers({
+    on_init: () => {
+      for (const [, player] of pairs(game.players)) {
+        action(player)
+      }
+    },
+    on_player_created: (e: OnPlayerCreatedPayload) => {
+      action(game.get_player(e.player_index))
+    },
+  })
 }
