@@ -20,13 +20,11 @@ export function createPlayerData<T>(
     global.__playerData = {}
   }
   dlog("creating player data:", name)
-  if (!global.__playerData[name]) {
-    global.__playerData[name] = {}
-  }
-  const playerDatum: PRecord<number, T> = global.__playerData[name]!
+  const playerDatum: PRecord<number, T> =
+    global.__playerData[name] || (global.__playerData[name] = {})
 
   function initPlayer(player: LuaPlayer) {
-    let data = initData(player)
+    const data = initData(player)
     playerDatum[player.index] = data
     if (onInit) {
       onInit(player, data)
@@ -35,7 +33,7 @@ export function createPlayerData<T>(
 
   registerHandlers({
     on_init: () => {
-      for (let [, player] of pairs(game.players)) {
+      for (const [, player] of pairs(game.players)) {
         initPlayer(player)
       }
     },

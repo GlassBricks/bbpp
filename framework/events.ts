@@ -37,38 +37,34 @@ const eventHandlers: {
   [e in EventName]?: EventHandler[]
 } = {}
 
-function registerScriptHandler(
+export function registerHandler(
   eventName: EventName,
-  eventInfo: { eventId?: any }
-) {
-  eventHandlers[eventName] = []
-  const handlers = eventHandlers[eventName]! //reference
-  const handleEvent = (event: any) => {
-    for (const handler of handlers) handler!(event)
-  }
-  if (eventInfo.eventId) {
-    script.on_event(eventInfo.eventId, handleEvent)
-  } else {
-    const f = (script as any)[eventName] as (h: EventHandler) => void
-    f(handleEvent)
-  }
-}
-
-export function registerHandler(eventName: EventName, handler: EventHandler) {
+  handler: EventHandler
+): void {
   const eventInfo = allEventIds[eventName]
   if (!eventInfo) {
-    error(`no event named ${eventName}`)
-    return
+    throw `no event named ${eventName}`
   }
   dlog("event", eventName)
   if (!eventHandlers[eventName]) {
-    registerScriptHandler(eventName, eventInfo)
+    eventHandlers[eventName] = []
+    const handlers: EventHandler[] = (eventHandlers[eventName] = [])
+    const handleEvent = (event: any) => {
+      for (const h of handlers) h(event)
+    }
+    if (eventInfo.eventId) {
+      script.on_event(eventInfo.eventId, handleEvent)
+    } else {
+      const f = (script as any)[eventName] as (h: EventHandler) => void
+      f(handleEvent)
+    }
   }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   eventHandlers[eventName]!.push(handler)
 }
 
-export function registerHandlers(handlers: EventHandlerContainer) {
+export function registerHandlers(handlers: EventHandlerContainer): void {
   for (const [eventName, handler] of pairs(handlers)) {
-    registerHandler(eventName, handler!)
+    registerHandler(eventName, handler)
   }
 }

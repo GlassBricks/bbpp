@@ -1,6 +1,5 @@
-import "./constants"
-import { SettingsData } from "Settings"
 import { settingNames } from "./constants"
+import { SettingsData } from "Settings"
 
 declare const data: SettingsData
 

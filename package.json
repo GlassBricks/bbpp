@@ -2,16 +2,25 @@
   "name": "bp-layers",
   "license": "MIT",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-import-resolver-typescript": "^2.4.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-promise": "^5.1.0",
     "factorio-type-kit": "^1.1.1",
     "lua-types": "^2.10.1",
-    "npm-run-all": "^4.1.5",
     "prettier": "^2.3.0",
     "typescript": "^4.2.4"
   },
   "scripts": {
     "build": "tstl",
     "watch": "tstl --watch",
-    "clean": "find . -name node_modules -prune -false -o -name '*.lua*' -print -exec rm {} \\;",
-    "what": "find . -name node_modules -prune -false -o -name '*.js' -print -exec rm {} \\;"
+    "lint": "eslint **/*.ts",
+    "clean": "find . -name node_modules -prune -false -o -name '*.lua*' -print -exec rm {} \\;"
   }
 }
