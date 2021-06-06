@@ -1506,7 +1506,16 @@ interface VehicleAutomaticTargetingParameters {
 }
 
 /** @noSelf **/
-interface SoundType {}
+interface SoundType {
+}
+
+
+/** @noSelf **/
+interface AnyPrototypeFilters {
+  filter: string
+  mode: null | string
+  invert: null | boolean
+}
 
 /** @noSelf **/
 interface ItemPrototypeFilters {
@@ -3358,120 +3367,6 @@ interface LuaGui {
   help: () => null
 }
 
-/** @noSelf **/
-type LuaGuiElement = LuaGuiElementBase & {
-  [k: string]: LuaGuiElement | undefined
-}
-
-/** @noSelf **/
-interface LuaGuiElementBase {
-  add: (element: GuiElementSpec) => LuaGuiElement
-  clear: () => null
-  destroy: () => null
-  get_mod: () => null
-  get_index_in_parent: () => null
-  clear_items: () => null
-  get_item: (index: number) => LocalisedString
-  set_item: (index: number, arg_1: LocalisedString) => null
-  add_item: (arg_0: LocalisedString, index?: null | number) => null
-  remove_item: (index: number) => null
-  get_slider_minimum: () => null
-  get_slider_maximum: () => null
-  set_slider_minimum_maximum: (minimum: number, maximum: number) => null
-  get_slider_value_step: () => null
-  get_slider_discrete_slider: () => null
-  get_slider_discrete_values: () => null
-  set_slider_value_step: (value: number) => null
-  set_slider_discrete_slider: (value: boolean) => null
-  set_slider_discrete_values: (value: boolean) => null
-  focus: () => null
-  scroll_to_top: () => null
-  scroll_to_bottom: () => null
-  scroll_to_left: () => null
-  scroll_to_right: () => null
-  scroll_to_element: (
-    element: LuaGuiElement,
-    scroll_mode?: null | string
-  ) => null
-  select_all: () => null
-  select: (start: number, end: number) => null
-  add_tab: (tab: LuaGuiElement, content: LuaGuiElement) => null
-  remove_tab: (tab: LuaGuiElement) => null
-  force_auto_center: () => null
-  scroll_to_item: (index: number, scroll_mode?: null | string) => null
-  bring_to_front: () => null
-  readonly index: number
-  readonly gui: LuaGui
-  readonly parent: LuaGuiElement
-  name: string
-  caption: LocalisedString
-  value: number
-  readonly direction: string
-  style: LuaStyle //!
-  visible: boolean
-  text: string
-  readonly children_names: string[]
-  state: boolean
-  readonly player_index: number
-  sprite: SpritePath
-  resize_to_sprite: boolean
-  hovered_sprite: SpritePath
-  clicked_sprite: SpritePath
-  tooltip: LocalisedString
-  horizontal_scroll_policy: string
-  vertical_scroll_policy: string
-  readonly type: string
-  readonly children: LuaGuiElement[]
-  items: LocalisedString[]
-  selected_index: number
-  number: number
-  show_percent_for_small_numbers: boolean
-  location: GuiLocation
-  auto_center: boolean
-  badge_text: LocalisedString
-  position: Position
-  surface_index: number
-  zoom: number
-  minimap_player_index: number
-  force: string
-  readonly elem_type: string
-  elem_value: string | SignalID
-  elem_filters: any
-  selectable: boolean
-  word_wrap: boolean
-  read_only: boolean
-  enabled: boolean
-  ignored_by_interaction: boolean
-  locked: boolean
-  draw_vertical_lines: boolean
-  draw_horizontal_lines: boolean
-  draw_horizontal_line_after_headers: boolean
-  readonly column_count: number
-  vertical_centering: boolean
-  slider_value: number
-  mouse_button_filter: MouseButtonFlags
-  numeric: boolean
-  allow_decimal: boolean
-  allow_negative: boolean
-  is_password: boolean
-  lose_focus_on_confirm: boolean
-  clear_and_focus_on_right_click: boolean
-  drag_target: LuaGuiElement
-  selected_tab_index: number
-  readonly tabs: any[]
-  entity: LuaEntity
-  anchor: GuiAnchor
-  tags: Tags
-  switch_state: string
-  allow_none_state: boolean
-  left_label_caption: LocalisedString
-  left_label_tooltip: LocalisedString
-  right_label_caption: LocalisedString
-  right_label_tooltip: LocalisedString
-  readonly valid: boolean
-  readonly object_name: string
-  help: () => null
-}
 
 /** @noSelf **/
 interface LuaHeatEnergySourcePrototype {

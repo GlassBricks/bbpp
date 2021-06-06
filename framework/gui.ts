@@ -1,344 +1,312 @@
+import { deepAssign, isFunction } from "./util"
 import { EventHandlerContainer, registerHandlers } from "./events"
 
-// -- Template --
+// -- Template
 
-export type GuiTemplate<TData> = GuiElementSpec &
-  CommonGuiTemplateFields<TData> &
-  GuiTemplateFields<TData> & {
-    name?: never
+export type GuiTemplate<Props = undefined> = GuiSpec & BaseGuiTemplate<Props>
+
+export interface BaseGuiTemplate<Props> extends BaseGuiSpec, GuiEventHandlers {
+  elementMod?: ModOf<BareGuiElementOfType<this["type"]>, Props>
+  styleMod?: ModOf<LuaStyle, Props>
+
+  onCreated?: (this: GuiElementOfType<this["type"]>) => void
+  onUpdate?: (this: GuiElementOfType<this["type"]>, props: Props) => void
+  readonly children?: readonly GuiTemplate<Props>[]
+}
+
+// This has to be an interface to get access to "this" type
+interface GuiEventHandlers {
+  readonly type: GuiElementType
+  // special one
+  onAction?: GuiFuncRef
+  onCheckedStateChanged?: GuiFuncRef
+  onClick?: GuiFuncRef
+  onClosed?: GuiFuncRef
+  onConfirmed?: GuiFuncRef
+  onElemChanged?: GuiFuncRef
+  onLocationChanged?: GuiFuncRef
+  onOpened?: GuiFuncRef
+  onSelectedTabChanged?: GuiFuncRef
+  onSelectionStateChanged?: GuiFuncRef
+  onSwitchStateChanged?: GuiFuncRef
+  onTextChanged?: GuiFuncRef
+  onValueChanged?: GuiFuncRef
+}
+
+// typescript will complain if a method is missing or shouldn't be there
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// noinspection JSUnusedLocalSymbols
+const completenessCheck: Record<GuiEventName, unknown> =
+  {} as Required<GuiEventHandlers>
+
+// noinspection JSUnusedLocalSymbols
+const limitedCheck: Required<GuiEventHandlers> = {} as Record<
+  GuiEventName,
+  any
+> & { type: any; onAction: any }
+
+/* eslint-enable @typescript-eslint/no-unused-vars */
+
+type ModOf<T, Props> = ValueOrFunction<Writable<T>, Props>
+
+type ValueOrFunction<T, Props> = {
+  [P in keyof T]?: T[P] | ((this: void, props: Props) => T[P])
+}
+
+export function create<T extends GuiTemplate<Props>, Props>(
+  parent: BareGuiElement,
+  template: T,
+  props: Props
+): GuiElementOfType<T["type"]>
+export function create<T extends GuiTemplate>(
+  parent: BareGuiElement,
+  template: T
+): GuiElementOfType<T["type"]>
+
+export function create<Props>(
+  parent: BareGuiElement,
+  template: GuiTemplate<Props>,
+  props?: Props
+): GuiElement {
+  const element = createRecursive(parent, template, props!)
+  updateFuncOnly(element, template, props!)
+  return element
+}
+
+function createRecursive<Props>(
+  parent: BareGuiElement,
+  template: GuiTemplate<Props>,
+  props: Props
+): GuiElement {
+  const spec: GuiSpec = extractSpec(template)
+  const element = parent.add(spec)
+  if (template.elementMod) assignMod(element, template.elementMod as any, props)
+  if (template.styleMod) assignMod(element.style, template.styleMod, props)
+  if (template.onCreated) {
+    ;(template.onCreated as (this: GuiElement) => void).call(element)
   }
-
-interface ProcessedGuiTemplate<TData> extends CommonGuiTemplateFields<TData> {
-  spec: GuiElementSpec
-  children?: Record<string, ProcessedGuiTemplate<TData>>
-}
-
-interface CommonGuiTemplateFields<TData> {
-  onCreated?: (this: LuaGuiElement, data: TData) => void
-  onUpdate?: (
-    this: LuaGuiElement,
-    data: TData,
-    component: GuiComponent<TData>
-  ) => void
-}
-
-type GuiTemplateFields<TData> = {
-  readonly children?: Record<string, GuiTemplate<TData>>
-  onAction?: GuiEventHandler<TData>
-} & {
-  [N in GuiEventName]?: GuiEventHandler<TData>
-}
-
-export type GuiEventHandler<TData> = (
-  this: LuaGuiElement,
-  event: GuiEventPayload,
-  component: GuiComponent<TData>
-) => void
-
-// Typescript hack to make sure all fields are done, and correctly
-const templateFieldsRaw: Required<
-  {
-    [K in keyof CommonGuiTemplateFields<any>]: true
-  } &
-    {
-      [K in keyof GuiTemplateFields<any>]: false
+  if (template.children) {
+    for (const childTemplate of template.children) {
+      create(element, childTemplate, props)
     }
+  }
+  return element
+}
+
+export function update<Props>(
+  element: LuaGuiElement,
+  template: GuiTemplate<Props>,
+  props: Props
+): GuiElement {
+  if (template.elementMod)
+    assignMod(element, template.elementMod as any, props, true)
+  if (template.styleMod)
+    assignMod(element.style, template.styleMod, props, true)
+  if (template.onUpdate) {
+    ;(template.onUpdate as (this: GuiElement, props: Props) => void).call(
+      element,
+      props
+    )
+  }
+  if (template.children) {
+    for (const [i, child] of ipairs(element.children)) {
+      // ipairs has different indexing
+      if (child) update(child, template.children[i - 1], props)
+    }
+  }
+  return element
+}
+
+function updateFuncOnly<Props>(
+  element: LuaGuiElement,
+  template: GuiTemplate<Props>,
+  props: Props
+) {
+  if (template.onUpdate) {
+    ;(template.onUpdate as (this: GuiElement, props: Props) => void).call(
+      element,
+      props
+    )
+  }
+  if (template.children) {
+    for (const [i, child] of ipairs(element.children)) {
+      // ipairs has different indexing
+      if (child) updateFuncOnly(child, template.children[i - 1], props)
+    }
+  }
+  return element
+}
+
+const specialFields: Record<
+  Exclude<keyof BaseGuiTemplate<unknown>, keyof BaseGuiSpec>,
+  true
 > = {
-  children: false,
-  onAction: false,
+  elementMod: true,
+  styleMod: true,
   onCreated: true,
+  onAction: true,
   onUpdate: true,
-  on_gui_checked_state_changed: false,
-  on_gui_click: false,
-  on_gui_closed: false,
-  on_gui_confirmed: false,
-  on_gui_elem_changed: false,
-  on_gui_location_changed: false,
-  on_gui_opened: false,
-  on_gui_selected_tab_changed: false,
-  on_gui_selection_state_changed: false,
-  on_gui_switch_state_changed: false,
-  on_gui_text_changed: false,
-  on_gui_value_changed: false,
+  onCheckedStateChanged: true,
+  onClick: true,
+  onClosed: true,
+  onConfirmed: true,
+  onElemChanged: true,
+  onLocationChanged: true,
+  onOpened: true,
+  onSelectedTabChanged: true,
+  onSelectionStateChanged: true,
+  onSwitchStateChanged: true,
+  onTextChanged: true,
+  onValueChanged: true,
+  children: true,
 }
-const templateFields: PRecord<string, boolean> = templateFieldsRaw
-
-function isCommonTemplateField(
-  k: string
-): k is keyof CommonGuiTemplateFields<any> {
-  return templateFields[k] === true
-}
-
-function isTemplateField(k: string): k is keyof GuiTemplateFields<any> {
-  return templateFields[k] === false
-}
-
-// -- component --
-
-const guiComponents: Record<string, GuiComponentImpl<any>> = {}
-
 declare global {
   interface Tags {
-    "#componentInfo"?: {
-      /** the component this is part of */
-      componentName: string
-      /** the path of this element, from root.
-       * Uniquely identifies element in component.
-       */
-      path: string
-      /** the depth of this element. Root has depth 0. */
-      depth: number
-    }
+    "#guiEventHandlers"?: PRecord<GuiEventName, string>
   }
 }
 
-/**
- * A gui component. Use [create] to add an instance.
- */
-export interface GuiComponent<TData> {
-  readonly componentName: string
+function extractSpec<Props>(template: GuiTemplate<Props>): GuiSpec {
+  const result: Record<string, unknown> = {}
 
-  create(parent: LuaGuiElement, name: string | null, data: TData): LuaGuiElement
+  // copy GuiSpec fields
+  for (const [key, value] of pairs(template)) {
+    if (!(specialFields as any)[key]) result[key] = value
+  }
 
-  update(elementOfComponent: LuaGuiElement, data: TData): void
+  // extract handlers
+  const handlers: Tags["#guiEventHandlers"] = {}
+
+  let name: GuiEventName
+  for (name in guiEvents) {
+    const handler = template[name] as GuiFuncRef
+    if (handler) {
+      handlers[name] = handler["#funcName"]
+    }
+  }
+  if (template.onAction) {
+    const eventName = onActionEvents[template.type]
+    if (!eventName) {
+      throw `GUI element of type ${template.type} does not have an onAction event.
+      Tried to register "${template.onAction["#funcName"]}".`
+    }
+    if (handlers[eventName])
+      throw `Cannot register 'onAction' handler ("${template.onAction["#funcName"]}") because
+      this element already has an event handler for ${eventName} ("${handlers[eventName]}").`
+    handlers[eventName] = template.onAction["#funcName"]
+  }
+  result.tags = result.tags || {}
+  ;(result.tags as Tags)["#guiEventHandlers"] = handlers
+
+  return result as any
 }
 
-/**
- * Declares a gui component with the given [template].
- *
- * A mod-wide unique [componentName] must be given.
- */
-export function GuiComponent<TData = undefined>(
-  componentName: string,
-  template: GuiTemplate<TData>
-): GuiComponent<TData> {
-  return new GuiComponentImpl(componentName, template)
-}
-
-class GuiComponentImpl<TData> implements GuiComponent<TData> {
-  // actionHandlers[path][guiEventName] = handler
-  readonly actionHandlers: Record<
-    string,
-    Record<string, GuiEventHandler<TData>>
-  > = {}
-
-  private readonly template: ProcessedGuiTemplate<TData>
-
-  constructor(
-    public readonly componentName: string,
-    template: GuiTemplate<TData>
-  ) {
-    if (guiComponents[componentName]) {
-      throw `Component with name ${componentName} already exists`
+function assignMod<T, Props>(
+  target: T,
+  mod: ModOf<T, Props>,
+  props: Props,
+  functionsOnly = false
+) {
+  for (const [key, value] of pairs(mod)) {
+    let newValue: any
+    if (isFunction(value)) {
+      newValue = (value as (p: Props) => any)(props)
+    } else if (!functionsOnly) {
+      newValue = value
     }
-    guiComponents[componentName] = this
-
-    this.template = this.processTemplate(template, 0, undefined, "")
-  }
-
-  private processTemplate(
-    template: GuiTemplate<TData>,
-    depth: number,
-    elementName: string | undefined,
-    path: string
-  ): ProcessedGuiTemplate<TData> {
-    const result: Partial<ProcessedGuiTemplate<TData>> = {}
-    const spec: Partial<GuiElementSpec> = {}
-    // copy (some) fields of template
-    for (const [key, value] of pairs(template)) {
-      if (isCommonTemplateField(key)) {
-        result[key] = value
-      } else if (!isTemplateField(key)) {
-        ;(spec as any)[key] = value
-      }
+    if (key === "tags") {
+      // merge tags instead of overwrite
+      const tags = (target[key] || {}) as Tags
+      deepAssign(tags, newValue as Record<string, unknown>)
+      newValue = tags
     }
-
-    // record handlers
-    for (const guiEvent of guiEvents) {
-      const handler = template[guiEvent]
-      if (handler) {
-        this.recordHandler(path, guiEvent, handler)
-      }
-    }
-    if (template.onAction) {
-      const eventName = onActionEvents[template.type]
-      if (!eventName) {
-        throw `GUI element of type ${template.type} does not have an onAction event`
-      }
-      this.recordHandler(path, eventName, template.onAction)
-    }
-
-    // set extra spec fields
-    spec.name = elementName
-    spec.tags = spec.tags || {}
-    spec.tags["#componentInfo"] = {
-      componentName: this.componentName,
-      depth,
-      path,
-    }
-
-    let children: ProcessedGuiTemplate<TData>["children"] | undefined
-    if (template.children) {
-      children = {}
-      for (const [childName, childTemplate] of pairs(template.children)) {
-        children[childName] = this.processTemplate(
-          childTemplate,
-          depth + 1,
-          childName,
-          path + "." + childName
-        )
-      }
-    }
-
-    result.spec = spec as GuiElementSpec
-    result.children = children
-    return result as ProcessedGuiTemplate<TData>
-  }
-
-  private recordHandler(
-    path: string,
-    eventName: GuiEventName,
-    handler: GuiEventHandler<any>
-  ) {
-    if (!this.actionHandlers[path]) this.actionHandlers[path] = {}
-    if (this.actionHandlers[path][eventName]) {
-      // TODO: multiple handlers allowed?
-      throw `Element ${this.componentName}${path} already has an event handler for ${eventName}.
-      (did you do include both onAction and ${eventName}?)`
-    }
-    this.actionHandlers[path][eventName] = handler
-  }
-
-  create(
-    parent: LuaGuiElement,
-    name: string | null,
-    data: TData
-  ): LuaGuiElement {
-    const element = GuiComponentImpl.createRecursive(
-      parent,
-      name,
-      this.template,
-      data
-    )
-    this.update(element, data)
-    return element
-  }
-
-  private static createRecursive<TData>(
-    parent: LuaGuiElement,
-    name: string | null,
-    template: ProcessedGuiTemplate<TData>,
-    data: TData
-  ): LuaGuiElement {
-    const spec = template.spec
-    spec.name = name || undefined // ugly mutation, I know, but it works
-
-    const element = parent.add(spec)
-    if (template.onCreated) {
-      template.onCreated.call(element, data)
-    }
-    if (template.children) {
-      for (const [childName, childTemplate] of pairs(template.children)) {
-        this.createRecursive(element, childName, childTemplate, data)
-      }
-    }
-    return element
-  }
-
-  update(element: LuaGuiElement, data: TData) {
-    const componentInfo = element.tags["#componentInfo"]
-    if (!componentInfo || componentInfo.componentName !== this.componentName) {
-      error("Element is not part of this component")
-    }
-    let root = element
-    for (let i = 0; i < componentInfo.depth; i++) {
-      root = root.parent
-    }
-    this.doUpdate(root, this.template, 0, data)
-  }
-
-  private doUpdate(
-    element: LuaGuiElement,
-    template: ProcessedGuiTemplate<TData>,
-    depth: number,
-    data: TData
-  ) {
-    const componentInfo = element.tags["#componentInfo"]
-    assert(
-      componentInfo &&
-        componentInfo.componentName === this.componentName &&
-        componentInfo.depth === depth
-    )
-    if (template.onUpdate) {
-      template.onUpdate.call(element, data, this)
-    }
-    for (const child of element.children) {
-      const childInfo = child.tags["#componentInfo"]
-      if (childInfo && childInfo.depth === depth + 1) {
-        const childTemplate = template.children![child.name]
-        this.doUpdate(child, childTemplate, depth + 1, data)
-      }
-    }
+    target[key] = newValue as any
   }
 }
 
-// -- GUI events --
+// -- GuiFunc
 
-const guiEvents = [
-  "on_gui_checked_state_changed",
-  "on_gui_click",
-  "on_gui_closed",
-  "on_gui_confirmed",
-  "on_gui_elem_changed",
-  "on_gui_location_changed",
-  "on_gui_opened",
-  "on_gui_selected_tab_changed",
-  "on_gui_selection_state_changed",
-  "on_gui_switch_state_changed",
-  "on_gui_text_changed",
-  "on_gui_value_changed",
-] as const
+export type GuiFunc = (this: any, event: GuiEventPayload) => void
 
-type GuiEventName = typeof guiEvents[number]
-
-const onActionEvents: PRecord<GuiElementType, GuiEventName> = {
-  checkbox: "on_gui_checked_state_changed",
-  "choose-elem-button": "on_gui_elem_changed",
-  button: "on_gui_click",
-  "sprite-button": "on_gui_click",
-  "drop-down": "on_gui_selection_state_changed",
-  textfield: "on_gui_text_changed",
-  "text-box": "on_gui_text_changed",
-  slider: "on_gui_value_changed",
-  switch: "on_gui_switch_state_changed",
+export interface GuiFuncRef {
+  "#funcName": string
 }
 
-// some events may have more fields
-export declare interface GuiEventPayload {
+// some events have more fields
+export interface GuiEventPayload {
   element: LuaGuiElement
   // eslint-disable-next-line camelcase
   player_index: number
 }
 
+const allGuiFuncs: Record<string, GuiFunc> = {}
+
+export function guiFunc(uniqueName: string, func: GuiFunc): GuiFuncRef {
+  if (allGuiFuncs[uniqueName]) {
+    throw `a GUI func with name "${uniqueName}" already exists`
+  }
+  allGuiFuncs[uniqueName] = func as GuiFunc
+  return { "#funcName": uniqueName }
+}
+
+export function guiFuncs<T extends Record<string, GuiFunc>>(
+  groupName: string,
+  funcs: T
+): {
+  [P in keyof T]: GuiFuncRef
+} {
+  const result: PRecord<keyof T, GuiFuncRef> = {}
+  for (const [name, func] of pairs(funcs)) {
+    result[name] = guiFunc(groupName + ":" + name, func)
+  }
+  return result as any
+}
+
+// -- GUI events
+
+const guiEvents = {
+  onCheckedStateChanged: "on_gui_checked_state_changed",
+  onClick: "on_gui_click",
+  onClosed: "on_gui_closed",
+  onConfirmed: "on_gui_confirmed",
+  onElemChanged: "on_gui_elem_changed",
+  onLocationChanged: "on_gui_location_changed",
+  onOpened: "on_gui_opened",
+  onSelectedTabChanged: "on_gui_selected_tab_changed",
+  onSelectionStateChanged: "on_gui_selection_state_changed",
+  onSwitchStateChanged: "on_gui_switch_state_changed",
+  onTextChanged: "on_gui_text_changed",
+  onValueChanged: "on_gui_value_changed",
+} as const
+export type GuiEventName = keyof typeof guiEvents
+
+const onActionEvents: PRecord<GuiElementType, GuiEventName> = {
+  checkbox: "onCheckedStateChanged",
+  "choose-elem-button": "onElemChanged",
+  button: "onClick",
+  "sprite-button": "onClick",
+  "drop-down": "onSelectionStateChanged",
+  textfield: "onTextChanged",
+  "text-box": "onTextChanged",
+  slider: "onValueChanged",
+  switch: "onSwitchStateChanged",
+}
+
 function handleGuiEvent(eventName: GuiEventName, event: GuiEventPayload) {
   const element = event.element
   if (!element) return
-  const elementInfo = element.tags["#componentInfo"]
-  if (!elementInfo) return
-  const component = guiComponents[elementInfo.componentName]
-  const path = elementInfo.path
-  const handlers = component.actionHandlers[path]
+  const handlers = element.tags["#guiEventHandlers"]
   if (!handlers) return
-  const handler = handlers[eventName]
-  if (handler) {
-    handler.call(element, event, component)
+  const handlerName = handlers[eventName]
+  if (handlerName) {
+    allGuiFuncs[handlerName].call(element, event)
   }
 }
 
 const handlers: EventHandlerContainer = {}
-for (const guiEvent of guiEvents) {
-  handlers[guiEvent] = (payload) => {
-    handleGuiEvent(guiEvent, payload)
+for (const [name, scriptName] of pairs(guiEvents)) {
+  handlers[scriptName] = (payload) => {
+    handleGuiEvent(name, payload)
   }
 }
 registerHandlers(handlers)

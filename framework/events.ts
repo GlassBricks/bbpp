@@ -17,11 +17,9 @@ export type EventName =
 
 type EventHandler = (a: any) => void
 
-export type EventHandlerContainer = {
-  [N in EventName]?: EventHandler
-}
+export type EventHandlerContainer = PRecord<EventName, EventHandler>
 
-const allEventIds: Partial<Record<EventName, { eventId?: any }>> = {
+const allEventIds: PRecord<EventName, { eventId?: any }> = {
   on_init: {},
   on_load: {},
   on_configuration_changed: {},
@@ -33,9 +31,7 @@ for (const [name, eventId] of pairs(customEvents)) {
   ;(allEventIds as any)[name] = { eventId }
 }
 
-const eventHandlers: {
-  [e in EventName]?: EventHandler[]
-} = {}
+const eventHandlers: PRecord<EventName, EventHandler[]> = {}
 
 export function registerHandler(
   eventName: EventName,
@@ -58,12 +54,11 @@ export function registerHandler(
       f(handleEvent)
     }
   }
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   eventHandlers[eventName]!.push(handler)
 }
 
 export function registerHandlers(handlers: EventHandlerContainer): void {
   for (const [eventName, handler] of pairs(handlers)) {
-    registerHandler(eventName, handler)
+    registerHandler(eventName, handler!)
   }
 }

@@ -1,5 +1,5 @@
 import { dlog } from "../framework/logging"
-import { addDevButton } from "../framework/addDevButton"
+import { DevButton } from "../framework/devButtons"
 
 function createSurface() {
   if (game.surfaces["test-surface"]) return
@@ -8,4 +8,4 @@ function createSurface() {
   surface.generate_with_lab_tiles = true
 }
 
-addDevButton("Create surface!!!", createSurface)
+DevButton("Create surface", createSurface)

@@ -1,13 +1,13 @@
 import { DEBUG } from "./debug"
 import { onPlayerCreated } from "./playerData"
-import { GuiComponent } from "./gui"
 import { registerHandler } from "./events"
-import { dlog } from "./logging"
 import { destroyIfValid } from "./util"
+import { create, guiFuncs, GuiTemplate } from "./gui"
+import { dlog } from "./logging"
 
 const devActions: Record<string, (player: LuaPlayer) => void> = {}
 
-export function addDevButton(
+export function DevButton(
   name: string,
   action: (player: LuaPlayer) => void
 ): void {
@@ -16,42 +16,48 @@ export function addDevButton(
   devActions[name] = action
 }
 
-let DevButtonsFrame: GuiComponent<undefined>
+let DevButtonsFrame: GuiTemplate
 
 function createDevButtons(player: LuaPlayer) {
   destroyDevButtons(player)
-  DevButtonsFrame.create(player.gui.screen, "__devButtons", undefined)
+  create(player.gui.screen, DevButtonsFrame)
 }
 
 function destroyDevButtons(player: LuaPlayer): void {
-  destroyIfValid(player.gui.screen.__devButtons)
+  destroyIfValid(player.gui.screen["#devButtons"])
 }
 
 if (DEBUG) {
-  const DevButton = GuiComponent("__devButton", {
-    type: "button",
-    onCreated() {
-      this.caption = this.name
-      this.style.width = 200
-    },
-    onAction() {
+  const functions = guiFuncs("#devButtons", {
+    onAction(this: GuiElement) {
       if (!devActions[this.name]) {
         dlog("Action", this.name, "does not exist, try refreshing")
       }
       devActions[this.name](game.get_player(this.player_index))
     },
   })
-  DevButtonsFrame = GuiComponent("__devButtonsFrame", {
+  const ADevButton: GuiTemplate<string> = {
+    type: "button",
+    elementMod: {
+      name: (n) => n,
+      caption: (n) => n,
+    },
+    styleMod: {
+      width: 200,
+    },
+    onAction: functions.onAction,
+  }
+  DevButtonsFrame = {
     type: "frame",
+    name: "#devButtons",
     direction: "vertical",
     caption: "BBPP dev buttons",
     onCreated() {
       for (const name in devActions) {
-        // noinspection JSUnfilteredForInLoop
-        DevButton.create(this, name, undefined)
+        create(this, ADevButton, name)
       }
     },
-  })
+  }
 
   onPlayerCreated((player) => {
     createDevButtons(player)
