@@ -1,1 +1,1 @@
-import "./control/layers"
+import "./control/all"

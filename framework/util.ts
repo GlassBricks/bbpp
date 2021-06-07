@@ -11,10 +11,7 @@ export function isFunction(a: any): a is Function {
   return type(a) === "function"
 }
 
-export function deepAssign(
-  target: Record<string, unknown>,
-  source: PRecord<string, unknown>
-): void {
+export function deepAssign(target: Record<string, unknown>, source: PRecord<string, unknown>): void {
   for (const [key, value] of pairs(source)) {
     if (value && typeof value === "object") {
       target[key] = target[key] || {}

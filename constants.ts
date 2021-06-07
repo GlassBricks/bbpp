@@ -1,5 +1,3 @@
-export const PREFIX = "bbpp-"
+export const PREFIX = "bbpp:"
 
-export const settingNames = {
-  debug: PREFIX + "debug",
-}
+export const settingNames = {}

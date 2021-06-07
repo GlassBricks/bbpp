@@ -1,17 +1,15 @@
-import { DEBUG } from "./debug"
-import { onPlayerCreated } from "./playerData"
+import { DEV } from "./DEV"
+import { onPlayerInit } from "./playerData"
 import { registerHandler } from "./events"
 import { destroyIfValid } from "./util"
-import { create, guiFuncs, GuiTemplate } from "./gui"
+import { create, GuiTemplate } from "./gui"
 import { dlog } from "./logging"
+import { funcRefs } from "./funcRef"
 
 const devActions: Record<string, (player: LuaPlayer) => void> = {}
 
-export function DevButton(
-  name: string,
-  action: (player: LuaPlayer) => void
-): void {
-  if (!DEBUG) return
+export function DevButton(name: string, action: (player: LuaPlayer) => void): void {
+  if (!DEV) return
   assert(!devActions[name])
   devActions[name] = action
 }
@@ -27,13 +25,14 @@ function destroyDevButtons(player: LuaPlayer): void {
   destroyIfValid(player.gui.screen["#devButtons"])
 }
 
-if (DEBUG) {
-  const functions = guiFuncs("#devButtons", {
-    onAction(this: GuiElement) {
-      if (!devActions[this.name]) {
-        dlog("Action", this.name, "does not exist, try refreshing")
+if (DEV) {
+  const functions = funcRefs({
+    devButtonOnClick(element: GuiElement) {
+      if (!devActions[element.name]) {
+        dlog("Action", element.name, "does not exist, try refreshing")
+        return
       }
-      devActions[this.name](game.get_player(this.player_index))
+      devActions[element.name](game.get_player(element.player_index))
     },
   })
   const ADevButton: GuiTemplate<string> = {
@@ -45,27 +44,30 @@ if (DEBUG) {
     styleMod: {
       width: 200,
     },
-    onAction: functions.onAction,
+    onClick: functions.devButtonOnClick,
   }
   DevButtonsFrame = {
     type: "frame",
     name: "#devButtons",
     direction: "vertical",
     caption: "BBPP dev buttons",
-    onCreated() {
+    elementMod: {
+      location: { x: 0, y: 1000 },
+    },
+    onCreated(element) {
       for (const name in devActions) {
-        create(this, ADevButton, name)
+        create(element, ADevButton, name)
       }
     },
   }
 
-  onPlayerCreated((player) => {
+  onPlayerInit((player) => {
     createDevButtons(player)
   })
 }
 
 registerHandler("on_configuration_changed", () => {
-  if (DEBUG) {
+  if (DEV) {
     for (const [, player] of pairs(game.players)) {
       createDevButtons(player)
     }

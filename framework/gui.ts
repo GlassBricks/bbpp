@@ -1,56 +1,54 @@
 import { deepAssign, isFunction } from "./util"
-import { EventHandlerContainer, registerHandlers } from "./events"
+import { EventHandler, EventName, registerHandlers } from "./events"
+import { FuncRef, getFuncRef } from "./funcRef"
+import { wlog } from "./logging"
 
 // -- Template
 
-export type GuiTemplate<Props = undefined> = GuiSpec & BaseGuiTemplate<Props>
+export type GuiTemplate<Props = any> = GuiSpec & BaseGuiTemplate<Props>
 
 export interface BaseGuiTemplate<Props> extends BaseGuiSpec, GuiEventHandlers {
   elementMod?: ModOf<BareGuiElementOfType<this["type"]>, Props>
   styleMod?: ModOf<LuaStyle, Props>
 
-  onCreated?: (this: GuiElementOfType<this["type"]>) => void
-  onUpdate?: (this: GuiElementOfType<this["type"]>, props: Props) => void
+  onCreated?: (this: unknown, element: GuiElementOfType<this["type"]>) => void
+  onUpdate?: (this: unknown, element: GuiElementOfType<this["type"]>, props: Props) => void
   readonly children?: readonly GuiTemplate<Props>[]
 }
 
 // This has to be an interface to get access to "this" type
 interface GuiEventHandlers {
   readonly type: GuiElementType
-  // special one
-  onAction?: GuiFuncRef
-  onCheckedStateChanged?: GuiFuncRef
-  onClick?: GuiFuncRef
-  onClosed?: GuiFuncRef
-  onConfirmed?: GuiFuncRef
-  onElemChanged?: GuiFuncRef
-  onLocationChanged?: GuiFuncRef
-  onOpened?: GuiFuncRef
-  onSelectedTabChanged?: GuiFuncRef
-  onSelectionStateChanged?: GuiFuncRef
-  onSwitchStateChanged?: GuiFuncRef
-  onTextChanged?: GuiFuncRef
-  onValueChanged?: GuiFuncRef
+  onAction?: FuncRef<[element: GuiElementOfType<this["type"]>, event: GuiEventPayload]>
+  onCheckedStateChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiCheckedStateChangedPayload]>
+  onClick?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiClickPayload]>
+  onClosed?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiClosedPayload]>
+  onConfirmed?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiConfirmedPayload]>
+  onElemChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiElemChangedPayload]>
+  onLocationChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiLocationChangedPayload]>
+  onOpened?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiOpenedPayload]>
+  onSelectedTabChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiSelectedTabChangedPayload]>
+  onSelectionStateChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiSelectionStateChangedPayload]>
+  onSwitchStateChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiSwitchStateChangedPayload]>
+  onTextChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiTextChangedPayload]>
+  onValueChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiValueChangedPayload]>
 }
 
 // typescript will complain if a method is missing or shouldn't be there
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // noinspection JSUnusedLocalSymbols
-const completenessCheck: Record<GuiEventName, unknown> =
-  {} as Required<GuiEventHandlers>
+const completenessCheck: Record<GuiEventName, unknown> = {} as Required<GuiEventHandlers>
 
 // noinspection JSUnusedLocalSymbols
-const limitedCheck: Required<GuiEventHandlers> = {} as Record<
-  GuiEventName,
-  any
-> & { type: any; onAction: any }
+const limitedCheck: Required<GuiEventHandlers> = {} as Record<GuiEventName, any> & { type: any; onAction: any }
 
 /* eslint-enable @typescript-eslint/no-unused-vars */
+type PropFunction<T, Props> = (this: void, props: Props, element: LuaGuiElement) => T
 
 type ModOf<T, Props> = ValueOrFunction<Writable<T>, Props>
 
 type ValueOrFunction<T, Props> = {
-  [P in keyof T]?: T[P] | ((this: void, props: Props) => T[P])
+  [P in keyof T]?: T[P] | PropFunction<T[P], Props>
 }
 
 export function create<T extends GuiTemplate<Props>, Props>(
@@ -58,32 +56,21 @@ export function create<T extends GuiTemplate<Props>, Props>(
   template: T,
   props: Props
 ): GuiElementOfType<T["type"]>
-export function create<T extends GuiTemplate>(
-  parent: BareGuiElement,
-  template: T
-): GuiElementOfType<T["type"]>
+export function create<T extends GuiTemplate>(parent: BareGuiElement, template: T): GuiElementOfType<T["type"]>
 
-export function create<Props>(
-  parent: BareGuiElement,
-  template: GuiTemplate<Props>,
-  props?: Props
-): GuiElement {
+export function create<Props>(parent: BareGuiElement, template: GuiTemplate<Props>, props?: Props): GuiElement {
   const element = createRecursive(parent, template, props!)
   updateFuncOnly(element, template, props!)
   return element
 }
 
-function createRecursive<Props>(
-  parent: BareGuiElement,
-  template: GuiTemplate<Props>,
-  props: Props
-): GuiElement {
+function createRecursive<Props>(parent: BareGuiElement, template: GuiTemplate<Props>, props: Props): GuiElement {
   const spec: GuiSpec = extractSpec(template)
   const element = parent.add(spec)
-  if (template.elementMod) assignMod(element, template.elementMod as any, props)
-  if (template.styleMod) assignMod(element.style, template.styleMod, props)
+  if (template.elementMod) assignMod(element, template.elementMod as any, props, element)
+  if (template.styleMod) assignMod(element.style, template.styleMod, props, element)
   if (template.onCreated) {
-    ;(template.onCreated as (this: GuiElement) => void).call(element)
+    template.onCreated(element as any)
   }
   if (template.children) {
     for (const childTemplate of template.children) {
@@ -93,54 +80,37 @@ function createRecursive<Props>(
   return element
 }
 
-export function update<Props>(
-  element: LuaGuiElement,
-  template: GuiTemplate<Props>,
-  props: Props
-): GuiElement {
-  if (template.elementMod)
-    assignMod(element, template.elementMod as any, props, true)
-  if (template.styleMod)
-    assignMod(element.style, template.styleMod, props, true)
+export function update(element: LuaGuiElement, template: GuiTemplate): GuiElement
+export function update<Props>(element: LuaGuiElement, template: GuiTemplate<Props>, props: Props): GuiElement
+export function update<Props>(element: LuaGuiElement, template: GuiTemplate<Props>, props?: Props): GuiElement {
+  if (template.elementMod) assignMod(element, template.elementMod as any, props, element, true)
+  if (template.styleMod) assignMod(element.style, template.styleMod, props!, element, true)
   if (template.onUpdate) {
-    ;(template.onUpdate as (this: GuiElement, props: Props) => void).call(
-      element,
-      props
-    )
+    template.onUpdate(element as any, props!)
   }
   if (template.children) {
     for (const [i, child] of ipairs(element.children)) {
       // ipairs has different indexing
-      if (child) update(child, template.children[i - 1], props)
+      if (child) update(child, template.children[i - 1], props!)
     }
   }
   return element
 }
 
-function updateFuncOnly<Props>(
-  element: LuaGuiElement,
-  template: GuiTemplate<Props>,
-  props: Props
-) {
+function updateFuncOnly<Props>(element: LuaGuiElement, template: GuiTemplate<Props>, props: Props) {
   if (template.onUpdate) {
-    ;(template.onUpdate as (this: GuiElement, props: Props) => void).call(
-      element,
-      props
-    )
+    template.onUpdate(element as any, props)
   }
   if (template.children) {
     for (const [i, child] of ipairs(element.children)) {
       // ipairs has different indexing
-      if (child) updateFuncOnly(child, template.children[i - 1], props)
+      if (child && template.children[i - 1]) updateFuncOnly(child, template.children[i - 1], props)
     }
   }
   return element
 }
 
-const specialFields: Record<
-  Exclude<keyof BaseGuiTemplate<unknown>, keyof BaseGuiSpec>,
-  true
-> = {
+const specialFields: Record<Exclude<keyof BaseGuiTemplate<unknown>, keyof BaseGuiSpec>, true> = {
   elementMod: true,
   styleMod: true,
   onCreated: true,
@@ -166,6 +136,34 @@ declare global {
   }
 }
 
+function assignMod<T, Props>(
+  target: T,
+  mod: ModOf<T, Props>,
+  props: Props,
+  element: LuaGuiElement,
+  functionsOnly = false
+) {
+  for (const [key, value] of pairs(mod)) {
+    let newValue: any
+    if (isFunction(value)) {
+      newValue = (value as PropFunction<any, Props>)(props, element)
+    } else if (!functionsOnly) {
+      newValue = value
+    } else continue
+    if (key === "tags") {
+      mergeTags(target as any, newValue as Tags)
+    } else {
+      target[key] = newValue as any
+    }
+  }
+}
+
+export function mergeTags(element: LuaGuiElement, tags: Tags): void {
+  const oldTags = element.tags
+  deepAssign(oldTags, tags)
+  element.tags = oldTags
+}
+
 function extractSpec<Props>(template: GuiTemplate<Props>): GuiSpec {
   const result: Record<string, unknown> = {}
 
@@ -179,21 +177,21 @@ function extractSpec<Props>(template: GuiTemplate<Props>): GuiSpec {
 
   let name: GuiEventName
   for (name in guiEvents) {
-    const handler = template[name] as GuiFuncRef
+    const handler = template[name] as FuncRef<[GuiElement, GuiEventPayload]>
     if (handler) {
-      handlers[name] = handler["#funcName"]
+      handlers[name] = handler["#name"]
     }
   }
   if (template.onAction) {
     const eventName = onActionEvents[template.type]
     if (!eventName) {
       throw `GUI element of type ${template.type} does not have an onAction event.
-      Tried to register "${template.onAction["#funcName"]}".`
+      Tried to register "${template.onAction["#name"]}".`
     }
     if (handlers[eventName])
-      throw `Cannot register 'onAction' handler ("${template.onAction["#funcName"]}") because
+      throw `Cannot register 'onAction' handler ("${template.onAction["#name"]}") because
       this element already has an event handler for ${eventName} ("${handlers[eventName]}").`
-    handlers[eventName] = template.onAction["#funcName"]
+    handlers[eventName] = template.onAction["#name"]
   }
   result.tags = result.tags || {}
   ;(result.tags as Tags)["#guiEventHandlers"] = handlers
@@ -201,65 +199,10 @@ function extractSpec<Props>(template: GuiTemplate<Props>): GuiSpec {
   return result as any
 }
 
-function assignMod<T, Props>(
-  target: T,
-  mod: ModOf<T, Props>,
-  props: Props,
-  functionsOnly = false
-) {
-  for (const [key, value] of pairs(mod)) {
-    let newValue: any
-    if (isFunction(value)) {
-      newValue = (value as (p: Props) => any)(props)
-    } else if (!functionsOnly) {
-      newValue = value
-    }
-    if (key === "tags") {
-      // merge tags instead of overwrite
-      const tags = (target[key] || {}) as Tags
-      deepAssign(tags, newValue as Record<string, unknown>)
-      newValue = tags
-    }
-    target[key] = newValue as any
-  }
-}
-
-// -- GuiFunc
-
-export type GuiFunc = (this: any, event: GuiEventPayload) => void
-
-export interface GuiFuncRef {
-  "#funcName": string
-}
-
 // some events have more fields
 export interface GuiEventPayload {
   element: LuaGuiElement
-  // eslint-disable-next-line camelcase
   player_index: number
-}
-
-const allGuiFuncs: Record<string, GuiFunc> = {}
-
-export function guiFunc(uniqueName: string, func: GuiFunc): GuiFuncRef {
-  if (allGuiFuncs[uniqueName]) {
-    throw `a GUI func with name "${uniqueName}" already exists`
-  }
-  allGuiFuncs[uniqueName] = func as GuiFunc
-  return { "#funcName": uniqueName }
-}
-
-export function guiFuncs<T extends Record<string, GuiFunc>>(
-  groupName: string,
-  funcs: T
-): {
-  [P in keyof T]: GuiFuncRef
-} {
-  const result: PRecord<keyof T, GuiFuncRef> = {}
-  for (const [name, func] of pairs(funcs)) {
-    result[name] = guiFunc(groupName + ":" + name, func)
-  }
-  return result as any
 }
 
 // -- GUI events
@@ -298,14 +241,20 @@ function handleGuiEvent(eventName: GuiEventName, event: GuiEventPayload) {
   const handlers = element.tags["#guiEventHandlers"]
   if (!handlers) return
   const handlerName = handlers[eventName]
-  if (handlerName) {
-    allGuiFuncs[handlerName].call(element, event)
+  if (!handlerName) return
+  const ref = getFuncRef(handlerName)
+  if (ref) {
+    ref.func(element, event)
+  } else {
+    wlog(`There is no gui handler function named ${handlerName}.
+    Try refreshing the UI; If error persists, please report to the mod author.
+    Event name ${eventName}, event: ${serpent.dump(event)}`)
   }
 }
 
-const handlers: EventHandlerContainer = {}
+const handlers: PRecord<EventName, EventHandler> = {}
 for (const [name, scriptName] of pairs(guiEvents)) {
-  handlers[scriptName] = (payload) => {
+  handlers[scriptName] = function (payload) {
     handleGuiEvent(name, payload)
   }
 }

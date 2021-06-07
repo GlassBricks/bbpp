@@ -1,6 +1,19 @@
-import { DEBUG } from "./debug"
+import { DEV } from "./DEV"
+
+export function wlog(...args: any[]): void {
+  doLog(args, { r: 255, g: 204, b: 20 })
+}
 
 export function dlog(...args: any[]): void {
+  doLog(args, DEV ? 0 : null)
+}
+
+export function vlog(...args: any[]): void {
+  if (!DEV) return
+  dlog(...args)
+}
+
+function doLog(args: any[], colorOrNoPrint: Color | 0 | null) {
   const tick = game ? game.tick : 0
   let msg = ""
   for (const v of args) {
@@ -14,10 +27,12 @@ export function dlog(...args: any[]): void {
 
   log(`${tick} ${msg}`)
 
-  if (DEBUG && game) game.print(`${tick} ${script.mod_name}: ${msg}`)
-}
-
-export function vlog(...args: any[]): void {
-  if (!DEBUG) return
-  dlog(...args)
+  if (colorOrNoPrint !== null && game) {
+    const message = `${tick} ${script.mod_name}: ${msg}`
+    if (colorOrNoPrint === 0) {
+      game.print(message)
+    } else {
+      game.print(message, colorOrNoPrint)
+    }
+  }
 }
