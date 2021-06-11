@@ -223,174 +223,174 @@ interface Defines {
   }
   events: /** @noSelf **/
   {
-    on_ai_command_completed: any
-    on_area_cloned: any
-    on_biter_base_built: any
-    on_brush_cloned: any
-    on_build_base_arrived: any
-    on_built_entity: any
-    on_cancelled_deconstruction: any
-    on_cancelled_upgrade: any
-    on_character_corpse_expired: any
-    on_chart_tag_added: any
-    on_chart_tag_modified: any
-    on_chart_tag_removed: any
-    on_chunk_charted: any
-    on_chunk_deleted: any
-    on_chunk_generated: any
-    on_combat_robot_expired: any
-    on_console_chat: any
-    on_console_command: any
-    on_cutscene_cancelled: any
-    on_cutscene_waypoint_reached: any
-    on_difficulty_settings_changed: any
-    on_entity_cloned: any
-    on_entity_damaged: any
-    on_entity_destroyed: any
-    on_entity_died: any
-    on_entity_renamed: any
-    on_entity_settings_pasted: any
-    on_entity_spawned: any
-    on_force_cease_fire_changed: any
-    on_force_created: any
-    on_force_friends_changed: any
-    on_force_reset: any
-    on_forces_merged: any
-    on_forces_merging: any
-    on_game_created_from_scenario: any
-    on_gui_checked_state_changed: any
-    on_gui_click: any
-    on_gui_closed: any
-    on_gui_confirmed: any
-    on_gui_elem_changed: any
-    on_gui_location_changed: any
-    on_gui_opened: any
-    on_gui_selected_tab_changed: any
-    on_gui_selection_state_changed: any
-    on_gui_switch_state_changed: any
-    on_gui_text_changed: any
-    on_gui_value_changed: any
-    on_land_mine_armed: any
-    on_lua_shortcut: any
-    on_marked_for_deconstruction: any
-    on_marked_for_upgrade: any
-    on_market_item_purchased: any
-    on_mod_item_opened: any
-    on_permission_group_added: any
-    on_permission_group_deleted: any
-    on_permission_group_edited: any
-    on_permission_string_imported: any
-    on_picked_up_item: any
-    on_player_alt_selected_area: any
-    on_player_ammo_inventory_changed: any
-    on_player_armor_inventory_changed: any
-    on_player_banned: any
-    on_player_built_tile: any
-    on_player_cancelled_crafting: any
-    on_player_changed_force: any
-    on_player_changed_position: any
-    on_player_changed_surface: any
-    on_player_cheat_mode_disabled: any
-    on_player_cheat_mode_enabled: any
-    on_player_clicked_gps_tag: any
-    on_player_configured_blueprint: any
-    on_player_configured_spider_remote: any
-    on_player_crafted_item: any
-    on_player_created: any
-    on_player_cursor_stack_changed: any
-    on_player_deconstructed_area: any
-    on_player_demoted: any
-    on_player_died: any
-    on_player_display_resolution_changed: any
-    on_player_display_scale_changed: any
-    on_player_driving_changed_state: any
-    on_player_dropped_item: any
-    on_player_fast_transferred: any
-    on_player_flushed_fluid: any
-    on_player_gun_inventory_changed: any
-    on_player_joined_game: any
-    on_player_kicked: any
-    on_player_left_game: any
-    on_player_main_inventory_changed: any
-    on_player_mined_entity: any
-    on_player_mined_item: any
-    on_player_mined_tile: any
-    on_player_muted: any
-    on_player_pipette: any
-    on_player_placed_equipment: any
-    on_player_promoted: any
-    on_player_removed: any
-    on_player_removed_equipment: any
-    on_player_repaired_entity: any
-    on_player_respawned: any
-    on_player_rotated_entity: any
-    on_player_selected_area: any
-    on_player_set_quick_bar_slot: any
-    on_player_setup_blueprint: any
-    on_player_toggled_alt_mode: any
-    on_player_toggled_map_editor: any
-    on_player_trash_inventory_changed: any
-    on_player_unbanned: any
-    on_player_unmuted: any
-    on_player_used_capsule: any
-    on_player_used_spider_remote: any
-    on_post_entity_died: any
-    on_pre_build: any
-    on_pre_chunk_deleted: any
-    on_pre_entity_settings_pasted: any
-    on_pre_ghost_deconstructed: any
-    on_pre_permission_group_deleted: any
-    on_pre_permission_string_imported: any
-    on_pre_player_crafted_item: any
-    on_pre_player_died: any
-    on_pre_player_left_game: any
-    on_pre_player_mined_item: any
-    on_pre_player_removed: any
-    on_pre_player_toggled_map_editor: any
-    on_pre_robot_exploded_cliff: any
-    on_pre_script_inventory_resized: any
-    on_pre_surface_cleared: any
-    on_pre_surface_deleted: any
-    on_research_finished: any
-    on_research_started: any
-    on_resource_depleted: any
-    on_robot_built_entity: any
-    on_robot_built_tile: any
-    on_robot_exploded_cliff: any
-    on_robot_mined: any
-    on_robot_mined_entity: any
-    on_robot_mined_tile: any
-    on_robot_pre_mined: any
-    on_rocket_launch_ordered: any
-    on_rocket_launched: any
-    on_runtime_mod_setting_changed: any
-    on_script_inventory_resized: any
-    on_script_path_request_finished: any
-    on_script_trigger_effect: any
-    on_sector_scanned: any
-    on_selected_entity_changed: any
-    on_spider_command_completed: any
-    on_string_translated: any
-    on_surface_cleared: any
-    on_surface_created: any
-    on_surface_deleted: any
-    on_surface_imported: any
-    on_surface_renamed: any
-    on_technology_effects_reset: any
-    on_tick: any
-    on_train_changed_state: any
-    on_train_created: any
-    on_train_schedule_changed: any
-    on_trigger_created_entity: any
-    on_trigger_fired_artillery: any
-    on_unit_added_to_group: any
-    on_unit_group_created: any
-    on_unit_group_finished_gathering: any
-    on_unit_removed_from_group: any
-    script_raised_built: any
-    script_raised_destroy: any
-    script_raised_revive: any
-    script_raised_set_tiles: any
+    on_ai_command_completed: EventId<OnAiCommandCompletedPayload>
+    on_area_cloned: EventId<OnAreaClonedPayload>
+    on_biter_base_built: EventId<OnBiterBaseBuiltPayload>
+    on_brush_cloned: EventId<OnBrushClonedPayload>
+    on_build_base_arrived: EventId<OnBuildBaseArrivedPayload>
+    on_built_entity: EventId<OnBuiltEntityPayload>
+    on_cancelled_deconstruction: EventId<OnCancelledDeconstructionPayload>
+    on_cancelled_upgrade: EventId<OnCancelledUpgradePayload>
+    on_character_corpse_expired: EventId<OnCharacterCorpseExpiredPayload>
+    on_chart_tag_added: EventId<OnChartTagAddedPayload>
+    on_chart_tag_modified: EventId<OnChartTagModifiedPayload>
+    on_chart_tag_removed: EventId<OnChartTagRemovedPayload>
+    on_chunk_charted: EventId<OnChunkChartedPayload>
+    on_chunk_deleted: EventId<OnChunkDeletedPayload>
+    on_chunk_generated: EventId<OnChunkGeneratedPayload>
+    on_combat_robot_expired: EventId<OnCombatRobotExpiredPayload>
+    on_console_chat: EventId<OnConsoleChatPayload>
+    on_console_command: EventId<OnConsoleCommandPayload>
+    on_cutscene_cancelled: EventId<OnCutsceneCancelledPayload>
+    on_cutscene_waypoint_reached: EventId<OnCutsceneWaypointReachedPayload>
+    on_difficulty_settings_changed: EventId<OnDifficultySettingsChangedPayload>
+    on_entity_cloned: EventId<OnEntityClonedPayload>
+    on_entity_damaged: EventId<OnEntityDamagedPayload>
+    on_entity_destroyed: EventId<OnEntityDestroyedPayload>
+    on_entity_died: EventId<OnEntityDiedPayload>
+    on_entity_renamed: EventId<OnEntityRenamedPayload>
+    on_entity_settings_pasted: EventId<OnEntitySettingsPastedPayload>
+    on_entity_spawned: EventId<OnEntitySpawnedPayload>
+    on_force_cease_fire_changed: EventId<OnForceCeaseFireChangedPayload>
+    on_force_created: EventId<OnForceCreatedPayload>
+    on_force_friends_changed: EventId<OnForceFriendsChangedPayload>
+    on_force_reset: EventId<OnForceResetPayload>
+    on_forces_merged: EventId<OnForcesMergedPayload>
+    on_forces_merging: EventId<OnForcesMergingPayload>
+    on_game_created_from_scenario: EventId<OnGameCreatedFromScenarioPayload>
+    on_gui_checked_state_changed: EventId<OnGuiCheckedStateChangedPayload>
+    on_gui_click: EventId<OnGuiClickPayload>
+    on_gui_closed: EventId<OnGuiClosedPayload>
+    on_gui_confirmed: EventId<OnGuiConfirmedPayload>
+    on_gui_elem_changed: EventId<OnGuiElemChangedPayload>
+    on_gui_location_changed: EventId<OnGuiLocationChangedPayload>
+    on_gui_opened: EventId<OnGuiOpenedPayload>
+    on_gui_selected_tab_changed: EventId<OnGuiSelectedTabChangedPayload>
+    on_gui_selection_state_changed: EventId<OnGuiSelectionStateChangedPayload>
+    on_gui_switch_state_changed: EventId<OnGuiSwitchStateChangedPayload>
+    on_gui_text_changed: EventId<OnGuiTextChangedPayload>
+    on_gui_value_changed: EventId<OnGuiValueChangedPayload>
+    on_land_mine_armed: EventId<OnLandMineArmedPayload>
+    on_lua_shortcut: EventId<OnLuaShortcutPayload>
+    on_marked_for_deconstruction: EventId<OnMarkedForDeconstructionPayload>
+    on_marked_for_upgrade: EventId<OnMarkedForUpgradePayload>
+    on_market_item_purchased: EventId<OnMarketItemPurchasedPayload>
+    on_mod_item_opened: EventId<OnModItemOpenedPayload>
+    on_permission_group_added: EventId<OnPermissionGroupAddedPayload>
+    on_permission_group_deleted: EventId<OnPermissionGroupDeletedPayload>
+    on_permission_group_edited: EventId<OnPermissionGroupEditedPayload>
+    on_permission_string_imported: EventId<OnPermissionStringImportedPayload>
+    on_picked_up_item: EventId<OnPickedUpItemPayload>
+    on_player_alt_selected_area: EventId<OnPlayerAltSelectedAreaPayload>
+    on_player_ammo_inventory_changed: EventId<OnPlayerAmmoInventoryChangedPayload>
+    on_player_armor_inventory_changed: EventId<OnPlayerArmorInventoryChangedPayload>
+    on_player_banned: EventId<OnPlayerBannedPayload>
+    on_player_built_tile: EventId<OnPlayerBuiltTilePayload>
+    on_player_cancelled_crafting: EventId<OnPlayerCancelledCraftingPayload>
+    on_player_changed_force: EventId<OnPlayerChangedForcePayload>
+    on_player_changed_position: EventId<OnPlayerChangedPositionPayload>
+    on_player_changed_surface: EventId<OnPlayerChangedSurfacePayload>
+    on_player_cheat_mode_disabled: EventId<OnPlayerCheatModeDisabledPayload>
+    on_player_cheat_mode_enabled: EventId<OnPlayerCheatModeEnabledPayload>
+    on_player_clicked_gps_tag: EventId<OnPlayerClickedGpsTagPayload>
+    on_player_configured_blueprint: EventId<OnPlayerConfiguredBlueprintPayload>
+    on_player_configured_spider_remote: EventId<OnPlayerConfiguredSpiderRemotePayload>
+    on_player_crafted_item: EventId<OnPlayerCraftedItemPayload>
+    on_player_created: EventId<OnPlayerCreatedPayload>
+    on_player_cursor_stack_changed: EventId<OnPlayerCursorStackChangedPayload>
+    on_player_deconstructed_area: EventId<OnPlayerDeconstructedAreaPayload>
+    on_player_demoted: EventId<OnPlayerDemotedPayload>
+    on_player_died: EventId<OnPlayerDiedPayload>
+    on_player_display_resolution_changed: EventId<OnPlayerDisplayResolutionChangedPayload>
+    on_player_display_scale_changed: EventId<OnPlayerDisplayScaleChangedPayload>
+    on_player_driving_changed_state: EventId<OnPlayerDrivingChangedStatePayload>
+    on_player_dropped_item: EventId<OnPlayerDroppedItemPayload>
+    on_player_fast_transferred: EventId<OnPlayerFastTransferredPayload>
+    on_player_flushed_fluid: EventId<OnPlayerFlushedFluidPayload>
+    on_player_gun_inventory_changed: EventId<OnPlayerGunInventoryChangedPayload>
+    on_player_joined_game: EventId<OnPlayerJoinedGamePayload>
+    on_player_kicked: EventId<OnPlayerKickedPayload>
+    on_player_left_game: EventId<OnPlayerLeftGamePayload>
+    on_player_main_inventory_changed: EventId<OnPlayerMainInventoryChangedPayload>
+    on_player_mined_entity: EventId<OnPlayerMinedEntityPayload>
+    on_player_mined_item: EventId<OnPlayerMinedItemPayload>
+    on_player_mined_tile: EventId<OnPlayerMinedTilePayload>
+    on_player_muted: EventId<OnPlayerMutedPayload>
+    on_player_pipette: EventId<OnPlayerPipettePayload>
+    on_player_placed_equipment: EventId<OnPlayerPlacedEquipmentPayload>
+    on_player_promoted: EventId<OnPlayerPromotedPayload>
+    on_player_removed: EventId<OnPlayerRemovedPayload>
+    on_player_removed_equipment: EventId<OnPlayerRemovedEquipmentPayload>
+    on_player_repaired_entity: EventId<OnPlayerRepairedEntityPayload>
+    on_player_respawned: EventId<OnPlayerRespawnedPayload>
+    on_player_rotated_entity: EventId<OnPlayerRotatedEntityPayload>
+    on_player_selected_area: EventId<OnPlayerSelectedAreaPayload>
+    on_player_set_quick_bar_slot: EventId<OnPlayerSetQuickBarSlotPayload>
+    on_player_setup_blueprint: EventId<OnPlayerSetupBlueprintPayload>
+    on_player_toggled_alt_mode: EventId<OnPlayerToggledAltModePayload>
+    on_player_toggled_map_editor: EventId<OnPlayerToggledMapEditorPayload>
+    on_player_trash_inventory_changed: EventId<OnPlayerTrashInventoryChangedPayload>
+    on_player_unbanned: EventId<OnPlayerUnbannedPayload>
+    on_player_unmuted: EventId<OnPlayerUnmutedPayload>
+    on_player_used_capsule: EventId<OnPlayerUsedCapsulePayload>
+    on_player_used_spider_remote: EventId<OnPlayerUsedSpiderRemotePayload>
+    on_post_entity_died: EventId<OnPostEntityDiedPayload>
+    on_pre_build: EventId<OnPreBuildPayload>
+    on_pre_chunk_deleted: EventId<OnPreChunkDeletedPayload>
+    on_pre_entity_settings_pasted: EventId<OnPreEntitySettingsPastedPayload>
+    on_pre_ghost_deconstructed: EventId<OnPreGhostDeconstructedPayload>
+    on_pre_permission_group_deleted: EventId<OnPrePermissionGroupDeletedPayload>
+    on_pre_permission_string_imported: EventId<OnPrePermissionStringImportedPayload>
+    on_pre_player_crafted_item: EventId<OnPrePlayerCraftedItemPayload>
+    on_pre_player_died: EventId<OnPrePlayerDiedPayload>
+    on_pre_player_left_game: EventId<OnPrePlayerLeftGamePayload>
+    on_pre_player_mined_item: EventId<OnPrePlayerMinedItemPayload>
+    on_pre_player_removed: EventId<OnPrePlayerRemovedPayload>
+    on_pre_player_toggled_map_editor: EventId<OnPrePlayerToggledMapEditorPayload>
+    on_pre_robot_exploded_cliff: EventId<OnPreRobotExplodedCliffPayload>
+    on_pre_script_inventory_resized: EventId<OnPreScriptInventoryResizedPayload>
+    on_pre_surface_cleared: EventId<OnPreSurfaceClearedPayload>
+    on_pre_surface_deleted: EventId<OnPreSurfaceDeletedPayload>
+    on_research_finished: EventId<OnResearchFinishedPayload>
+    on_research_started: EventId<OnResearchStartedPayload>
+    on_resource_depleted: EventId<OnResourceDepletedPayload>
+    on_robot_built_entity: EventId<OnRobotBuiltEntityPayload>
+    on_robot_built_tile: EventId<OnRobotBuiltTilePayload>
+    on_robot_exploded_cliff: EventId<OnRobotExplodedCliffPayload>
+    on_robot_mined: EventId<OnRobotMinedPayload>
+    on_robot_mined_entity: EventId<OnRobotMinedEntityPayload>
+    on_robot_mined_tile: EventId<OnRobotMinedTilePayload>
+    on_robot_pre_mined: EventId<OnRobotPreMinedPayload>
+    on_rocket_launch_ordered: EventId<OnRocketLaunchOrderedPayload>
+    on_rocket_launched: EventId<OnRocketLaunchedPayload>
+    on_runtime_mod_setting_changed: EventId<OnRuntimeModSettingChangedPayload>
+    on_script_inventory_resized: EventId<OnScriptInventoryResizedPayload>
+    on_script_path_request_finished: EventId<OnScriptPathRequestFinishedPayload>
+    on_script_trigger_effect: EventId<OnScriptTriggerEffectPayload>
+    on_sector_scanned: EventId<OnSectorScannedPayload>
+    on_selected_entity_changed: EventId<OnSelectedEntityChangedPayload>
+    on_spider_command_completed: EventId<OnSpiderCommandCompletedPayload>
+    on_string_translated: EventId<OnStringTranslatedPayload>
+    on_surface_cleared: EventId<OnSurfaceClearedPayload>
+    on_surface_created: EventId<OnSurfaceCreatedPayload>
+    on_surface_deleted: EventId<OnSurfaceDeletedPayload>
+    on_surface_imported: EventId<OnSurfaceImportedPayload>
+    on_surface_renamed: EventId<OnSurfaceRenamedPayload>
+    on_technology_effects_reset: EventId<OnTechnologyEffectsResetPayload>
+    on_tick: EventId<OnTickPayload>
+    on_train_changed_state: EventId<OnTrainChangedStatePayload>
+    on_train_created: EventId<OnTrainCreatedPayload>
+    on_train_schedule_changed: EventId<OnTrainScheduleChangedPayload>
+    on_trigger_created_entity: EventId<OnTriggerCreatedEntityPayload>
+    on_trigger_fired_artillery: EventId<OnTriggerFiredArtilleryPayload>
+    on_unit_added_to_group: EventId<OnUnitAddedToGroupPayload>
+    on_unit_group_created: EventId<OnUnitGroupCreatedPayload>
+    on_unit_group_finished_gathering: EventId<OnUnitGroupFinishedGatheringPayload>
+    on_unit_removed_from_group: EventId<OnUnitRemovedFromGroupPayload>
+    script_raised_built: EventId<ScriptRaisedBuiltPayload>
+    script_raised_destroy: EventId<ScriptRaisedDestroyPayload>
+    script_raised_revive: EventId<ScriptRaisedRevivePayload>
+    script_raised_set_tiles: EventId<ScriptRaisedSetTilesPayload>
   }
   flow_precision_index: /** @noSelf **/
   {
@@ -822,15 +822,18 @@ interface DisplayResolution {
 
 /** @noSelf **/
 interface PersonalLogisticParameters {
-  name: null | string
-  min: null | number
-  max: null | number
+  name?: string
+  min?: number
+  max?: number
 }
 
-type Position = {
-  /** @noSelf **/ x: number
+/** @noSelf **/
+interface Position {
+  x: number
   y: number
 }
+
+type PositionIn = Position | [number, number]
 
 /** @noSelf **/
 interface ChunkPosition {}
@@ -852,9 +855,9 @@ type GuiLocation = Position | [x: number, y: number]
 interface GuiAnchor {
   gui: typeof defines.relative_gui_type
   position: typeof defines.relative_gui_position
-  type: null | string
-  name: null | string
-  names: null | string[]
+  type?: string
+  name?: string
+  names?: string[]
 }
 
 /** @noSelf **/
@@ -873,12 +876,12 @@ interface SmokeSource {
   name: string
   frequency: number
   offset: number
-  position: null | Vector
-  north_position: null | Vector
-  east_position: null | Vector
-  south_position: null | Vector
-  west_position: null | Vector
-  deviation: null | Position
+  position?: Vector
+  north_position?: Vector
+  east_position?: Vector
+  south_position?: Vector
+  west_position?: Vector
+  deviation?: Position
   starting_frame_speed: number
   starting_frame_speed_deviation: number
   starting_frame: number
@@ -895,11 +898,13 @@ interface SmokeSource {
 interface Vector {}
 
 /** @noSelf **/
-interface BoundingBox {
+type BoundingBox =
+  | {
   left_top: Position
   right_bottom: Position
-  orientation: number
+  orientation?: number
 }
+  | [PositionIn, PositionIn]
 
 /** @noSelf **/
 interface ScriptArea {
@@ -930,12 +935,12 @@ interface ColorModifier {}
 
 /** @noSelf **/
 interface PathFindFlags {
-  allow_destroy_friendly_entities: null | boolean
-  allow_paths_through_own_entities: null | boolean
-  cache: null | boolean
-  prefer_straight_paths: null | boolean
-  low_priority: null | boolean
-  no_break: null | boolean
+  allow_destroy_friendly_entities?: boolean
+  allow_paths_through_own_entities?: boolean
+  cache?: boolean
+  prefer_straight_paths?: boolean
+  low_priority?: boolean
+  no_break?: boolean
 }
 
 /** @noSelf **/
@@ -946,14 +951,14 @@ interface TileProperties {}
 
 /** @noSelf **/
 interface MapViewSettings {
-  "show-logistic-network": null | boolean
-  "show-electric-network": null | boolean
-  "show-turret-range": null | boolean
-  "show-pollution": null | boolean
-  "show-train-station-names": null | boolean
-  "show-player-names": null | boolean
-  "show-networkless-logistic-members": null | boolean
-  "show-non-standard-map-info": null | boolean
+  "show-logistic-network"?: boolean
+  "show-electric-network"?: boolean
+  "show-turret-range"?: boolean
+  "show-pollution"?: boolean
+  "show-train-station-names"?: boolean
+  "show-player-names"?: boolean
+  "show-networkless-logistic-members"?: boolean
+  "show-non-standard-map-info"?: boolean
 }
 
 /** @noSelf **/
@@ -977,7 +982,7 @@ interface MapExchangeStringData {
 interface Fluid {
   name: string
   amount: number
-  temperature: null | number
+  temperature?: number
 }
 
 /** @noSelf **/
@@ -985,21 +990,21 @@ interface Ingredient {
   type: string
   name: string
   amount: number
-  minimum_temperature: null | number
-  maximum_temperature: null | number
-  catalyst_amount: null | number
+  minimum_temperature?: number
+  maximum_temperature?: number
+  catalyst_amount?: number
 }
 
 /** @noSelf **/
 interface Product {
   type: string
   name: string
-  amount: null | number
-  temperature: null | number
-  amount_min: null | number
-  amount_max: null | number
-  probability: null | number
-  catalyst_amount: null | number
+  amount?: number
+  temperature?: number
+  amount_min?: number
+  amount_max?: number
+  probability?: number
+  catalyst_amount?: number
 }
 
 /** @noSelf **/
@@ -1049,7 +1054,7 @@ interface AutoplaceSpecification {
     d_top_property_limit: number
     d_max_range: number
   }
-  control: null | string
+  control?: string
   table_14: { first?: string; second?: string }
   force: string
   random_probability_penalty: number
@@ -1085,25 +1090,25 @@ interface CliffPlacementSettings {
 
 /** @noSelf **/
 interface MapGenSettings {
-  terrain_segmentation: MapGenSize
-  water: MapGenSize
-  autoplace_controls: any //TODO
+  terrain_segmentation?: MapGenSize
+  water?: MapGenSize
+  autoplace_controls?: Record<string, any>
   default_enable_all_autoplace_controls?: boolean // !!
-  autoplace_settings: Record<string, AutoplaceSettings>
-  cliff_settings: CliffPlacementSettings
-  seed: number
-  width: number
-  height: number
-  starting_area: MapGenSize
-  starting_points: Position[]
-  peaceful_mode: boolean
-  property_expression_names: Record<string, string>
+  autoplace_settings?: Record<string, AutoplaceSettings>
+  cliff_settings?: CliffPlacementSettings
+  seed?: number
+  width?: number
+  height?: number
+  starting_area?: MapGenSize
+  starting_points?: Position[]
+  peaceful_mode?: boolean
+  property_expression_names?: Record<string, string>
 }
 
 /** @noSelf **/
 interface SignalID {
   type: string
-  name: null | string
+  name?: string
 }
 
 /** @noSelf **/
@@ -1115,46 +1120,46 @@ interface Signal {
 /** @noSelf **/
 interface UpgradeFilter {
   type: string
-  name: null | string
+  name?: string
 }
 
 /** @noSelf **/
 interface InfinityInventoryFilter {
   name: string
-  count: null | number
-  mode: null | string
+  count?: number
+  mode?: string
   index: number
 }
 
 /** @noSelf **/
 interface InfinityPipeFilter {
   name: string
-  percentage: null | number
-  temperature: null | number
-  mode: null | string
+  percentage?: number
+  temperature?: number
+  mode?: string
 }
 
 /** @noSelf **/
 interface HeatSetting {
-  temperature: null | number
-  mode: null | string
+  temperature?: number
+  mode?: string
 }
 
 /** @noSelf **/
 interface FluidBoxConnection {
-  max_underground_distance: null | number
+  max_underground_distance?: number
   type: string
   positions: Vector[]
 }
 
 /** @noSelf **/
 interface ArithmeticCombinatorParameters {
-  first_signal: null | SignalID
-  second_signal: null | SignalID
-  first_constant: null | number
-  second_constant: null | number
-  operation: null | string
-  output_signal: null | SignalID
+  first_signal?: SignalID
+  second_signal?: SignalID
+  first_constant?: number
+  second_constant?: number
+  operation?: string
+  output_signal?: SignalID
 }
 
 /** @noSelf **/
@@ -1169,26 +1174,26 @@ interface ComparatorString {}
 
 /** @noSelf **/
 interface DeciderCombinatorParameters {
-  first_signal: null | SignalID
-  second_signal: null | SignalID
-  constant: null | number
-  comparator: null | ComparatorString
-  output_signal: null | SignalID
-  copy_count_from_input: null | boolean
+  first_signal?: SignalID
+  second_signal?: SignalID
+  constant?: number
+  comparator?: ComparatorString
+  output_signal?: SignalID
+  copy_count_from_input?: boolean
 }
 
 /** @noSelf **/
 interface CircuitCondition {
-  comparator: null | ComparatorString
-  first_signal: null | SignalID
-  second_signal: null | SignalID
-  constant: null | number
+  comparator?: ComparatorString
+  first_signal?: SignalID
+  second_signal?: SignalID
+  constant?: number
 }
 
 /** @noSelf **/
 interface CircuitConditionSpecification {
   condition: CircuitCondition
-  fulfilled: null | boolean
+  fulfilled?: boolean
 }
 
 /** @noSelf **/
@@ -1210,11 +1215,11 @@ interface RaiseEventParameters {}
 /** @noSelf **/
 interface SimpleItemStack {
   name: string
-  count: null | number
-  health: null | number
-  durability: null | number
-  ammo: null | number
-  tags: null | string[]
+  count?: number
+  health?: number
+  durability?: number
+  ammo?: number
+  tags?: string[]
 }
 
 /** @noSelf **/
@@ -1225,12 +1230,12 @@ interface Command {
 
 /** @noSelf **/
 interface PathfindFlags {
-  allow_destroy_friendly_entities: null | boolean
-  allow_paths_through_own_entities: null | boolean
-  cache: null | boolean
-  prefer_straight_paths: null | boolean
-  low_priority: null | boolean
-  no_break: null | boolean
+  allow_destroy_friendly_entities?: boolean
+  allow_paths_through_own_entities?: boolean
+  cache?: boolean
+  prefer_straight_paths?: boolean
+  low_priority?: boolean
+  no_break?: boolean
 }
 
 type FluidSpecification = string | LuaFluidPrototype | Fluid
@@ -1246,16 +1251,16 @@ type ItemPrototypeSpecification = LuaItemStack | LuaItemPrototype | string
 interface WaitCondition {
   type: string
   compare_type: string
-  ticks: null | number
-  condition: null | CircuitCondition
+  ticks?: number
+  condition?: CircuitCondition
 }
 
 /** @noSelf **/
 interface TrainScheduleRecord {
-  station: null | string
-  rail: null | LuaEntity
+  station?: string
+  rail?: LuaEntity
   wait_conditions: WaitCondition[]
-  temporary: null | boolean
+  temporary?: boolean
 }
 
 /** @noSelf **/
@@ -1272,17 +1277,17 @@ interface GuiArrowSpecification {
 
 /** @noSelf **/
 interface AmmoType {
-  action: null | TriggerItem[]
+  action?: TriggerItem[]
   target_type: string
-  clamp_position: null | boolean
+  clamp_position?: boolean
   category: string
-  energy_consumption: null | number
+  energy_consumption?: number
 }
 
 /** @noSelf **/
 interface BeamTarget {
-  entity: null | LuaEntity
-  position: null | Position
+  entity?: LuaEntity
+  position?: Position
 }
 
 /** @noSelf **/
@@ -1305,8 +1310,8 @@ interface ModConfigurationChangedData {
 
 /** @noSelf **/
 interface ConfigurationChangedData {
-  old_version: null | string
-  new_version: null | string
+  old_version?: string
+  new_version?: string
   mod_changes: Record<string, ModConfigurationChangedData>
   mod_startup_settings_changed: boolean
   migration_applied: boolean
@@ -1356,9 +1361,9 @@ interface TriggerDelivery {
 /** @noSelf **/
 interface TriggerItem {
   type: string
-  action_delivery: null | TriggerDelivery[]
+  action_delivery?: TriggerDelivery[]
   source_effects: TriggerEffectItem[]
-  entity_flags: null | EntityPrototypeFlags
+  entity_flags?: EntityPrototypeFlags
   ignore_collision_condition: boolean
   collision_mask: CollisionMask
   trigger_target_mask: TriggerTargetMask
@@ -1382,15 +1387,15 @@ interface AttackParameters {
   warmup: number
   movement_slow_down_factor: number
   movement_slow_down_cooldown: number
-  ammo_type: null | AmmoType
-  ammo_categories: null | string[]
+  ammo_type?: AmmoType
+  ammo_categories?: string[]
 }
 
 /** @noSelf **/
 interface CapsuleAction {
   type: string
-  attack_parameters: null | AttackParameters
-  equipment: null | string
+  attack_parameters?: AttackParameters
+  equipment?: string
 }
 
 /** @noSelf **/
@@ -1457,9 +1462,9 @@ interface SelectedPrototypeData {
 
 /** @noSelf **/
 interface ScriptRenderTarget {
-  entity: null | LuaEntity
-  entity_offset: null | Vector
-  position: null | Position
+  entity?: LuaEntity
+  entity_offset?: Vector
+  position?: Position
 }
 
 type MouseButtons =
@@ -1507,78 +1512,78 @@ interface SoundType {
 /** @noSelf **/
 interface AnyPrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface ItemPrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface ModSettingPrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface TechnologyPrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface DecorativePrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface AchievementPrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface FluidPrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface EquipmentPrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface TilePrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface RecipePrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** @noSelf **/
 interface EntityPrototypeFilters {
   filter: string
-  mode: null | string
-  invert: null | boolean
+  mode?: string
+  invert?: boolean
 }
 
 /** classes */
@@ -1590,15 +1595,17 @@ interface LuaAISettings {
   path_resolution_modifier: number
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaControlBehavior {
-  get_circuit_network: (
+  get_circuit_network(
     wire: typeof defines.wire_type,
-    circuit_connector?: null | typeof defines.circuit_connector_id
-  ) => LuaCircuitNetwork | null
+    circuit_connector?: typeof defines.circuit_connector_id
+  ): LuaCircuitNetwork | undefined
+
   readonly type: typeof defines.control_behavior.type
   readonly entity: LuaEntity
 }
@@ -1608,32 +1615,38 @@ interface LuaAccumulatorControlBehavior extends LuaControlBehavior {
   output_signal: SignalID
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaCombinatorControlBehavior extends LuaControlBehavior {
-  get_signal_last_tick: (signal: SignalID) => number | null
+  get_signal_last_tick(signal: SignalID): number | undefined
+
   readonly signals_last_tick: Signal[]
 }
 
 /** @noSelf **/
 interface LuaConstantCombinatorControlBehavior extends LuaControlBehavior {
-  set_signal: (index: number, signal: Signal) => null
-  get_signal: (index: number) => Signal
+  set_signal(index: number, signal: Signal): void
+
+  get_signal(index: number): Signal
+
   parameters: ConstantCombinatorParameters
   enabled: boolean
   readonly signals_count: number
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaContainerControlBehavior extends LuaControlBehavior {
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1644,7 +1657,8 @@ interface LuaGenericOnOffControlBehavior extends LuaControlBehavior {
   connect_to_logistic_network: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1652,7 +1666,8 @@ interface LuaLogisticContainerControlBehavior extends LuaControlBehavior {
   circuit_mode_of_operation: typeof defines.control_behavior.logistic_container.circuit_mode_of_operation
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1661,7 +1676,8 @@ interface LuaProgrammableSpeakerControlBehavior extends LuaControlBehavior {
   circuit_condition: CircuitConditionSpecification
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1672,7 +1688,8 @@ interface LuaRailChainSignalControlBehavior extends LuaControlBehavior {
   blue_signal: SignalID
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1685,7 +1702,8 @@ interface LuaRailSignalControlBehavior extends LuaControlBehavior {
   circuit_condition: CircuitConditionSpecification
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1698,14 +1716,16 @@ interface LuaRoboportControlBehavior extends LuaControlBehavior {
   total_construction_output_signal: SignalID
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaStorageTankControlBehavior extends LuaControlBehavior {
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1716,7 +1736,8 @@ interface LuaWallControlBehavior extends LuaControlBehavior {
   output_signal: SignalID
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1724,7 +1745,8 @@ interface LuaArithmeticCombinatorControlBehavior extends LuaCombinatorControlBeh
   parameters: ArithmeticCombinatorParameters
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1732,7 +1754,8 @@ interface LuaDeciderCombinatorControlBehavior extends LuaCombinatorControlBehavi
   parameters: DeciderCombinatorParameters
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1744,7 +1767,8 @@ interface LuaInserterControlBehavior extends LuaGenericOnOffControlBehavior {
   circuit_stack_control_signal: SignalID
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1753,7 +1777,8 @@ interface LuaLampControlBehavior extends LuaGenericOnOffControlBehavior {
   readonly color: Color
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1764,7 +1789,8 @@ interface LuaMiningDrillControlBehavior extends LuaGenericOnOffControlBehavior {
   readonly resource_read_targets: LuaEntity[]
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1780,7 +1806,8 @@ interface LuaTrainStopControlBehavior extends LuaGenericOnOffControlBehavior {
   trains_limit_signal: SignalID
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1790,7 +1817,8 @@ interface LuaTransportBeltControlBehavior extends LuaGenericOnOffControlBehavior
   read_contents_mode: typeof defines.control_behavior.transport_belt.content_read_mode
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1803,7 +1831,8 @@ interface LuaAchievementPrototype {
   readonly hidden: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1815,7 +1844,8 @@ interface LuaAmmoCategoryPrototype {
   readonly bonus_gui_order: string
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1829,38 +1859,58 @@ interface LuaAutoplaceControlPrototype {
   readonly category: string
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 interface CustomEventId {}
 
 /** @noSelf **/
 interface LuaBootstrap {
-  on_init: (f: (...args: any[]) => any) => null
-  on_load: (f: (...args: any[]) => any) => null
-  on_configuration_changed: (f: (...args: any[]) => any) => null
-  on_event: (
-    event: typeof defines.events | typeof defines.events[] | string,
-    f: (...args: any[]) => any,
-    filters?: null | Filters
-  ) => null
-  on_nth_tick: (tick: number | number[], f: (...args: any[]) => any) => null
-  register_on_entity_destroyed: (entity: LuaEntity) => number
-  generate_event_name: () => CustomEventId
-  get_event_handler: (event: number) => null
-  get_event_order: () => null
-  set_event_filter: (event: number, filters?: null | Filters) => null
-  get_event_filter: (event: number) => any | null
-  raise_event: (event: CustomEventId, arg_1: any) => null
-  raise_console_chat: (table: RaiseEventParameters) => null
-  raise_player_crafted_item: (table: RaiseEventParameters) => null
-  raise_player_fast_transferred: (table: RaiseEventParameters) => null
-  raise_biter_base_built: (table: RaiseEventParameters) => null
-  raise_market_item_purchased: (table: RaiseEventParameters) => null
-  raise_script_built: (table: RaiseEventParameters) => null
-  raise_script_destroy: (table: RaiseEventParameters) => null
-  raise_script_revive: (table: RaiseEventParameters) => null
-  raise_script_set_tiles: (table: RaiseEventParameters) => null
+  on_init(e: () => void): void
+
+  on_load(e: () => void): void
+
+  on_configuration_changed(f: (d: ConfigurationChangedData) => void): void
+
+  on_event(this: void, event: EventId<any>[] | string, f: (...args: any[]) => void, filters?: Filters): void
+
+  on_event<Payload>(this: void, event: EventId<Payload>, f: (event: Payload) => void, filters?: Filters): void
+
+  on_nth_tick(tick: number | number[], f: (...args: any[]) => any): void
+
+  register_on_entity_destroyed(entity: LuaEntity): number
+
+  generate_event_name(): CustomEventId
+
+  get_event_handler(event: number): void
+
+  get_event_order(): void
+
+  set_event_filter(event: number, filters?: Filters): void
+
+  get_event_filter(event: number): any | undefined
+
+  raise_event(event: CustomEventId, arg_1: any): void
+
+  raise_console_chat(table: RaiseEventParameters): void
+
+  raise_player_crafted_item(table: RaiseEventParameters): void
+
+  raise_player_fast_transferred(table: RaiseEventParameters): void
+
+  raise_biter_base_built(table: RaiseEventParameters): void
+
+  raise_market_item_purchased(table: RaiseEventParameters): void
+
+  raise_script_built(table: RaiseEventParameters): void
+
+  raise_script_destroy(table: RaiseEventParameters): void
+
+  raise_script_revive(table: RaiseEventParameters): void
+
+  raise_script_set_tiles(table: RaiseEventParameters): void
+
   readonly mod_name: string
   readonly level: any
   readonly active_mods: Record<string, string>
@@ -1879,7 +1929,8 @@ interface LuaBurner {
   readonly fuel_categories: Record<string, boolean>
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -1895,20 +1946,23 @@ interface LuaBurnerPrototype {
   readonly fuel_categories: Record<string, boolean>
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaChunkIterator {
-  "operator ()": () => null
+  "operator ()": () => void
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaCircuitNetwork {
-  get_signal: (signal: SignalID) => number
+  get_signal(signal: SignalID): number
+
   readonly entity: LuaEntity
   readonly wire_type: typeof defines.wire_type
   readonly circuit_connector_id: typeof defines.circuit_connector_id
@@ -1917,13 +1971,16 @@ interface LuaCircuitNetwork {
   readonly connected_circuit_count: number
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaCommandProcessor {
-  add_command: (name: string, help: LocalisedString, fn: (...args: any[]) => any) => null
-  remove_command: () => boolean
+  add_command(name: string, help: LocalisedString, fn: (...args: any[]) => any): void
+
+  remove_command(): boolean
+
   readonly commands: Record<string, LocalisedString>
   readonly game_commands: Record<string, LocalisedString>
   readonly object_name: string
@@ -1931,38 +1988,70 @@ interface LuaCommandProcessor {
 
 /** @noSelf **/
 interface LuaControl {
-  get_inventory: (inventory: typeof defines.inventory) => LuaInventory | null
-  get_main_inventory: () => null
-  can_insert: (items: ItemStackSpecification) => boolean
-  insert: (items: ItemStackSpecification) => number
-  set_gui_arrow: (table_0: { type: string }) => null
-  clear_gui_arrow: () => null
-  get_item_count: (item?: null | string) => number
-  has_items_inside: () => null
-  can_reach_entity: (entity: LuaEntity) => boolean
-  clear_items_inside: () => null
-  remove_item: (items: ItemStackSpecification) => number
-  teleport: (position: Position, surface?: null | SurfaceSpecification) => boolean
-  update_selected_entity: (position: Position) => null
-  clear_selected_entity: () => null
-  disable_flashlight: () => null
-  enable_flashlight: () => null
-  is_flashlight_enabled: () => null
-  get_craftable_count: (recipe: string | LuaRecipe) => number
-  begin_crafting: (table_0: { count: number; recipe: string | LuaRecipe; silent?: boolean }) => number
-  cancel_crafting: (table_0: { index: number; count: number }) => null
-  mine_entity: (entity: LuaEntity, force?: null | boolean) => boolean
-  mine_tile: (tile: LuaTile) => boolean
-  is_player: () => null
-  open_technology_gui: (technology?: null | TechnologySpecification) => null
-  set_personal_logistic_slot: (slot_index: number, value: PersonalLogisticParameters) => boolean
-  set_vehicle_logistic_slot: (slot_index: number, value: PersonalLogisticParameters) => boolean
-  get_personal_logistic_slot: (slot_index: number) => PersonalLogisticParameters
-  get_vehicle_logistic_slot: (slot_index: number) => PersonalLogisticParameters
-  clear_personal_logistic_slot: (slot_index: number) => null
-  clear_vehicle_logistic_slot: (slot_index: number) => null
-  is_cursor_blueprint: () => null
-  get_blueprint_entities: () => null
+  get_inventory(inventory: typeof defines.inventory): LuaInventory | undefined
+
+  get_main_inventory(): LuaInventory
+
+  can_insert(items: ItemStackSpecification): boolean
+
+  insert(items: ItemStackSpecification): number
+
+  set_gui_arrow(table_0: { type: string }): void
+
+  clear_gui_arrow(): void
+
+  get_item_count(item?: string): number
+
+  has_items_inside(): void
+
+  can_reach_entity(entity: LuaEntity): boolean
+
+  clear_items_inside(): void
+
+  remove_item(items: ItemStackSpecification): number
+
+  teleport(position: PositionIn, surface?: SurfaceSpecification): boolean
+
+  update_selected_entity(position: PositionIn): void
+
+  clear_selected_entity(): void
+
+  disable_flashlight(): void
+
+  enable_flashlight(): void
+
+  is_flashlight_enabled(): void
+
+  get_craftable_count(recipe: string | LuaRecipe): number
+
+  begin_crafting(table_0: { count: number; recipe: string | LuaRecipe; silent?: boolean }): number
+
+  cancel_crafting(table_0: { index: number; count: number }): void
+
+  mine_entity(entity: LuaEntity, force?: boolean): boolean
+
+  mine_tile(tile: LuaTile): boolean
+
+  is_player(): void
+
+  open_technology_gui(technology?: TechnologySpecification): void
+
+  set_personal_logistic_slot(slot_index: number, value: PersonalLogisticParameters): boolean
+
+  set_vehicle_logistic_slot(slot_index: number, value: PersonalLogisticParameters): boolean
+
+  get_personal_logistic_slot(slot_index: number): PersonalLogisticParameters
+
+  get_vehicle_logistic_slot(slot_index: number): PersonalLogisticParameters
+
+  clear_personal_logistic_slot(slot_index: number): void
+
+  clear_vehicle_logistic_slot(slot_index: number): void
+
+  is_cursor_blueprint(): void
+
+  get_blueprint_entities(): void
+
   readonly surface: LuaSurface
   readonly position: Position
   readonly vehicle: LuaEntity
@@ -2020,7 +2109,8 @@ interface LuaControl {
 
 /** @noSelf **/
 interface LuaCustomChartTag {
-  destroy: () => null
+  destroy(): void
+
   icon: SignalID
   last_user: LuaPlayer
   readonly position: Position
@@ -2030,7 +2120,8 @@ interface LuaCustomChartTag {
   readonly surface: LuaSurface
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2046,7 +2137,8 @@ interface LuaCustomInputPrototype {
   readonly enabled: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2055,7 +2147,8 @@ interface LuaCustomTable {
   readonly "operator #": number
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2067,7 +2160,8 @@ interface LuaDamagePrototype {
   readonly hidden: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2082,7 +2176,8 @@ interface LuaDecorativePrototype {
   readonly autoplace_specification: AutoplaceSpecification
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2097,154 +2192,265 @@ interface LuaElectricEnergySourcePrototype {
   readonly render_no_power_icon: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaEntity extends LuaControl {
-  get_output_inventory: () => null
-  get_module_inventory: () => null
-  get_fuel_inventory: () => null
-  get_burnt_result_inventory: () => null
-  damage: (damage: number, force: ForceSpecification, type?: null | string, dealer?: null | LuaEntity) => number
-  can_be_destroyed: () => null
-  destroy: (opts?: { do_cliff_correction?: boolean; raise_destroy?: boolean }) => boolean
-  set_command: (command: Command) => null
-  has_command: () => null
-  die: (force: ForceSpecification, cause?: null | LuaEntity) => boolean
-  has_flag: (flag: string) => boolean
-  ghost_has_flag: (flag: string) => boolean
-  add_market_item: (offer: Offer) => null
-  remove_market_item: (offer: number) => boolean
-  get_market_items: () => null
-  clear_market_items: () => null
-  connect_neighbour: (target: LuaEntity | any) => boolean
-  disconnect_neighbour: (target?: null | (typeof defines.wire_type | LuaEntity | any)) => null
-  order_deconstruction: (force: ForceSpecification, player?: null | PlayerSpecification) => boolean
-  cancel_deconstruction: (force: ForceSpecification, player?: null | PlayerSpecification) => null
-  to_be_deconstructed: () => null
-  order_upgrade: (table_0: {
+  get_output_inventory(): void
+
+  get_module_inventory(): void
+
+  get_fuel_inventory(): void
+
+  get_burnt_result_inventory(): void
+
+  damage(damage: number, force: ForceSpecification, type?: string, dealer?: LuaEntity): number
+
+  can_be_destroyed(): void
+
+  destroy(opts?: { do_cliff_correction?: boolean; raise_destroy?: boolean }): boolean
+
+  set_command(command: Command): void
+
+  has_command(): void
+
+  die(force: ForceSpecification, cause?: LuaEntity): boolean
+
+  has_flag(flag: string): boolean
+
+  ghost_has_flag(flag: string): boolean
+
+  add_market_item(offer: Offer): void
+
+  remove_market_item(offer: number): boolean
+
+  get_market_items(): void
+
+  clear_market_items(): void
+
+  connect_neighbour(target: LuaEntity | any): boolean
+
+  disconnect_neighbour(target?: typeof defines.wire_type | LuaEntity | any): void
+
+  order_deconstruction(force: ForceSpecification, player?: PlayerSpecification): boolean
+
+  cancel_deconstruction(force: ForceSpecification, player?: PlayerSpecification): void
+
+  to_be_deconstructed(): void
+
+  order_upgrade(table_0: {
     force: ForceSpecification
     target: EntityPrototypeSpecification
     player?: PlayerSpecification
     direction?: typeof defines.direction
-  }) => boolean
-  cancel_upgrade: (force: ForceSpecification, player?: null | PlayerSpecification) => boolean
-  to_be_upgraded: () => null
-  get_request_slot: (slot: number) => SimpleItemStack
-  set_request_slot: (request: ItemStackSpecification, slot: number) => boolean
-  clear_request_slot: (slot: number) => null
-  is_crafting: () => null
-  is_opened: () => null
-  is_opening: () => null
-  is_closed: () => null
-  is_closing: () => null
-  request_to_open: (force: ForceSpecification, extra_time?: null | number) => null
-  request_to_close: (force: ForceSpecification) => null
-  get_transport_line: (index: number) => LuaTransportLine
-  get_max_transport_line_index: () => null
-  launch_rocket: () => null
-  revive: (opts?: { return_item_request_proxy?: boolean; raise_revive?: boolean }) => Record<string, number> | null
-  silent_revive: (opts?: {
+  }): boolean
+
+  cancel_upgrade(force: ForceSpecification, player?: PlayerSpecification): boolean
+
+  to_be_upgraded(): void
+
+  get_request_slot(slot: number): SimpleItemStack
+
+  set_request_slot(request: ItemStackSpecification, slot: number): boolean
+
+  clear_request_slot(slot: number): void
+
+  is_crafting(): void
+
+  is_opened(): void
+
+  is_opening(): void
+
+  is_closed(): void
+
+  is_closing(): void
+
+  request_to_open(force: ForceSpecification, extra_time?: number): void
+
+  request_to_close(force: ForceSpecification): void
+
+  get_transport_line(index: number): LuaTransportLine
+
+  get_max_transport_line_index(): void
+
+  launch_rocket(): void
+
+  revive(opts?: {
     return_item_request_proxy?: boolean
     raise_revive?: boolean
-  }) => Record<string, number> | null
-  get_connected_rail: (table_0: {
+  }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined]>
+
+  silent_revive(opts?: {
+    return_item_request_proxy?: boolean
+    raise_revive?: boolean
+  }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined]>
+
+  get_connected_rail(table_0: {
     rail_direction: typeof defines.rail_direction
     rail_connection_direction: typeof defines.rail_connection_direction
-  }) => LuaEntity
-  get_connected_rails: () => null
-  get_rail_segment_entity: (direction: typeof defines.rail_direction, in_else_out: boolean) => LuaEntity
-  get_rail_segment_end: (direction: typeof defines.rail_direction) => LuaEntity
-  get_rail_segment_length: () => null
-  get_rail_segment_overlaps: () => null
-  get_filter: (arg_0: number) => string
-  set_filter: (arg_0: number, arg_1: string) => null
-  get_infinity_container_filter: (index: number) => InfinityInventoryFilter
-  set_infinity_container_filter: (index: number, filter: InfinityInventoryFilter) => null
-  get_infinity_pipe_filter: () => null
-  set_infinity_pipe_filter: (filter: InfinityPipeFilter) => null
-  get_heat_setting: () => null
-  set_heat_setting: (filter: HeatSetting) => null
-  get_control_behavior: () => null
-  get_or_create_control_behavior: () => null
-  get_circuit_network: (
+  }): LuaEntity
+
+  get_connected_rails(): void
+
+  get_rail_segment_entity(direction: typeof defines.rail_direction, in_else_out: boolean): LuaEntity
+
+  get_rail_segment_end(direction: typeof defines.rail_direction): LuaEntity
+
+  get_rail_segment_length(): void
+
+  get_rail_segment_overlaps(): void
+
+  get_filter(arg_0: number): string
+
+  set_filter(arg_0: number, arg_1: string): void
+
+  get_infinity_container_filter(index: number): InfinityInventoryFilter
+
+  set_infinity_container_filter(index: number, filter: InfinityInventoryFilter): void
+
+  get_infinity_pipe_filter(): void
+
+  set_infinity_pipe_filter(filter: InfinityPipeFilter): void
+
+  get_heat_setting(): void
+
+  set_heat_setting(filter: HeatSetting): void
+
+  get_control_behavior(): void
+
+  get_or_create_control_behavior(): void
+
+  get_circuit_network(
     wire: typeof defines.wire_type,
-    circuit_connector?: null | typeof defines.circuit_connector_id
-  ) => LuaCircuitNetwork | null
-  get_merged_signal: (signal: SignalID, circuit_connector?: null | typeof defines.circuit_connector_id) => number
-  get_merged_signals: (circuit_connector?: null | typeof defines.circuit_connector_id) => Signal[] | null
-  supports_backer_name: () => null
-  copy_settings: (entity: LuaEntity, by_player?: null | PlayerSpecification) => Record<string, number>
-  get_logistic_point: (arg_0?: null | typeof defines.logistic_member_index) => LuaLogisticPoint | LuaLogisticPoint[]
-  play_note: (instrument: number, note: number) => boolean
-  connect_rolling_stock: (direction: typeof defines.rail_direction) => boolean
-  disconnect_rolling_stock: (direction: typeof defines.rail_direction) => boolean
-  update_connections: () => null
-  get_recipe: () => null
-  set_recipe: (recipe: string | LuaRecipe) => Record<string, number>
-  rotate: (options?: {
+    circuit_connector?: typeof defines.circuit_connector_id
+  ): LuaCircuitNetwork | undefined
+
+  get_merged_signal(signal: SignalID, circuit_connector?: typeof defines.circuit_connector_id): number
+
+  get_merged_signals(circuit_connector?: typeof defines.circuit_connector_id): Signal[] | undefined
+
+  supports_backer_name(): void
+
+  copy_settings(entity: LuaEntity, by_player?: PlayerSpecification): Record<string, number>
+
+  get_logistic_point(arg_0?: typeof defines.logistic_member_index): LuaLogisticPoint | LuaLogisticPoint[]
+
+  play_note(instrument: number, note: number): boolean
+
+  connect_rolling_stock(direction: typeof defines.rail_direction): boolean
+
+  disconnect_rolling_stock(direction: typeof defines.rail_direction): boolean
+
+  update_connections(): void
+
+  get_recipe(): void
+
+  set_recipe(recipe: string | LuaRecipe): Record<string, number>
+
+  rotate(options?: {
     reverse?: boolean
     by_player?: PlayerSpecification
     spill_items?: boolean
     enable_looted?: boolean
     force?: LuaForce | string
-  }) => boolean
-  get_driver: () => null
-  set_driver: (driver: LuaEntity | PlayerSpecification) => null
-  get_passenger: () => null
-  set_passenger: (passenger: LuaEntity | PlayerSpecification) => null
-  is_connected_to_electric_network: () => null
-  get_train_stop_trains: () => null
-  get_stopped_train: () => null
-  clone: (table_0: {
-    position: Position
+  }): boolean
+
+  get_driver(): void
+
+  set_driver(driver: LuaEntity | PlayerSpecification): void
+
+  get_passenger(): void
+
+  set_passenger(passenger: LuaEntity | PlayerSpecification): void
+
+  is_connected_to_electric_network(): void
+
+  get_train_stop_trains(): void
+
+  get_stopped_train(): void
+
+  clone(table_0: {
+    position: PositionIn
     surface?: LuaSurface
     force?: ForceSpecification
     create_build_effect_smoke?: boolean
-  }) => LuaEntity | null
-  get_fluid_count: (fluid?: null | string) => number
-  get_fluid_contents: () => null
-  remove_fluid: (table_0: {
+  }): LuaEntity | undefined
+
+  get_fluid_count(fluid?: string): number
+
+  get_fluid_contents(): void
+
+  remove_fluid(table_0: {
     name: string
     amount: number
     minimum_temperature?: number
     maximum_temperature?: number
     temperature?: number
-  }) => number
-  insert_fluid: (fluid: Fluid) => number
-  clear_fluid_inside: () => null
-  get_beam_source: () => null
-  set_beam_source: (source: LuaEntity | Position) => null
-  get_beam_target: () => null
-  set_beam_target: (target: LuaEntity | Position) => null
-  get_radius: () => null
-  get_health_ratio: () => null
-  create_build_effect_smoke: () => null
-  release_from_spawner: () => null
-  toggle_equipment_movement_bonus: () => null
-  can_shoot: (target: LuaEntity, position: Position) => boolean
-  start_fading_out: () => null
-  get_upgrade_target: () => null
-  get_upgrade_direction: () => null
-  get_damage_to_be_taken: () => null
-  deplete: () => null
-  mine: (options?: {
+  }): number
+
+  insert_fluid(fluid: Fluid): number
+
+  clear_fluid_inside(): void
+
+  get_beam_source(): void
+
+  set_beam_source(source: LuaEntity | PositionIn): void
+
+  get_beam_target(): void
+
+  set_beam_target(target: LuaEntity | PositionIn): void
+
+  get_radius(): void
+
+  get_health_ratio(): void
+
+  create_build_effect_smoke(): void
+
+  release_from_spawner(): void
+
+  toggle_equipment_movement_bonus(): void
+
+  can_shoot(target: LuaEntity, position: PositionIn): boolean
+
+  start_fading_out(): void
+
+  get_upgrade_target(): void
+
+  get_upgrade_direction(): void
+
+  get_damage_to_be_taken(): void
+
+  deplete(): void
+
+  mine(options?: {
     inventory?: LuaInventory
     force?: boolean
     raise_destroyed?: boolean
     ignore_minable?: boolean
-  }) => boolean
-  spawn_decorations: () => null
-  can_wires_reach: (entity: LuaEntity) => boolean
-  get_connected_rolling_stock: (direction: typeof defines.rail_direction) => LuaEntity
-  is_registered_for_construction: () => null
-  is_registered_for_deconstruction: (force: ForceSpecification) => boolean
-  is_registered_for_upgrade: () => null
-  is_registered_for_repair: () => null
-  add_autopilot_destination: () => null
-  connect_linked_belts: (neighbour: LuaEntity) => null
-  disconnect_linked_belts: () => null
+  }): boolean
+
+  spawn_decorations(): void
+
+  can_wires_reach(entity: LuaEntity): boolean
+
+  get_connected_rolling_stock(direction: typeof defines.rail_direction): LuaEntity
+
+  is_registered_for_construction(): void
+
+  is_registered_for_deconstruction(force: ForceSpecification): boolean
+
+  is_registered_for_upgrade(): void
+
+  is_registered_for_repair(): void
+
+  add_autopilot_destination(): void
+
+  connect_linked_belts(neighbour: LuaEntity): void
+
+  disconnect_linked_belts(): void
+
   readonly name: string
   readonly ghost_name: string
   readonly localised_name: LocalisedString
@@ -2322,8 +2528,8 @@ interface LuaEntity extends LuaControl {
   readonly electric_output_flow_limit: number
   readonly electric_drain: number
   readonly electric_emissions: number
-  readonly unit_number: number
-  readonly ghost_unit_number: number
+  readonly unit_number?: number
+  readonly ghost_unit_number?: number
   mining_progress: number
   bonus_mining_progress: number
   power_production: number
@@ -2395,7 +2601,7 @@ interface LuaEntity extends LuaControl {
   request_from_buffers: boolean
   corpse_expires: boolean
   corpse_immune_to_entity_placement: boolean
-  tags: Tags
+  tags?: Tags
   readonly command: Command
   readonly distraction_command: Command
   time_to_next_effect: number
@@ -2414,13 +2620,16 @@ interface LuaEntity extends LuaControl {
   readonly linked_belt_neighbour: LuaEntity
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaEntityPrototype {
-  has_flag: (flag: string) => boolean
-  get_inventory_size: (index: typeof defines.inventory) => number
+  has_flag(flag: string): boolean
+
+  get_inventory_size(index: typeof defines.inventory): number
+
   readonly type: string
   readonly name: string
   readonly localised_name: LocalisedString
@@ -2625,7 +2834,8 @@ interface LuaEntityPrototype {
   readonly character_corpse: LuaEntityPrototype
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2645,7 +2855,8 @@ interface LuaEquipment {
   readonly burner: LuaBurner
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2656,23 +2867,32 @@ interface LuaEquipmentCategoryPrototype {
   readonly localised_description: LocalisedString
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaEquipmentGrid {
-  take: (tbl?: {
-    position?: Position
+  take(tbl?: {
+    position?: PositionIn
     equipment?: LuaEquipment
     by_player?: PlayerSpecification
-  }) => SimpleItemStack | null
-  take_all: () => null
-  clear: () => null
-  put: (table_0: { name: string; position?: Position; by_player?: PlayerSpecification }) => LuaEquipment | null
-  can_move: (table_0: { equipment: LuaEquipment; position: Position }) => boolean
-  move: (table_0: { equipment: LuaEquipment; position: Position }) => boolean
-  get: (position: Position) => LuaEquipment | null
-  get_contents: () => null
+  }): SimpleItemStack | undefined
+
+  take_all(): void
+
+  clear(): void
+
+  put(table_0: { name: string; position?: PositionIn; by_player?: PlayerSpecification }): LuaEquipment | undefined
+
+  can_move(table_0: { equipment: LuaEquipment; position: PositionIn }): boolean
+
+  move(table_0: { equipment: LuaEquipment; position: PositionIn }): boolean
+
+  get(position: PositionIn): LuaEquipment | undefined
+
+  get_contents(): void
+
   readonly prototype: LuaEquipmentGridPrototype
   readonly width: number
   readonly height: number
@@ -2686,7 +2906,8 @@ interface LuaEquipmentGrid {
   inhibit_movement_bonus: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2701,7 +2922,8 @@ interface LuaEquipmentGridPrototype {
   readonly locked: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2728,38 +2950,51 @@ interface LuaEquipmentPrototype {
   readonly automatic: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaFlowStatistics {
-  get_input_count: (arg_0: string) => number
-  set_input_count: (arg_0: string, count: number) => null
-  get_output_count: (arg_0: string) => number
-  set_output_count: (arg_0: string, count: number) => null
-  get_flow_count: (table_0: {
+  get_input_count(arg_0: string): number
+
+  set_input_count(arg_0: string, count: number): void
+
+  get_output_count(arg_0: string): number
+
+  set_output_count(arg_0: string, count: number): void
+
+  get_flow_count(table_0: {
     name: string
     input: boolean
     precision_index: typeof defines.flow_precision_index
     count?: boolean
-  }) => number
-  on_flow: (arg_0: string, count: number) => null
-  clear: () => null
+  }): number
+
+  on_flow(arg_0: string, count: number): void
+
+  clear(): void
+
   readonly input_counts: Record<string, number[] | number>
   readonly output_counts: Record<string, number[] | number>
   readonly force: LuaForce
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaFluidBox {
-  get_prototype: (index: number) => LuaFluidBoxPrototype
-  get_capacity: (index: number) => number
-  get_connections: (index: number) => LuaFluidBox[]
-  get_filter: (index: number) => any
-  set_filter: (
+  get_prototype(index: number): LuaFluidBoxPrototype
+
+  get_capacity(index: number): number
+
+  get_connections(index: number): LuaFluidBox[]
+
+  get_filter(index: number): any
+
+  set_filter(
     index: number,
     table: {
       name: string
@@ -2767,16 +3002,21 @@ interface LuaFluidBox {
       maximum_temperature?: number
       force?: boolean
     }
-  ) => boolean
-  get_flow: (index: number) => number
-  get_locked_fluid: (index: number) => string
-  flush: (index: number, fluid?: null | FluidSpecification) => Record<string, number>
+  ): boolean
+
+  get_flow(index: number): number
+
+  get_locked_fluid(index: number): string
+
+  flush(index: number, fluid?: FluidSpecification): Record<string, number>
+
   readonly "operator #": number
   readonly owner: LuaEntity
-  readonly "operator []": Fluid | null
+  readonly "operator []": Fluid | undefined
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2796,7 +3036,8 @@ interface LuaFluidBoxPrototype {
   readonly render_layer: string
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2813,7 +3054,8 @@ interface LuaFluidEnergySourcePrototype {
   readonly fluid_box: any
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2835,7 +3077,8 @@ interface LuaFluidPrototype {
   readonly hidden: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2849,75 +3092,127 @@ interface LuaFontPrototype {
   readonly border_color: Color
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaForce {
-  get_entity_count: (name: string) => number
-  disable_research: () => null
-  enable_research: () => null
-  disable_all_prototypes: () => null
-  enable_all_prototypes: () => null
-  reset_recipes: () => null
-  enable_all_recipes: () => null
-  enable_all_technologies: () => null
-  research_all_technologies: (arg_0?: null | any) => null
-  reset_technologies: () => null
-  reset: () => null
-  reset_technology_effects: () => null
-  chart: (surface: SurfaceSpecification, area: BoundingBox) => null
-  clear_chart: (surface?: null | SurfaceSpecification) => null
-  rechart: () => null
-  chart_all: (surface?: null | SurfaceSpecification) => null
-  is_chunk_charted: (surface: SurfaceSpecification, position: ChunkPosition) => boolean
-  is_chunk_visible: (surface: SurfaceSpecification, position: ChunkPosition) => boolean
-  cancel_charting: (surface?: null | SurfaceSpecification) => null
-  get_ammo_damage_modifier: (ammo: string) => number
-  set_ammo_damage_modifier: (ammo: string, modifier: number) => null
-  get_gun_speed_modifier: (ammo: string) => number
-  set_gun_speed_modifier: (ammo: string, modifier: number) => null
-  get_turret_attack_modifier: (turret: string) => number
-  set_turret_attack_modifier: (turret: string, modifier: number) => null
-  set_cease_fire: (other: ForceSpecification, cease_fire: boolean) => null
-  get_cease_fire: (other: ForceSpecification) => boolean
-  set_friend: (other: ForceSpecification, friend: boolean) => null
-  get_friend: (other: ForceSpecification) => boolean
-  is_pathfinder_busy: () => null
-  kill_all_units: () => null
-  find_logistic_network_by_position: (position: Position, surface: SurfaceSpecification) => LuaLogisticNetwork | null
-  set_spawn_position: (position: Position, surface: SurfaceSpecification) => null
-  get_spawn_position: (surface: SurfaceSpecification) => Position
-  unchart_chunk: (position: ChunkPosition, surface: SurfaceSpecification) => null
-  get_item_launched: (item: string) => number
-  set_item_launched: (item: string, count: number) => null
-  print: (message: LocalisedString, color?: null | Color) => null
-  get_trains: (surface?: null | SurfaceSpecification) => LuaTrain[]
-  add_chart_tag: (
+  get_entity_count(name: string): number
+
+  disable_research(): void
+
+  enable_research(): void
+
+  disable_all_prototypes(): void
+
+  enable_all_prototypes(): void
+
+  reset_recipes(): void
+
+  enable_all_recipes(): void
+
+  enable_all_technologies(): void
+
+  research_all_technologies(arg_0?: any): void
+
+  reset_technologies(): void
+
+  reset(): void
+
+  reset_technology_effects(): void
+
+  chart(surface: SurfaceSpecification, area: BoundingBox): void
+
+  clear_chart(surface?: SurfaceSpecification): void
+
+  rechart(): void
+
+  chart_all(surface?: SurfaceSpecification): void
+
+  is_chunk_charted(surface: SurfaceSpecification, position: ChunkPosition): boolean
+
+  is_chunk_visible(surface: SurfaceSpecification, position: ChunkPosition): boolean
+
+  cancel_charting(surface?: SurfaceSpecification): void
+
+  get_ammo_damage_modifier(ammo: string): number
+
+  set_ammo_damage_modifier(ammo: string, modifier: number): void
+
+  get_gun_speed_modifier(ammo: string): number
+
+  set_gun_speed_modifier(ammo: string, modifier: number): void
+
+  get_turret_attack_modifier(turret: string): number
+
+  set_turret_attack_modifier(turret: string, modifier: number): void
+
+  set_cease_fire(other: ForceSpecification, cease_fire: boolean): void
+
+  get_cease_fire(other: ForceSpecification): boolean
+
+  set_friend(other: ForceSpecification, friend: boolean): void
+
+  get_friend(other: ForceSpecification): boolean
+
+  is_pathfinder_busy(): void
+
+  kill_all_units(): void
+
+  find_logistic_network_by_position(position: PositionIn, surface: SurfaceSpecification): LuaLogisticNetwork | undefined
+
+  set_spawn_position(position: PositionIn, surface: SurfaceSpecification): void
+
+  get_spawn_position(surface: SurfaceSpecification): Position
+
+  unchart_chunk(position: ChunkPosition, surface: SurfaceSpecification): void
+
+  get_item_launched(item: string): number
+
+  set_item_launched(item: string, count: number): void
+
+  print(message: LocalisedString, color?: Color): void
+
+  get_trains(surface?: SurfaceSpecification): LuaTrain[]
+
+  add_chart_tag(
     surface: SurfaceSpecification,
     tag: {
       icon?: SignalID
-      position: Position
+      position: PositionIn
       text?: string
       last_user?: PlayerSpecification
     }
-  ) => LuaCustomChartTag
-  find_chart_tags: (surface: SurfaceSpecification, area?: null | BoundingBox) => LuaCustomChartTag[]
-  get_saved_technology_progress: (technology: TechnologySpecification) => number
-  set_saved_technology_progress: (technology: TechnologySpecification, arg_1: number) => null
-  reset_evolution: () => null
-  play_sound: (table_0: {
+  ): LuaCustomChartTag
+
+  find_chart_tags(surface: SurfaceSpecification, area?: BoundingBox): LuaCustomChartTag[]
+
+  get_saved_technology_progress(technology: TechnologySpecification): number
+
+  set_saved_technology_progress(technology: TechnologySpecification, arg_1: number): void
+
+  reset_evolution(): void
+
+  play_sound(table_0: {
     path: SoundPath
-    position?: Position
+    position?: PositionIn
     volume_modifier?: number
     override_sound_type?: SoundType
-  }) => boolean
-  get_train_stops: (opts?: { name?: string | string[]; surface?: SurfaceSpecification }) => LuaEntity[]
-  get_hand_crafting_disabled_for_recipe: (recipe: string | LuaRecipe) => boolean
-  set_hand_crafting_disabled_for_recipe: (recipe: string | LuaRecipe, hand_crafting_disabled: boolean) => null
-  add_research: (technology: TechnologySpecification) => boolean
-  cancel_current_research: () => null
-  get_linked_inventory: (prototype: EntityPrototypeSpecification, link_id: number) => LuaInventory
+  }): boolean
+
+  get_train_stops(opts?: { name?: string | string[]; surface?: SurfaceSpecification }): LuaEntity[]
+
+  get_hand_crafting_disabled_for_recipe(recipe: string | LuaRecipe): boolean
+
+  set_hand_crafting_disabled_for_recipe(recipe: string | LuaRecipe, hand_crafting_disabled: boolean): void
+
+  add_research(technology: TechnologySpecification): boolean
+
+  cancel_current_research(): void
+
+  get_linked_inventory(prototype: EntityPrototypeSpecification, link_id: number): LuaInventory
+
   readonly name: string
   readonly technologies: Record<string, LuaTechnology>
   readonly recipes: Record<string, LuaRecipe>
@@ -2980,7 +3275,8 @@ interface LuaForce {
   readonly research_enabled: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -2991,38 +3287,48 @@ interface LuaFuelCategoryPrototype {
   readonly localised_description: LocalisedString
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaGameScript {
-  set_game_state: (table_0: {
+  set_game_state(table_0: {
     game_finished: boolean
     player_won: boolean
     next_level: string
     can_continue: boolean
     victorious_force: ForceSpecification
-  }) => null
-  get_entity_by_tag: (tag: string) => LuaEntity
-  show_message_dialog: (table_0: {
+  }): void
+
+  get_entity_by_tag(tag: string): LuaEntity
+
+  show_message_dialog(table_0: {
     text: LocalisedString
     image?: string
     point_to?: GuiArrowSpecification
     style?: string
     wrapper_frame_style?: string
-  }) => null
-  is_demo: () => null
-  reload_script: () => null
-  reload_mods: () => null
-  save_atlas: () => null
-  check_consistency: () => null
-  regenerate_entity: (entities: string | string[]) => null
-  take_screenshot: (table_0: {
+  }): void
+
+  is_demo(): void
+
+  reload_script(): void
+
+  reload_mods(): void
+
+  save_atlas(): void
+
+  check_consistency(): void
+
+  regenerate_entity(entities: string | string[]): void
+
+  take_screenshot(table_0: {
     player?: PlayerSpecification
     by_player?: PlayerSpecification
     surface?: SurfaceSpecification
-    position?: Position
-    resolution?: Position
+    position?: PositionIn
+    resolution?: PositionIn
     zoom?: number
     path?: string
     show_gui?: boolean
@@ -3034,77 +3340,132 @@ interface LuaGameScript {
     daytime?: number
     water_tick?: number
     force_render?: boolean
-  }) => null
-  set_wait_for_screenshots_to_finish: () => null
-  take_technology_screenshot: (table_0: {
+  }): void
+
+  set_wait_for_screenshots_to_finish(): void
+
+  take_technology_screenshot(table_0: {
     force?: ForceSpecification
     path?: string
     by_player?: PlayerSpecification
     selected_technology?: TechnologySpecification
     skip_disabled?: boolean
     quality?: number
-  }) => null
-  table_to_json: (data: any) => string
-  json_to_table: (json: string) => any | null
-  write_file: (filename: string, data: LocalisedString, append?: null | boolean, for_player?: null | number) => null
-  remove_path: (path: string) => null
-  remove_offline_players: (players?: null | (LuaPlayer[] | string)) => null
-  force_crc: () => null
-  create_force: (force: string) => LuaForce
-  merge_forces: (source: ForceSpecification, destination: ForceSpecification) => null
-  create_surface: (name: string, settings?: null | MapGenSettings) => LuaSurface
-  server_save: (name?: null | string) => null
-  auto_save: (name?: null | string) => null
-  delete_surface: (surface: string | LuaSurface) => null
-  disable_replay: () => null
-  disable_tutorial_triggers: () => null
-  direction_to_string: (direction: typeof defines.direction) => null
-  print: (message: LocalisedString, color?: null | Color) => null
-  create_random_generator: (seed?: null | number) => LuaRandomGenerator
-  check_prototype_translations: () => null
-  play_sound: (table_0: {
+  }): void
+
+  table_to_json(data: any): string
+
+  json_to_table(json: string): any | undefined
+
+  write_file(filename: string, data: LocalisedString, append?: boolean, for_player?: number): void
+
+  remove_path(path: string): void
+
+  remove_offline_players(players?: LuaPlayer[] | string): void
+
+  force_crc(): void
+
+  create_force(force: string): LuaForce
+
+  merge_forces(source: ForceSpecification, destination: ForceSpecification): void
+
+  create_surface(name: string, settings?: MapGenSettings): LuaSurface
+
+  server_save(name?: string): void
+
+  auto_save(name?: string): void
+
+  delete_surface(surface: string | LuaSurface): void
+
+  disable_replay(): void
+
+  disable_tutorial_triggers(): void
+
+  direction_to_string(direction: typeof defines.direction): void
+
+  print(message: LocalisedString, color?: Color): void
+
+  create_random_generator(seed?: number): LuaRandomGenerator
+
+  check_prototype_translations(): void
+
+  play_sound(table_0: {
     path: SoundPath
-    position?: Position
+    position?: PositionIn
     volume_modifier?: number
     override_sound_type?: SoundType
-  }) => boolean
-  is_valid_sound_path: () => boolean
-  is_valid_sprite_path: (sprite_path: SpritePath) => boolean
-  kick_player: (arg_0: PlayerSpecification, reason?: null | LocalisedString) => null
-  ban_player: (arg_0: PlayerSpecification, reason?: null | LocalisedString) => null
-  unban_player: (arg_0: PlayerSpecification) => null
-  purge_player: (arg_0: PlayerSpecification) => null
-  mute_player: (arg_0: PlayerSpecification) => null
-  unmute_player: (arg_0: PlayerSpecification) => null
-  count_pipe_groups: () => null
-  is_multiplayer: () => null
-  get_active_entities_count: (surface?: null | SurfaceSpecification) => number
-  get_map_exchange_string: () => null
-  parse_map_exchange_string: (map_exchange_string: string) => MapExchangeStringData
-  get_train_stops: (opts?: {
+  }): boolean
+
+  is_valid_sound_path(): boolean
+
+  is_valid_sprite_path(sprite_path: SpritePath): boolean
+
+  kick_player(arg_0: PlayerSpecification, reason?: LocalisedString): void
+
+  ban_player(arg_0: PlayerSpecification, reason?: LocalisedString): void
+
+  unban_player(arg_0: PlayerSpecification): void
+
+  purge_player(arg_0: PlayerSpecification): void
+
+  mute_player(arg_0: PlayerSpecification): void
+
+  unmute_player(arg_0: PlayerSpecification): void
+
+  count_pipe_groups(): void
+
+  is_multiplayer(): void
+
+  get_active_entities_count(surface?: SurfaceSpecification): number
+
+  get_map_exchange_string(): void
+
+  parse_map_exchange_string(map_exchange_string: string): MapExchangeStringData
+
+  get_train_stops(opts?: {
     name?: string | string[]
     surface?: SurfaceSpecification
     force?: ForceSpecification
-  }) => LuaEntity[]
-  get_player: (player: number | string) => LuaPlayer
-  get_surface: (surface: number | string) => LuaSurface
-  create_profiler: (stopped?: null | boolean) => LuaProfiler
-  evaluate_expression: (expression: string, variables?: null | Record<string, number>) => number
-  get_filtered_entity_prototypes: (filters: EntityPrototypeFilters) => Record<string, LuaEntityPrototype>
-  get_filtered_item_prototypes: (filters: ItemPrototypeFilters) => Record<string, LuaItemPrototype>
-  get_filtered_equipment_prototypes: (filters: EquipmentPrototypeFilters) => Record<string, LuaEquipmentPrototype>
-  get_filtered_mod_setting_prototypes: (filters: ModSettingPrototypeFilters) => Record<string, LuaModSettingPrototype>
-  get_filtered_achievement_prototypes: (filters: AchievementPrototypeFilters) => Record<string, LuaAchievementPrototype>
-  get_filtered_tile_prototypes: (filters: TilePrototypeFilters) => Record<string, LuaTilePrototype>
-  get_filtered_decorative_prototypes: (filters: DecorativePrototypeFilters) => Record<string, LuaDecorativePrototype>
-  get_filtered_fluid_prototypes: (filters: FluidPrototypeFilters) => Record<string, LuaFluidPrototype>
-  get_filtered_recipe_prototypes: (filters: RecipePrototypeFilters) => Record<string, LuaRecipePrototype>
-  get_filtered_technology_prototypes: (filters: TechnologyPrototypeFilters) => Record<string, LuaTechnologyPrototype>
-  create_inventory: (size: number) => LuaInventory
-  get_script_inventories: (mod?: null | string) => Record<string, LuaInventory[]>
-  reset_time_played: () => null
-  encode_string: (string: string) => string | null
-  decode_string: (string: string) => string | null
+  }): LuaEntity[]
+
+  get_player(player: number | string): LuaPlayer
+
+  get_surface(surface: number | string): LuaSurface | undefined
+
+  create_profiler(stopped?: boolean): LuaProfiler
+
+  evaluate_expression(expression: string, variables?: Record<string, number>): number
+
+  get_filtered_entity_prototypes(filters: EntityPrototypeFilters): Record<string, LuaEntityPrototype>
+
+  get_filtered_item_prototypes(filters: ItemPrototypeFilters): Record<string, LuaItemPrototype>
+
+  get_filtered_equipment_prototypes(filters: EquipmentPrototypeFilters): Record<string, LuaEquipmentPrototype>
+
+  get_filtered_mod_setting_prototypes(filters: ModSettingPrototypeFilters): Record<string, LuaModSettingPrototype>
+
+  get_filtered_achievement_prototypes(filters: AchievementPrototypeFilters): Record<string, LuaAchievementPrototype>
+
+  get_filtered_tile_prototypes(filters: TilePrototypeFilters): Record<string, LuaTilePrototype>
+
+  get_filtered_decorative_prototypes(filters: DecorativePrototypeFilters): Record<string, LuaDecorativePrototype>
+
+  get_filtered_fluid_prototypes(filters: FluidPrototypeFilters): Record<string, LuaFluidPrototype>
+
+  get_filtered_recipe_prototypes(filters: RecipePrototypeFilters): Record<string, LuaRecipePrototype>
+
+  get_filtered_technology_prototypes(filters: TechnologyPrototypeFilters): Record<string, LuaTechnologyPrototype>
+
+  create_inventory(size: number): LuaInventory
+
+  get_script_inventories(mod?: string): Record<string, LuaInventory[]>
+
+  reset_time_played(): void
+
+  encode_string(string: string): string | undefined
+
+  decode_string(string: string): string | undefined
+
   readonly object_name: string
   readonly player: LuaPlayer
   readonly players: Record<number | string, LuaPlayer>
@@ -3181,12 +3542,14 @@ interface LuaGroup {
   readonly order: string
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaGui {
-  is_valid_sprite_path: (sprite_path: SpritePath) => boolean
+  is_valid_sprite_path(sprite_path: SpritePath): boolean
+
   readonly player: LuaPlayer
   readonly children: Record<string, LuaGuiElement>
   readonly top: LuaGuiElement
@@ -3197,7 +3560,8 @@ interface LuaGui {
   readonly relative: LuaGuiElement
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3215,33 +3579,56 @@ interface LuaHeatEnergySourcePrototype {
   readonly connections: any[]
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
-interface LuaInventory {
-  clear: () => null
-  can_insert: (items: ItemStackSpecification) => boolean
-  insert: (items: ItemStackSpecification) => number
-  remove: (items: ItemStackSpecification) => number
-  get_item_count: (item?: null | string) => number
-  is_empty: () => null
-  get_contents: () => null
-  supports_bar: () => null
-  get_bar: () => null
-  set_bar: (bar?: null | number) => null
-  supports_filters: () => null
-  is_filtered: () => null
-  can_set_filter: (index: number, filter: string) => boolean
-  get_filter: (index: number) => string | null
-  set_filter: (index: number, filter: string) => boolean
-  find_item_stack: (item: string) => LuaItemStack | null
-  find_empty_stack: (item?: null | string) => LuaItemStack | null
-  count_empty_stacks: (include_filtered?: null | boolean) => number
-  get_insertable_count: (item: string) => null
-  sort_and_merge: () => null
-  resize: (size: number) => null
-  destroy: () => null
+interface LuaInventoryBase {
+  clear(): void
+
+  can_insert(items: ItemStackSpecification): boolean
+
+  insert(items: ItemStackSpecification): number
+
+  remove(items: ItemStackSpecification): number
+
+  get_item_count(item?: string): number
+
+  is_empty(): void
+
+  get_contents(): void
+
+  supports_bar(): void
+
+  get_bar(): void
+
+  set_bar(bar?: number): void
+
+  supports_filters(): void
+
+  is_filtered(): void
+
+  can_set_filter(index: number, filter: string): boolean
+
+  get_filter(index: number): string | undefined
+
+  set_filter(index: number, filter: string): boolean
+
+  find_item_stack(item: string): LuaItemStack | undefined
+
+  find_empty_stack(item?: string): LuaItemStack | undefined
+
+  count_empty_stacks(include_filtered?: boolean): number
+
+  get_insertable_count(item: string): void
+
+  sort_and_merge(): void
+
+  resize(size: number): void
+
+  destroy(): void
+
   readonly "operator #": number
   readonly index: typeof defines.inventory
   readonly entity_owner: LuaEntity
@@ -3251,13 +3638,21 @@ interface LuaInventory {
   readonly "operator []": LuaItemStack
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
+}
+
+/** @noSelf **/
+type LuaInventory = LuaInventoryBase & {
+  [index: number]: LuaItemStack | undefined
 }
 
 /** @noSelf **/
 interface LuaItemPrototype {
-  has_flag: (flag: string) => boolean
-  get_ammo_type: (ammo_source_type?: null | string) => AmmoType
+  has_flag(flag: string): boolean
+
+  get_ammo_type(ammo_source_type?: string): AmmoType
+
   readonly type: string
   readonly name: string
   readonly localised_name: LocalisedString
@@ -3332,53 +3727,91 @@ interface LuaItemPrototype {
   readonly mapper_count: number
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
+}
+
+interface BlueprintCircuitConnection {}
+
+interface BlueprintControlBehavior {}
+
+/** @noSelf **/
+interface BlueprintEntity {
+  entity_number: number
+  name: string
+  position: Position
+  direction?: any
+  tags?: Tags
+  items?: Record<string, number>
+  connections?: BlueprintCircuitConnection
+  control_behavior?: BlueprintControlBehavior
+  schedule?: TrainScheduleRecord[]
 }
 
 /** @noSelf **/
 interface LuaItemStack {
-  is_blueprint_setup: () => null
-  get_blueprint_entities: () => null
-  set_blueprint_entities: (entities: any[]) => null
-  add_ammo: (amount: number) => null
-  drain_ammo: (amount: number) => null
-  add_durability: (amount: number) => null
-  drain_durability: (amount: number) => null
-  can_set_stack: (stack?: null | ItemStackSpecification) => boolean
-  set_stack: (stack?: null | ItemStackSpecification) => boolean
-  transfer_stack: (stack: ItemStackSpecification) => boolean
-  export_stack: () => null
-  import_stack: (data: string) => number
-  swap_stack: (stack: LuaItemStack) => boolean
-  clear: () => null
-  get_blueprint_tiles: () => null
-  set_blueprint_tiles: (tiles: any[]) => null
-  get_inventory: (inventory: typeof defines.inventory) => LuaInventory | null
-  build_blueprint: (table_0: {
+  is_blueprint_setup(): boolean
+
+  get_blueprint_entities(): BlueprintEntity[]
+
+  set_blueprint_entities(entities: BlueprintEntity[]): void
+
+  add_ammo(amount: number): void
+
+  drain_ammo(amount: number): void
+
+  add_durability(amount: number): void
+
+  drain_durability(amount: number): void
+
+  can_set_stack(stack?: ItemStackSpecification): boolean
+
+  set_stack(stack?: ItemStackSpecification): boolean
+
+  transfer_stack(stack: ItemStackSpecification): boolean
+
+  export_stack(): void
+
+  import_stack(data: string): number
+
+  swap_stack(stack: LuaItemStack): boolean
+
+  clear(): void
+
+  get_blueprint_tiles(): Tile[]
+
+  set_blueprint_tiles(tiles: Tile[]): void
+
+  get_inventory(inventory: typeof defines.inventory): LuaInventory | undefined
+
+  build_blueprint(table_0: {
     surface: SurfaceSpecification
     force: ForceSpecification
-    position: Position
+    position: PositionIn
     force_build?: boolean
     direction?: typeof defines.direction
     skip_fog_of_war?: boolean
     by_player?: PlayerSpecification
     raise_built?: boolean
-  }) => LuaEntity[]
-  deconstruct_area: (table_0: {
+  }): LuaEntity[]
+
+  deconstruct_area(table_0: {
     surface: SurfaceSpecification
     force: ForceSpecification
     area: BoundingBox
     skip_fog_of_war?: boolean
     by_player?: PlayerSpecification
-  }) => null
-  cancel_deconstruct_area: (table_0: {
+  }): void
+
+  cancel_deconstruct_area(table_0: {
     surface: SurfaceSpecification
     force: ForceSpecification
     area: BoundingBox
     skip_fog_of_war?: boolean
     by_player?: PlayerSpecification
-  }) => null
-  create_blueprint: (table_0: {
+  }): void
+
+  create_blueprint(table_0: {
     surface: SurfaceSpecification
     force: ForceSpecification
     area: BoundingBox
@@ -3388,25 +3821,44 @@ interface LuaItemStack {
     include_station_names?: boolean
     include_trains?: boolean
     include_fuel?: boolean
-  }) => Record<number, LuaEntity>
-  get_tag: (tag_name: string) => any
-  set_tag: (tag_name: string, tag: any) => any
-  remove_tag: (tag: string) => boolean
-  clear_blueprint: () => null
-  get_entity_filter: (index: number) => string
-  set_entity_filter: (index: number, filter: string | LuaEntityPrototype | LuaEntity) => boolean
-  get_tile_filter: (index: number) => string
-  set_tile_filter: (index: number, filter: string | LuaTilePrototype | LuaTile) => boolean
-  clear_deconstruction_item: () => null
-  clear_upgrade_item: () => null
-  get_mapper: (index: number, type: string) => UpgradeFilter
-  set_mapper: (index: number, type: string, filter: UpgradeFilter) => null
-  get_blueprint_entity_count: () => null
-  get_blueprint_entity_tags: (index: number) => Tags
-  set_blueprint_entity_tags: (index: number, tags: Tags) => null
-  get_blueprint_entity_tag: (index: number, tag: string) => any
-  set_blueprint_entity_tag: (index: number, tag: string, value: any) => null
-  create_grid: () => null
+  }): Record<number, LuaEntity>
+
+  get_tag(tag_name: string): any
+
+  set_tag(tag_name: string, tag: any): any
+
+  remove_tag(tag: string): boolean
+
+  clear_blueprint(): void
+
+  get_entity_filter(index: number): string
+
+  set_entity_filter(index: number, filter: string | LuaEntityPrototype | LuaEntity): boolean
+
+  get_tile_filter(index: number): string
+
+  set_tile_filter(index: number, filter: string | LuaTilePrototype | LuaTile): boolean
+
+  clear_deconstruction_item(): void
+
+  clear_upgrade_item(): void
+
+  get_mapper(index: number, type: string): UpgradeFilter
+
+  set_mapper(index: number, type: string, filter: UpgradeFilter): void
+
+  get_blueprint_entity_count(): number
+
+  get_blueprint_entity_tags(index: number): Tags
+
+  set_blueprint_entity_tags(index: number, tags: Tags): void
+
+  get_blueprint_entity_tag(index: number, tag: string): any
+
+  set_blueprint_entity_tag(index: number, tag: string, value: any): void
+
+  create_grid(): LuaEquipmentGrid
+
   readonly valid_for_read: boolean
   readonly prototype: LuaItemPrototype
   readonly name: string
@@ -3456,14 +3908,18 @@ interface LuaItemStack {
   readonly is_upgrade_item: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaLogisticCell {
-  is_in_logistic_range: (position: Position) => boolean
-  is_in_construction_range: (position: Position) => boolean
-  is_neighbour_with: (other: LuaLogisticCell) => boolean
+  is_in_logistic_range(position: PositionIn): boolean
+
+  is_in_construction_range(position: PositionIn): boolean
+
+  is_neighbour_with(other: LuaLogisticCell): boolean
+
   readonly logistic_radius: number
   readonly logistics_connection_distance: number
   readonly construction_radius: number
@@ -3481,23 +3937,31 @@ interface LuaLogisticCell {
   readonly to_charge_robots: LuaEntity[]
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaLogisticNetwork {
-  get_item_count: (item?: null | string, member?: null | string) => number
-  get_contents: () => null
-  remove_item: (item: ItemStackSpecification, members?: null | string) => number
-  insert: (item: ItemStackSpecification, members?: null | string) => number
-  find_cell_closest_to: (position: Position) => LuaLogisticCell
-  select_pickup_point: (table_0: {
+  get_item_count(item?: string, member?: string): number
+
+  get_contents(): void
+
+  remove_item(item: ItemStackSpecification, members?: string): number
+
+  insert(item: ItemStackSpecification, members?: string): number
+
+  find_cell_closest_to(position: PositionIn): LuaLogisticCell
+
+  select_pickup_point(table_0: {
     name: string
-    position?: Position
+    position?: PositionIn
     include_buffers?: boolean
     members?: string
-  }) => LuaLogisticPoint
-  select_drop_point: (table_0: { stack: ItemStackSpecification; members?: string }) => LuaLogisticPoint
+  }): LuaLogisticPoint
+
+  select_drop_point(table_0: { stack: ItemStackSpecification; members?: string }): LuaLogisticPoint
+
   readonly force: LuaForce
   readonly available_logistic_robots: number
   readonly all_logistic_robots: number
@@ -3521,7 +3985,8 @@ interface LuaLogisticNetwork {
   readonly logistic_robots: LuaEntity[]
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3537,7 +4002,8 @@ interface LuaLogisticPoint {
   readonly exact: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3557,7 +4023,8 @@ interface LuaModSettingPrototype {
   readonly hidden: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3568,7 +4035,8 @@ interface LuaModuleCategoryPrototype {
   readonly localised_description: LocalisedString
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3581,7 +4049,8 @@ interface LuaNamedNoiseExpression {
   readonly expression: NoiseExpression
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3592,7 +4061,8 @@ interface LuaNoiseLayerPrototype {
   readonly localised_description: LocalisedString
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3612,154 +4082,225 @@ interface LuaParticlePrototype {
   readonly mining_particle_frame_speed: number
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaPermissionGroup {
-  add_player: (player: PlayerSpecification) => boolean
-  remove_player: (player: PlayerSpecification) => boolean
-  allows_action: (arg_0: any) => boolean
-  set_allows_action: (param_0: any) => boolean
-  destroy: () => null
+  add_player(player: PlayerSpecification): boolean
+
+  remove_player(player: PlayerSpecification): boolean
+
+  allows_action(arg_0: any): boolean
+
+  set_allows_action(param_0: any): boolean
+
+  destroy(): void
+
   name: string
   readonly players: LuaPlayer[]
   readonly group_id: number
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaPermissionGroups {
-  create_group: (name?: null | string) => LuaPermissionGroup
-  get_group: (group: string | number) => LuaPermissionGroup
+  create_group(name?: string): LuaPermissionGroup
+
+  get_group(group: string | number): LuaPermissionGroup
+
   readonly groups: LuaPermissionGroup[]
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaPlayer extends LuaControl {
-  set_ending_screen_data: (message: LocalisedString, file?: null | string) => null
-  print: (message: LocalisedString, color?: null | Color) => null
-  clear_console: () => null
-  get_goal_description: () => null
-  set_goal_description: (text?: null | LocalisedString, only_update?: null | boolean) => null
-  set_controller: (table_0: {
+  set_ending_screen_data(message: LocalisedString, file?: string): void
+
+  print(message: LocalisedString, color?: Color): void
+
+  clear_console(): void
+
+  get_goal_description(): void
+
+  set_goal_description(text?: LocalisedString, only_update?: boolean): void
+
+  set_controller(table_0: {
     type: typeof defines.controllers
     character?: LuaEntity
     waypoints: {
-      position?: Position
+      position?: PositionIn
       target?: LuaEntity | LuaUnitGroup
       transition_time: number
       time_to_wait: number
       zoom?: number
     }
-    start_position?: Position
+    start_position?: PositionIn
     start_zoom?: number
     final_transition_time?: number
     chart_mode_cutoff?: number
-  }) => null
-  drag_wire: (table_0: { position: Position }) => boolean
-  disable_recipe_groups: () => null
-  enable_recipe_groups: () => null
-  disable_recipe_subgroups: () => null
-  enable_recipe_subgroups: () => null
-  print_entity_statistics: (entities?: null | string[]) => null
-  print_robot_jobs: () => null
-  print_lua_object_statistics: () => null
-  log_active_entity_chunk_counts: () => null
-  log_active_entity_counts: () => null
-  unlock_achievement: (name: string) => null
-  clear_cursor: () => null
-  create_character: (character?: null | string) => boolean
-  add_alert: (entity: LuaEntity, type: typeof defines.alert_type) => null
-  add_custom_alert: (entity: LuaEntity, icon: SignalID, message: LocalisedString, show_on_map: boolean) => null
-  remove_alert: (table_0: {
+  }): void
+
+  drag_wire(table_0: { position: PositionIn }): boolean
+
+  disable_recipe_groups(): void
+
+  enable_recipe_groups(): void
+
+  disable_recipe_subgroups(): void
+
+  enable_recipe_subgroups(): void
+
+  print_entity_statistics(entities?: string[]): void
+
+  print_robot_jobs(): void
+
+  print_lua_object_statistics(): void
+
+  log_active_entity_chunk_counts(): void
+
+  log_active_entity_counts(): void
+
+  unlock_achievement(name: string): void
+
+  clear_cursor(): void
+
+  create_character(character?: string): boolean
+
+  add_alert(entity: LuaEntity, type: typeof defines.alert_type): void
+
+  add_custom_alert(entity: LuaEntity, icon: SignalID, message: LocalisedString, show_on_map: boolean): void
+
+  remove_alert(table_0: {
     entity?: LuaEntity
     prototype?: LuaEntityPrototype
-    position?: Position
+    position?: PositionIn
     type?: typeof defines.alert_type
     surface?: SurfaceSpecification
     icon?: SignalID
     message?: LocalisedString
-  }) => null
-  get_alerts: (table_0: {
+  }): void
+
+  get_alerts(table_0: {
     entity?: LuaEntity
     prototype?: LuaEntityPrototype
-    position?: Position
+    position?: PositionIn
     type?: typeof defines.alert_type
     surface?: SurfaceSpecification
-  }) => Record<number, Record<typeof defines.alert_type[keyof typeof defines.alert_type], any[]>>
-  mute_alert: (alert_type: typeof defines.alert_type) => boolean
-  unmute_alert: (alert_type: typeof defines.alert_type) => boolean
-  is_alert_muted: (alert_type: typeof defines.alert_type) => boolean
-  enable_alert: (alert_type: typeof defines.alert_type) => boolean
-  disable_alert: (alert_type: typeof defines.alert_type) => boolean
-  is_alert_enabled: (alert_type: typeof defines.alert_type) => boolean
-  pipette_entity: (entity: string | LuaEntity | LuaEntityPrototype) => boolean
-  can_place_entity: (table_0: { name: string; position: Position; direction?: typeof defines.direction }) => boolean
-  can_build_from_cursor: (table_0: {
-    position: Position
+  }): Record<number, Record<typeof defines.alert_type[keyof typeof defines.alert_type], any[]>>
+
+  mute_alert(alert_type: typeof defines.alert_type): boolean
+
+  unmute_alert(alert_type: typeof defines.alert_type): boolean
+
+  is_alert_muted(alert_type: typeof defines.alert_type): boolean
+
+  enable_alert(alert_type: typeof defines.alert_type): boolean
+
+  disable_alert(alert_type: typeof defines.alert_type): boolean
+
+  is_alert_enabled(alert_type: typeof defines.alert_type): boolean
+
+  pipette_entity(entity: string | LuaEntity | LuaEntityPrototype): boolean
+
+  can_place_entity(table_0: { name: string; position: PositionIn; direction?: typeof defines.direction }): boolean
+
+  can_build_from_cursor(table_0: {
+    position: PositionIn
     direction?: typeof defines.direction
     alt?: boolean
     terrain_building_size?: number
     skip_fog_of_war?: boolean
-  }) => boolean
-  build_from_cursor: (table_0: {
-    position: Position
+  }): boolean
+
+  build_from_cursor(table_0: {
+    position: PositionIn
     direction?: typeof defines.direction
     alt?: boolean
     terrain_building_size?: number
     skip_fog_of_war?: boolean
-  }) => null
-  use_from_cursor: (position: Position) => null
-  play_sound: (table_0: {
+  }): void
+
+  use_from_cursor(position: PositionIn): void
+
+  play_sound(table_0: {
     path: SoundPath
-    position?: Position
+    position?: PositionIn
     volume_modifier?: number
     override_sound_type?: SoundType
-  }) => boolean
-  get_associated_characters: () => null
-  associate_character: (character: LuaEntity) => null
-  disassociate_character: (character: LuaEntity) => null
-  create_local_flying_text: (table_0: {
+  }): boolean
+
+  get_associated_characters(): void
+
+  associate_character(character: LuaEntity): void
+
+  disassociate_character(character: LuaEntity): void
+
+  create_local_flying_text(table_0: {
     text: LocalisedString
-    position?: Position
+    position?: PositionIn
     create_at_cursor?: boolean
     color?: Color
     time_to_live?: number
     speed?: number
-  }) => null
-  get_quick_bar_slot: (index: number) => LuaItemPrototype
-  set_quick_bar_slot: (index: number, filter: string | LuaItemPrototype | LuaItemStack) => null
-  get_active_quick_bar_page: (index: number) => number
-  set_active_quick_bar_page: (screen_index: number, page_index: number) => null
-  jump_to_cutscene_waypoint: (waypoint_index: number) => null
-  exit_cutscene: () => null
-  open_map: (position: Position, scale?: null | number) => null
-  zoom_to_world: (position: Position, scale?: null | number) => null
-  close_map: () => null
-  is_shortcut_toggled: (prototype_name: string) => boolean
-  is_shortcut_available: (prototype_name: string) => boolean
-  set_shortcut_toggled: (prototype_name: string, toggled: boolean) => null
-  set_shortcut_available: (prototype_name: string, available: boolean) => null
-  connect_to_server: (table_0: {
+  }): void
+
+  get_quick_bar_slot(index: number): LuaItemPrototype
+
+  set_quick_bar_slot(index: number, filter: string | LuaItemPrototype | LuaItemStack): void
+
+  get_active_quick_bar_page(index: number): number
+
+  set_active_quick_bar_page(screen_index: number, page_index: number): void
+
+  jump_to_cutscene_waypoint(waypoint_index: number): void
+
+  exit_cutscene(): void
+
+  open_map(position: PositionIn, scale?: number): void
+
+  zoom_to_world(position: PositionIn, scale?: number): void
+
+  close_map(): void
+
+  is_shortcut_toggled(prototype_name: string): boolean
+
+  is_shortcut_available(prototype_name: string): boolean
+
+  set_shortcut_toggled(prototype_name: string, toggled: boolean): void
+
+  set_shortcut_available(prototype_name: string, available: boolean): void
+
+  connect_to_server(table_0: {
     address: string
     name?: LocalisedString
     description?: LocalisedString
     password?: string
-  }) => null
-  toggle_map_editor: () => null
-  request_translation: (localised_string: LocalisedString) => boolean
-  get_infinity_inventory_filter: (index: number) => InfinityInventoryFilter
-  set_infinity_inventory_filter: (index: number, filter: InfinityInventoryFilter) => null
-  clear_recipe_notifications: () => null
-  add_recipe_notification: (arg_0: string) => null
-  add_to_clipboard: (arg_0: LuaItemStack) => null
-  activate_paste: () => null
+  }): void
+
+  toggle_map_editor(): void
+
+  request_translation(localised_string: LocalisedString): boolean
+
+  get_infinity_inventory_filter(index: number): InfinityInventoryFilter
+
+  set_infinity_inventory_filter(index: number, filter: InfinityInventoryFilter): void
+
+  clear_recipe_notifications(): void
+
+  add_recipe_notification(arg_0: string): void
+
+  add_to_clipboard(arg_0: LuaItemStack): void
+
+  activate_paste(): void
+
   character: LuaEntity
   readonly cutscene_character: LuaEntity
   readonly index: number
@@ -3795,24 +4336,32 @@ interface LuaPlayer extends LuaControl {
   map_view_settings: MapViewSettings
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaProfiler {
-  reset: () => null
-  stop: () => null
-  restart: () => null
-  add: (other: LuaProfiler) => null
-  divide: (number: number) => null
+  reset(): void
+
+  stop(): void
+
+  restart(): void
+
+  add(other: LuaProfiler): void
+
+  divide(number: number): void
+
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaRCON {
-  print: (message: LocalisedString) => null
+  print(message: LocalisedString): void
+
   readonly object_name: string
 }
 
@@ -3825,21 +4374,26 @@ interface LuaRailPath {
   readonly rails: Record<number, LuaEntity>
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaRandomGenerator {
-  "operator ()": () => null
-  re_seed: (seed: number) => null
+  "operator ()": () => void
+
+  re_seed(seed: number): void
+
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaRecipe {
-  reload: () => null
+  reload(): void
+
   readonly name: string
   readonly localised_name: LocalisedString
   readonly localised_description: LocalisedString
@@ -3857,7 +4411,8 @@ interface LuaRecipe {
   readonly force: LuaForce
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3868,7 +4423,8 @@ interface LuaRecipeCategoryPrototype {
   readonly localised_description: LocalisedString
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -3901,28 +4457,32 @@ interface LuaRecipePrototype {
   readonly unlock_results: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaRemote {
-  add_interface: (name: string, functions: Record<string, (...args: any[]) => any>) => null
-  remove_interface: (name: string) => boolean
-  call: (intfc: string, fn: string, ...args: any[]) => any
+  add_interface(name: string, functions: Record<string, (...args: any[]) => any>): void
+
+  remove_interface(name: string): boolean
+
+  call(intfc: string, fn: string, ...args: any[]): any
+
   readonly object_name: string
   readonly interfaces: Record<string, Record<string, boolean>>
 }
 
 /** @noSelf **/
 interface LuaRendering {
-  draw_line: (table_0: {
+  draw_line(table_0: {
     color: Color
     width: number
     gap_length?: number
     dash_length?: number
-    from: Position | LuaEntity
+    from: PositionIn | LuaEntity
     from_offset?: Vector
-    to: Position | LuaEntity
+    to: PositionIn | LuaEntity
     to_offset?: Vector
     surface: SurfaceSpecification
     time_to_live?: number
@@ -3931,11 +4491,12 @@ interface LuaRendering {
     visible?: boolean
     draw_on_ground?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  draw_text: (table_0: {
+  }): number
+
+  draw_text(table_0: {
     text: LocalisedString
     surface: SurfaceSpecification
-    target: Position | LuaEntity
+    target: PositionIn | LuaEntity
     target_offset?: Vector
     color: Color
     scale?: number
@@ -3949,13 +4510,14 @@ interface LuaRendering {
     alignment?: string
     scale_with_zoom?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  draw_circle: (table_0: {
+  }): number
+
+  draw_circle(table_0: {
     color: Color
     radius: number
     width?: number
     filled: boolean
-    target: Position | LuaEntity
+    target: PositionIn | LuaEntity
     target_offset?: Vector
     surface: SurfaceSpecification
     time_to_live?: number
@@ -3964,14 +4526,15 @@ interface LuaRendering {
     visible?: boolean
     draw_on_ground?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  draw_rectangle: (table_0: {
+  }): number
+
+  draw_rectangle(table_0: {
     color: Color
     width?: number
     filled: boolean
-    left_top: Position | LuaEntity
+    left_top: PositionIn | LuaEntity
     left_top_offset?: Vector
-    right_bottom: Position | LuaEntity
+    right_bottom: PositionIn | LuaEntity
     right_bottom_offset?: Vector
     surface: SurfaceSpecification
     time_to_live?: number
@@ -3980,14 +4543,15 @@ interface LuaRendering {
     visible?: boolean
     draw_on_ground?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  draw_arc: (table_0: {
+  }): number
+
+  draw_arc(table_0: {
     color: Color
     max_radius: number
     min_radius: number
     start_angle: number
     angle: number
-    target: Position | LuaEntity
+    target: PositionIn | LuaEntity
     target_offset?: Vector
     surface: SurfaceSpecification
     time_to_live?: number
@@ -3996,14 +4560,15 @@ interface LuaRendering {
     visible?: boolean
     draw_on_ground?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  draw_polygon: (table_0: {
+  }): number
+
+  draw_polygon(table_0: {
     color: Color
-    table_1: { target: Position | LuaEntity; target_offset?: Vector }
-    target?: Position | LuaEntity
+    table_1: { target: PositionIn | LuaEntity; target_offset?: Vector }
+    target?: PositionIn | LuaEntity
     target_offset?: Vector
     orientation?: number
-    orientation_target?: Position | LuaEntity
+    orientation_target?: PositionIn | LuaEntity
     orientation_target_offset?: Vector
     surface: SurfaceSpecification
     time_to_live?: number
@@ -4012,18 +4577,19 @@ interface LuaRendering {
     visible?: boolean
     draw_on_ground?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  draw_sprite: (table_0: {
+  }): number
+
+  draw_sprite(table_0: {
     sprite: SpritePath
     orientation?: number
     x_scale?: number
     y_scale?: number
     tint?: Color
     render_layer?: RenderLayer
-    orientation_target?: Position | LuaEntity
+    orientation_target?: PositionIn | LuaEntity
     orientation_target_offset?: Vector
     oriented_offset?: Vector
-    target: Position | LuaEntity
+    target: PositionIn | LuaEntity
     target_offset?: Vector
     surface: SurfaceSpecification
     time_to_live?: number
@@ -4031,8 +4597,9 @@ interface LuaRendering {
     players?: PlayerSpecification[]
     visible?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  draw_light: (table_0: {
+  }): number
+
+  draw_light(table_0: {
     sprite: SpritePath
     orientation?: number
     scale?: number
@@ -4040,7 +4607,7 @@ interface LuaRendering {
     minimum_darkness?: number
     oriented?: boolean
     color?: Color
-    target: Position | LuaEntity
+    target: PositionIn | LuaEntity
     target_offset?: Vector
     surface: SurfaceSpecification
     time_to_live?: number
@@ -4048,8 +4615,9 @@ interface LuaRendering {
     players?: PlayerSpecification[]
     visible?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  draw_animation: (table_0: {
+  }): number
+
+  draw_animation(table_0: {
     animation: string
     orientation?: number
     x_scale?: number
@@ -4058,10 +4626,10 @@ interface LuaRendering {
     render_layer?: RenderLayer
     animation_speed?: number
     animation_offset?: number
-    orientation_target?: Position | LuaEntity
+    orientation_target?: PositionIn | LuaEntity
     orientation_target_offset?: Vector
     oriented_offset?: Vector
-    target: Position | LuaEntity
+    target: PositionIn | LuaEntity
     target_offset?: Vector
     surface: SurfaceSpecification
     time_to_live?: number
@@ -4069,107 +4637,198 @@ interface LuaRendering {
     players?: PlayerSpecification[]
     visible?: boolean
     only_in_alt_mode?: boolean
-  }) => number
-  destroy: (id: number) => null
-  is_font_valid: (font_name: string) => boolean
-  is_valid: (id: number) => boolean
-  get_all_ids: (mod_name?: null | string) => number[]
-  clear: (mod_name?: null | string) => null
-  get_type: (id: number) => string
-  bring_to_front: (id: number) => null
-  get_surface: (id: number) => LuaSurface
-  get_time_to_live: (id: number) => number
-  set_time_to_live: (id: number, time_to_live: number) => null
-  get_forces: (id: number) => LuaForce[]
-  set_forces: (id: number, forces: ForceSpecification[]) => null
-  get_players: (id: number) => LuaPlayer[]
-  set_players: (id: number, players: PlayerSpecification[]) => null
-  get_visible: (id: number) => boolean
-  set_visible: (id: number, visible: boolean) => null
-  get_draw_on_ground: (id: number) => boolean
-  set_draw_on_ground: (id: number, draw_on_ground: boolean) => null
-  get_only_in_alt_mode: (id: number) => boolean
-  set_only_in_alt_mode: (id: number, only_in_alt_mode: boolean) => null
-  get_color: (id: number) => Color | null
-  set_color: (id: number, color: Color) => null
-  get_width: (id: number) => number | null
-  set_width: (id: number, width: number) => null
-  get_from: (id: number) => ScriptRenderTarget
-  set_from: (id: number, from: Position | LuaEntity, from_offset?: null | Vector) => null
-  get_to: (id: number) => ScriptRenderTarget
-  set_to: (id: number, to: Position | LuaEntity, to_offset?: null | Vector) => null
-  get_dash_length: (id: number) => number
-  set_dash_length: (id: number, dash_length: number) => null
-  get_gap_length: (id: number) => number
-  set_gap_length: (id: number, gap_length: number) => null
-  set_dashes: (id: number, dash_length: number, gap_length: number) => null
-  get_target: (id: number) => ScriptRenderTarget
-  set_target: (id: number, target: Position | LuaEntity, target_offset?: null | Vector) => null
-  get_orientation: (id: number) => number
-  set_orientation: (id: number, orientation: number) => null
-  get_scale: (id: number) => number
-  set_scale: (id: number, scale: number) => null
-  get_text: (id: number) => LocalisedString
-  set_text: (id: number, text: LocalisedString) => null
-  get_font: (id: number) => string
-  set_font: (id: number, font: string) => null
-  get_alignment: (id: number) => string
-  set_alignment: (id: number, alignment: string) => null
-  get_scale_with_zoom: (id: number) => boolean
-  set_scale_with_zoom: (id: number, scale_with_zoom: boolean) => null
-  get_filled: (id: number) => boolean
-  set_filled: (id: number, filled: boolean) => null
-  get_radius: (id: number) => number
-  set_radius: (id: number, radius: number) => null
-  get_left_top: (id: number) => ScriptRenderTarget
-  set_left_top: (id: number, left_top: Position | LuaEntity, left_top_offset?: null | Vector) => null
-  get_right_bottom: (id: number) => ScriptRenderTarget
-  set_right_bottom: (id: number, right_bottom: Position | LuaEntity, right_bottom_offset?: null | Vector) => null
-  set_corners: (
+  }): number
+
+  destroy(id: number): void
+
+  is_font_valid(font_name: string): boolean
+
+  is_valid(id: number): boolean
+
+  get_all_ids(mod_name?: string): number[]
+
+  clear(mod_name?: string): void
+
+  get_type(id: number): string
+
+  bring_to_front(id: number): void
+
+  get_surface(id: number): LuaSurface
+
+  get_time_to_live(id: number): number
+
+  set_time_to_live(id: number, time_to_live: number): void
+
+  get_forces(id: number): LuaForce[]
+
+  set_forces(id: number, forces: ForceSpecification[]): void
+
+  get_players(id: number): LuaPlayer[]
+
+  set_players(id: number, players: PlayerSpecification[]): void
+
+  get_visible(id: number): boolean
+
+  set_visible(id: number, visible: boolean): void
+
+  get_draw_on_ground(id: number): boolean
+
+  set_draw_on_ground(id: number, draw_on_ground: boolean): void
+
+  get_only_in_alt_mode(id: number): boolean
+
+  set_only_in_alt_mode(id: number, only_in_alt_mode: boolean): void
+
+  get_color(id: number): Color | undefined
+
+  set_color(id: number, color: Color): void
+
+  get_width(id: number): number | undefined
+
+  set_width(id: number, width: number): void
+
+  get_from(id: number): ScriptRenderTarget
+
+  set_from(id: number, from: PositionIn | LuaEntity, from_offset?: Vector): void
+
+  get_to(id: number): ScriptRenderTarget
+
+  set_to(id: number, to: PositionIn | LuaEntity, to_offset?: Vector): void
+
+  get_dash_length(id: number): number
+
+  set_dash_length(id: number, dash_length: number): void
+
+  get_gap_length(id: number): number
+
+  set_gap_length(id: number, gap_length: number): void
+
+  set_dashes(id: number, dash_length: number, gap_length: number): void
+
+  get_target(id: number): ScriptRenderTarget
+
+  set_target(id: number, target: PositionIn | LuaEntity, target_offset?: Vector): void
+
+  get_orientation(id: number): number
+
+  set_orientation(id: number, orientation: number): void
+
+  get_scale(id: number): number
+
+  set_scale(id: number, scale: number): void
+
+  get_text(id: number): LocalisedString
+
+  set_text(id: number, text: LocalisedString): void
+
+  get_font(id: number): string
+
+  set_font(id: number, font: string): void
+
+  get_alignment(id: number): string
+
+  set_alignment(id: number, alignment: string): void
+
+  get_scale_with_zoom(id: number): boolean
+
+  set_scale_with_zoom(id: number, scale_with_zoom: boolean): void
+
+  get_filled(id: number): boolean
+
+  set_filled(id: number, filled: boolean): void
+
+  get_radius(id: number): number
+
+  set_radius(id: number, radius: number): void
+
+  get_left_top(id: number): ScriptRenderTarget
+
+  set_left_top(id: number, left_top: PositionIn | LuaEntity, left_top_offset?: Vector): void
+
+  get_right_bottom(id: number): ScriptRenderTarget
+
+  set_right_bottom(id: number, right_bottom: PositionIn | LuaEntity, right_bottom_offset?: Vector): void
+
+  set_corners(
     id: number,
-    left_top: Position | LuaEntity,
+    left_top: PositionIn | LuaEntity,
     left_top_offset: Vector,
-    right_bottom: Position | LuaEntity,
+    right_bottom: PositionIn | LuaEntity,
     right_bottom_offset: Vector
-  ) => null
-  get_max_radius: (id: number) => number
-  set_max_radius: (id: number, max_radius: number) => null
-  get_min_radius: (id: number) => number
-  set_min_radius: (id: number, min_radius: number) => null
-  get_start_angle: (id: number) => number
-  set_start_angle: (id: number, start_angle: number) => null
-  get_angle: (id: number) => number
-  set_angle: (id: number, angle: number) => null
-  get_vertices: (id: number) => ScriptRenderTarget[]
-  set_vertices: (id: number, vertices: ScriptRenderTarget[]) => null
-  get_sprite: (id: number) => SpritePath
-  set_sprite: (id: number, sprite: SpritePath) => null
-  get_x_scale: (id: number) => number
-  set_x_scale: (id: number, x_scale: number) => null
-  get_y_scale: (id: number) => number
-  set_y_scale: (id: number, y_scale: number) => null
-  get_render_layer: (id: number) => RenderLayer
-  set_render_layer: (id: number, render_layer: RenderLayer) => null
-  get_orientation_target: (id: number) => ScriptRenderTarget
-  set_orientation_target: (
+  ): void
+
+  get_max_radius(id: number): number
+
+  set_max_radius(id: number, max_radius: number): void
+
+  get_min_radius(id: number): number
+
+  set_min_radius(id: number, min_radius: number): void
+
+  get_start_angle(id: number): number
+
+  set_start_angle(id: number, start_angle: number): void
+
+  get_angle(id: number): number
+
+  set_angle(id: number, angle: number): void
+
+  get_vertices(id: number): ScriptRenderTarget[]
+
+  set_vertices(id: number, vertices: ScriptRenderTarget[]): void
+
+  get_sprite(id: number): SpritePath
+
+  set_sprite(id: number, sprite: SpritePath): void
+
+  get_x_scale(id: number): number
+
+  set_x_scale(id: number, x_scale: number): void
+
+  get_y_scale(id: number): number
+
+  set_y_scale(id: number, y_scale: number): void
+
+  get_render_layer(id: number): RenderLayer
+
+  set_render_layer(id: number, render_layer: RenderLayer): void
+
+  get_orientation_target(id: number): ScriptRenderTarget
+
+  set_orientation_target(
     id: number,
-    orientation_target: Position | LuaEntity,
-    orientation_target_offset?: null | Vector
-  ) => null
-  get_oriented_offset: (id: number) => Vector
-  set_oriented_offset: (id: number, oriented_offset: Vector) => null
-  get_intensity: (id: number) => number
-  set_intensity: (id: number, intensity: number) => null
-  get_minimum_darkness: (id: number) => number
-  set_minimum_darkness: (id: number, minimum_darkness: number) => null
-  get_oriented: (id: number) => boolean
-  set_oriented: (id: number, oriented: boolean) => null
-  get_animation: (id: number) => string
-  set_animation: (id: number, animation: string) => null
-  get_animation_speed: (id: number) => number
-  set_animation_speed: (id: number, animation_speed: number) => null
-  get_animation_offset: (id: number) => number
-  set_animation_offset: (id: number, animation_offset: number) => null
+    orientation_target: PositionIn | LuaEntity,
+    orientation_target_offset?: Vector
+  ): void
+
+  get_oriented_offset(id: number): Vector
+
+  set_oriented_offset(id: number, oriented_offset: Vector): void
+
+  get_intensity(id: number): number
+
+  set_intensity(id: number, intensity: number): void
+
+  get_minimum_darkness(id: number): number
+
+  set_minimum_darkness(id: number, minimum_darkness: number): void
+
+  get_oriented(id: number): boolean
+
+  set_oriented(id: number, oriented: boolean): void
+
+  get_animation(id: number): string
+
+  set_animation(id: number, animation: string): void
+
+  get_animation_speed(id: number): number
+
+  set_animation_speed(id: number, animation_speed: number): void
+
+  get_animation_offset(id: number): number
+
+  set_animation_offset(id: number, animation_offset: number): void
+
   readonly object_name: string
 }
 
@@ -4181,12 +4840,14 @@ interface LuaResourceCategoryPrototype {
   readonly localised_description: LocalisedString
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaSettings {
-  get_player_settings: (player: PlayerSpecification) => Record<string, ModSetting>
+  get_player_settings(player: PlayerSpecification): Record<string, ModSetting>
+
   readonly object_name: string
   readonly startup: Record<string, ModSetting>
   readonly global: Record<string, ModSetting>
@@ -4206,7 +4867,8 @@ interface LuaShortcutPrototype {
   readonly associated_control_input: string
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -4279,31 +4941,37 @@ interface LuaStyle {
   extra_margin_when_activated: number | number[]
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaSurface {
-  get_pollution: (position: Position) => number
-  can_place_entity: (table_0: {
+  get_pollution(position: PositionIn): number
+
+  can_place_entity(table_0: {
     name: string
-    position: Position
+    position: PositionIn
     direction?: typeof defines.direction
     force?: ForceSpecification
     build_check_type?: typeof defines.build_check_type
     forced?: boolean
-  }) => boolean
-  can_fast_replace: (table_0: {
+  }): boolean
+
+  can_fast_replace(table_0: {
     name: string
-    position: Position
+    position: PositionIn
     direction?: typeof defines.direction
     force?: ForceSpecification
-  }) => boolean
-  find_entity: (entity: string, position: Position) => LuaEntity
-  find_entities: (area?: null | BoundingBox) => LuaEntity[]
-  find_entities_filtered: (table_0: {
+  }): boolean
+
+  find_entity(entity: string, position: PositionIn): LuaEntity
+
+  find_entities(area?: BoundingBox): LuaEntity[]
+
+  find_entities_filtered(table_0: {
     area?: BoundingBox
-    position?: Position
+    position?: PositionIn
     radius?: number
     name?: string | string[]
     type?: string | string[]
@@ -4316,19 +4984,21 @@ interface LuaSurface {
     to_be_upgraded?: boolean
     limit?: number
     invert?: boolean
-  }) => LuaEntity[]
-  find_tiles_filtered: (table_0: {
+  }): LuaEntity[]
+
+  find_tiles_filtered(table_0: {
     area?: BoundingBox
-    position?: Position
+    position?: PositionIn
     radius?: number
     name?: string | string[]
     limit?: number
     has_hidden_tile?: boolean
     collision_mask?: CollisionMaskLayer | CollisionMaskLayer[]
-  }) => LuaTile[]
-  count_entities_filtered: (table_0: {
+  }): LuaTile[]
+
+  count_entities_filtered(table_0: {
     area?: BoundingBox
-    position?: Position
+    position?: PositionIn
     radius?: number
     name?: string | string[]
     type?: string | string[]
@@ -4341,52 +5011,61 @@ interface LuaSurface {
     to_be_upgraded?: boolean
     limit?: number
     invert?: boolean
-  }) => number
-  count_tiles_filtered: (table_0: {
+  }): number
+
+  count_tiles_filtered(table_0: {
     area?: BoundingBox
-    position?: Position
+    position?: PositionIn
     radius?: number
     name?: string | string[]
     limit?: number
     has_hidden_tile?: boolean
     collision_mask?: CollisionMaskLayer | CollisionMaskLayer[]
-  }) => number
-  find_non_colliding_position: (
+  }): number
+
+  find_non_colliding_position(
     name: string,
-    center: Position,
+    center: PositionIn,
     radius: number,
     precision: number,
-    force_to_tile_center?: null | boolean
-  ) => Position
-  find_non_colliding_position_in_box: (
+    force_to_tile_center?: boolean
+  ): PositionIn
+
+  find_non_colliding_position_in_box(
     name: string,
     search_space: BoundingBox,
     precision: number,
-    force_to_tile_center?: null | boolean
-  ) => Position
-  spill_item_stack: (
-    position: Position,
+    force_to_tile_center?: boolean
+  ): PositionIn
+
+  spill_item_stack(
+    position: PositionIn,
     items: ItemStackSpecification,
-    enable_looted?: null | boolean,
-    force?: null | (LuaForce | string),
-    allow_belts?: null | boolean
-  ) => LuaEntity[]
-  find_enemy_units: (center: Position, radius: number, force?: null | (LuaForce | string)) => LuaEntity[]
-  find_units: (table_0: { area: BoundingBox; force: LuaForce | string; condition: ForceCondition }) => LuaEntity[]
-  find_nearest_enemy: (table_0: {
-    position: Position
+    enable_looted?: boolean,
+    force?: LuaForce | string,
+    allow_belts?: boolean
+  ): LuaEntity[]
+
+  find_enemy_units(center: PositionIn, radius: number, force?: LuaForce | string): LuaEntity[]
+
+  find_units(table_0: { area: BoundingBox; force: LuaForce | string; condition: ForceCondition }): LuaEntity[]
+
+  find_nearest_enemy(table_0: {
+    position: PositionIn
     max_distance: number
     force?: ForceSpecification
-  }) => LuaEntity | null
-  set_multi_command: (table_0: {
+  }): LuaEntity | undefined
+
+  set_multi_command(table_0: {
     command: Command
     unit_count: number
     force?: ForceSpecification
     unit_search_distance?: number
-  }) => number
-  create_entity: (table_0: {
+  }): number
+
+  create_entity(table_0: {
     name: string
-    position: Position
+    position: PositionIn
     direction?: typeof defines.direction
     force?: ForceSpecification
     target?: LuaEntity
@@ -4398,95 +5077,129 @@ interface LuaSurface {
     create_build_effect_smoke?: boolean
     spawn_decorations?: boolean
     item?: LuaItemStack
-  }) => LuaEntity | null
-  create_trivial_smoke: (table_0: { name: string; position: Position }) => null
-  create_particle: (table_0: {
+  }): LuaEntity | undefined
+
+  create_trivial_smoke(table_0: { name: string; position: PositionIn }): void
+
+  create_particle(table_0: {
     name: string
-    position: Position
+    position: PositionIn
     movement: Vector
     height: number
     vertical_speed: number
     frame_speed: number
-  }) => null
-  create_unit_group: (table_0: { position: Position; force?: ForceSpecification }) => LuaUnitGroup
-  build_enemy_base: (position: Position, unit_count: number, force?: null | ForceSpecification) => null
-  get_tile: (x: number, y: number) => LuaTile
-  set_tiles: (
-    table_0: { name: string; position: Position },
-    correct_tiles?: null | boolean,
-    remove_colliding_entities?: null | (boolean | string),
-    remove_colliding_decoratives?: null | boolean,
-    raise_event?: null | boolean
-  ) => null
-  pollute: (source: Position, amount: number) => null
-  get_chunks: () => null
-  is_chunk_generated: (position: ChunkPosition) => boolean
-  request_to_generate_chunks: (position: Position, radius: number) => null
-  force_generate_chunk_requests: () => null
-  set_chunk_generated_status: (position: ChunkPosition, status: typeof defines.chunk_generated_status) => null
-  find_logistic_network_by_position: (position: Position, force: ForceSpecification) => LuaLogisticNetwork | null
-  find_logistic_networks_by_construction_area: (position: Position, force: ForceSpecification) => LuaLogisticNetwork[]
-  deconstruct_area: (table_0: {
+  }): void
+
+  create_unit_group(table_0: { position: PositionIn; force?: ForceSpecification }): LuaUnitGroup
+
+  build_enemy_base(position: PositionIn, unit_count: number, force?: ForceSpecification): void
+
+  get_tile(x: number, y: number): LuaTile
+
+  set_tiles(
+    table_0: { name: string; position: PositionIn },
+    correct_tiles?: boolean,
+    remove_colliding_entities?: boolean | string,
+    remove_colliding_decoratives?: boolean,
+    raise_event?: boolean
+  ): void
+
+  pollute(source: PositionIn, amount: number): void
+
+  get_chunks(): void
+
+  is_chunk_generated(position: ChunkPosition): boolean
+
+  request_to_generate_chunks(position: PositionIn, radius: number): void
+
+  force_generate_chunk_requests(): void
+
+  set_chunk_generated_status(position: ChunkPosition, status: typeof defines.chunk_generated_status): void
+
+  find_logistic_network_by_position(position: PositionIn, force: ForceSpecification): LuaLogisticNetwork | undefined
+
+  find_logistic_networks_by_construction_area(position: PositionIn, force: ForceSpecification): LuaLogisticNetwork[]
+
+  deconstruct_area(table_0: {
     area: BoundingBox
     force: ForceSpecification
     player?: PlayerSpecification
     skip_fog_of_war?: boolean
     item?: LuaItemStack
-  }) => null
-  cancel_deconstruct_area: (table_0: {
+  }): void
+
+  cancel_deconstruct_area(table_0: {
     area: BoundingBox
     force: ForceSpecification
     player?: PlayerSpecification
     skip_fog_of_war?: boolean
     item?: LuaItemStack
-  }) => null
-  upgrade_area: (table_0: {
+  }): void
+
+  upgrade_area(table_0: {
     area: BoundingBox
     force: ForceSpecification
     player?: PlayerSpecification
     skip_fog_of_war?: boolean
     item: LuaItemStack
-  }) => null
-  cancel_upgrade_area: (table_0: {
+  }): void
+
+  cancel_upgrade_area(table_0: {
     area: BoundingBox
     force: ForceSpecification
     player?: PlayerSpecification
     skip_fog_of_war?: boolean
     item?: LuaItemStack
-  }) => null
-  get_hidden_tile: (position: TilePosition) => string
-  set_hidden_tile: (position: TilePosition, tile: string | LuaTilePrototype) => null
-  get_connected_tiles: (position: Position, tiles: string[]) => Position[]
-  delete_chunk: (position: ChunkPosition) => null
-  regenerate_entity: (entities?: null | (string | string[]), chunks?: null | ChunkPosition[]) => null
-  regenerate_decorative: (decoratives?: null | (string | string[]), chunks?: null | ChunkPosition[]) => null
-  print: (message: LocalisedString, color?: null | Color) => null
-  destroy_decoratives: (table_0: {
+  }): void
+
+  get_hidden_tile(position: TilePosition): string
+
+  set_hidden_tile(position: TilePosition, tile: string | LuaTilePrototype): void
+
+  get_connected_tiles(position: PositionIn, tiles: string[]): Position[]
+
+  delete_chunk(position: ChunkPosition): void
+
+  regenerate_entity(entities?: string | string[], chunks?: ChunkPosition[]): void
+
+  regenerate_decorative(decoratives?: string | string[], chunks?: ChunkPosition[]): void
+
+  print(message: LocalisedString, color?: Color): void
+
+  destroy_decoratives(table_0: {
     area?: BoundingBox
     position?: TilePosition
     name?: string | string[] | LuaDecorativePrototype | LuaDecorativePrototype[]
     limit?: number
     invert?: boolean
-  }) => null
-  create_decoratives: (table_0: { check_collision?: boolean; decoratives: any[] }) => null
-  find_decoratives_filtered: (table_0: {
+  }): void
+
+  create_decoratives(table_0: { check_collision?: boolean; decoratives: any[] }): void
+
+  find_decoratives_filtered(table_0: {
     area?: BoundingBox
     position?: TilePosition
     name?: string | string[] | LuaDecorativePrototype | LuaDecorativePrototype[]
     limit?: number
     invert?: boolean
-  }) => any[]
-  get_trains: (force?: null | ForceSpecification) => LuaTrain[]
-  clear_pollution: () => null
-  play_sound: (table_0: {
+  }): any[]
+
+  get_trains(force?: ForceSpecification): LuaTrain[]
+
+  clear_pollution(): void
+
+  play_sound(table_0: {
     path: SoundPath
-    position?: Position
+    position?: PositionIn
     volume_modifier?: number
     override_sound_type?: SoundType
-  }) => boolean
-  get_resource_counts: () => null
-  get_random_chunk: () => null
-  clone_area: (table_0: {
+  }): boolean
+
+  get_resource_counts(): void
+
+  get_random_chunk(): void
+
+  clone_area(table_0: {
     source_area: BoundingBox
     destination_area: BoundingBox
     destination_surface?: SurfaceSpecification
@@ -4498,8 +5211,9 @@ interface LuaSurface {
     clear_destination_decoratives?: boolean
     expand_map?: boolean
     create_build_effect_smoke?: boolean
-  }) => null
-  clone_brush: (table_0: {
+  }): void
+
+  clone_brush(table_0: {
     source_offset: TilePosition
     destination_offset: TilePosition
     source_positions: TilePosition[]
@@ -4513,53 +5227,77 @@ interface LuaSurface {
     expand_map?: boolean
     manual_collision_mode?: boolean
     create_build_effect_smoke?: boolean
-  }) => null
-  clone_entities: (table_0: {
+  }): void
+
+  clone_entities(table_0: {
     entities: LuaEntity[]
     destination_offset: Vector
     destination_surface?: SurfaceSpecification
     destination_force?: ForceSpecification
     snap_to_grid?: boolean
     create_build_effect_smoke?: boolean
-  }) => null
-  clear: (ignore_characters?: null | boolean) => null
-  request_path: (table_0: {
+  }): void
+
+  clear(ignore_characters?: boolean): void
+
+  request_path(table_0: {
     bounding_box: BoundingBox
     collision_mask: CollisionMask | string[]
-    start: Position
-    goal: Position
+    start: PositionIn
+    goal: PositionIn
     force: LuaForce | string
     radius?: number
     pathfind_flags?: PathFindFlags
     can_open_gates?: boolean
     path_resolution_modifier?: number
     entity_to_ignore?: LuaEntity
-  }) => number
-  get_script_areas: (name?: null | string) => ScriptArea[]
-  get_script_area: (key?: null | (string | number)) => ScriptArea
-  edit_script_area: (id: number, area: ScriptArea) => null
-  add_script_area: (area: ScriptArea) => number
-  remove_script_area: (id: number) => boolean
-  get_script_positions: (name?: null | string) => ScriptPosition[]
-  get_script_position: (key?: null | (string | number)) => ScriptPosition
-  edit_script_position: (id: number, area: ScriptPosition) => null
-  add_script_position: (area: ScriptPosition) => number
-  remove_script_position: (id: number) => boolean
-  get_map_exchange_string: () => null
-  get_starting_area_radius: () => null
-  get_closest: (position: Position, entities: LuaEntity[]) => LuaEntity
-  get_train_stops: (opts?: { name?: string | string[]; force?: ForceSpecification }) => LuaEntity[]
-  get_total_pollution: () => null
-  entity_prototype_collides: (
+  }): number
+
+  get_script_areas(name?: string): ScriptArea[]
+
+  get_script_area(key?: string | number): ScriptArea
+
+  edit_script_area(id: number, area: ScriptArea): void
+
+  add_script_area(area: ScriptArea): number
+
+  remove_script_area(id: number): boolean
+
+  get_script_positions(name?: string): ScriptPosition[]
+
+  get_script_position(key?: string | number): ScriptPosition
+
+  edit_script_position(id: number, area: ScriptPosition): void
+
+  add_script_position(area: ScriptPosition): number
+
+  remove_script_position(id: number): boolean
+
+  get_map_exchange_string(): void
+
+  get_starting_area_radius(): void
+
+  get_closest(position: PositionIn, entities: LuaEntity[]): LuaEntity
+
+  get_train_stops(opts?: { name?: string | string[]; force?: ForceSpecification }): LuaEntity[]
+
+  get_total_pollution(): void
+
+  entity_prototype_collides(
     prototype: EntityPrototypeSpecification,
-    position: Position,
+    position: PositionIn,
     use_map_generation_bounding_box: boolean,
-    direction?: null | typeof defines.direction
-  ) => null
-  decorative_prototype_collides: (prototype: string, position: Position) => null
-  calculate_tile_properties: (property_names: string[], positions: Position[]) => Record<string, number[]>
-  get_entities_with_force: (position: ChunkPosition, force: LuaForce | string) => LuaEntity[]
-  build_checkerboard: (area: BoundingBox) => null
+    direction?: typeof defines.direction
+  ): void
+
+  decorative_prototype_collides(prototype: string, position: PositionIn): void
+
+  calculate_tile_properties(property_names: string[], positions: PositionIn[]): Record<string, number[]>
+
+  get_entities_with_force(position: ChunkPosition, force: LuaForce | string): LuaEntity[]
+
+  build_checkerboard(area: BoundingBox): void
+
   name: string
   readonly index: number
   map_gen_settings: MapGenSettings
@@ -4583,12 +5321,14 @@ interface LuaSurface {
   show_clouds: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaTechnology {
-  reload: () => null
+  reload(): void
+
   readonly force: LuaForce
   readonly name: string
   readonly localised_name: LocalisedString
@@ -4608,7 +5348,8 @@ interface LuaTechnology {
   readonly research_unit_count_formula: string
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -4632,15 +5373,20 @@ interface LuaTechnologyPrototype {
   readonly research_unit_count_formula: string
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaTile {
-  collides_with: (layer: CollisionMaskLayer) => boolean
-  to_be_deconstructed: () => null
-  order_deconstruction: (force: ForceSpecification, player?: null | PlayerSpecification) => LuaEntity | null
-  cancel_deconstruction: (force: ForceSpecification, player?: null | PlayerSpecification) => null
+  collides_with(layer: CollisionMaskLayer): boolean
+
+  to_be_deconstructed(): void
+
+  order_deconstruction(force: ForceSpecification, player?: PlayerSpecification): LuaEntity | undefined
+
+  cancel_deconstruction(force: ForceSpecification, player?: PlayerSpecification): void
+
   readonly name: string
   readonly prototype: LuaTilePrototype
   readonly position: Position
@@ -4648,7 +5394,8 @@ interface LuaTile {
   readonly surface: LuaSurface
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -4675,24 +5422,38 @@ interface LuaTilePrototype {
   readonly emissions_per_second: number
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaTrain {
-  get_item_count: (item?: null | string) => number
-  get_contents: () => null
-  remove_item: (stack: ItemStackSpecification) => number
-  insert: (stack: ItemStackSpecification) => null
-  clear_items_inside: () => null
-  recalculate_path: (force?: null | boolean) => boolean
-  get_fluid_count: (fluid?: null | string) => number
-  get_fluid_contents: () => null
-  remove_fluid: (fluid: Fluid) => number
-  insert_fluid: (fluid: Fluid) => number
-  clear_fluids_inside: () => null
-  go_to_station: (index: number) => null
-  get_rails: () => null
+  get_item_count(item?: string): number
+
+  get_contents(): void
+
+  remove_item(stack: ItemStackSpecification): number
+
+  insert(stack: ItemStackSpecification): void
+
+  clear_items_inside(): void
+
+  recalculate_path(force?: boolean): boolean
+
+  get_fluid_count(fluid?: string): number
+
+  get_fluid_contents(): void
+
+  remove_fluid(fluid: Fluid): number
+
+  insert_fluid(fluid: Fluid): number
+
+  clear_fluids_inside(): void
+
+  go_to_station(index: number): void
+
+  get_rails(): void
+
   manual_mode: boolean
   speed: number
   readonly max_forward_speed: number
@@ -4723,20 +5484,30 @@ interface LuaTrain {
   readonly signal: LuaEntity
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaTransportLine {
-  clear: () => null
-  get_item_count: (item?: null | string) => number
-  remove_item: (items: ItemStackSpecification) => number
-  can_insert_at: (position: number) => boolean
-  can_insert_at_back: () => null
-  insert_at: (position: number, items: ItemStackSpecification) => boolean
-  insert_at_back: (items: ItemStackSpecification) => boolean
-  get_contents: () => null
-  line_equals: (other: LuaTransportLine) => boolean
+  clear(): void
+
+  get_item_count(item?: string): number
+
+  remove_item(items: ItemStackSpecification): number
+
+  can_insert_at(position: number): boolean
+
+  can_insert_at_back(): void
+
+  insert_at(position: number, items: ItemStackSpecification): boolean
+
+  insert_at_back(items: ItemStackSpecification): boolean
+
+  get_contents(): void
+
+  line_equals(other: LuaTransportLine): boolean
+
   readonly "operator #": number
   readonly owner: LuaEntity
   readonly output_lines: LuaTransportLine[]
@@ -4744,7 +5515,8 @@ interface LuaTransportLine {
   readonly "operator []": LuaItemStack
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -4769,16 +5541,22 @@ interface LuaTrivialSmokePrototype {
   readonly render_layer: RenderLayer
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
 interface LuaUnitGroup {
-  add_member: (unit: LuaEntity) => null
-  set_command: (command: Command) => null
-  set_autonomous: () => null
-  start_moving: () => null
-  destroy: () => null
+  add_member(unit: LuaEntity): void
+
+  set_command(command: Command): void
+
+  set_autonomous(): void
+
+  start_moving(): void
+
+  destroy(): void
+
   readonly members: LuaEntity[]
   readonly position: Position
   readonly state: typeof defines.group_state
@@ -4790,7 +5568,8 @@ interface LuaUnitGroup {
   readonly distraction_command: Command
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -4803,7 +5582,8 @@ interface LuaVirtualSignalPrototype {
   readonly subgroup: LuaGroup
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** @noSelf **/
@@ -4813,10 +5593,13 @@ interface LuaVoidEnergySourcePrototype {
   readonly render_no_power_icon: boolean
   readonly valid: boolean
   readonly object_name: string
-  help: () => null
+
+  help(): void
 }
 
 /** events */
+
+interface EventId<Payload> {}
 
 /**
  *
@@ -4854,7 +5637,7 @@ type OnAreaClonedPayload /** @noSelf **/ = {
   source_area: BoundingBox
   destination_surface: LuaSurface
   destination_area: BoundingBox
-  destination_force: null | LuaForce
+  destination_force?: LuaForce
   clone_tiles: boolean
   clone_entities: boolean
   clone_decoratives: boolean
@@ -4880,7 +5663,7 @@ type OnBrushClonedPayload /** @noSelf **/ = {
   source_surface: LuaSurface
   source_positions: TilePosition[]
   destination_surface: LuaSurface
-  destination_force: null | LuaForce
+  destination_force?: LuaForce
   clone_tiles: boolean
   clone_entities: boolean
   clone_decoratives: boolean
@@ -4894,8 +5677,8 @@ type OnBrushClonedPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_build_base_arrived on_build_base_arrived}
  */
 type OnBuildBaseArrivedPayload /** @noSelf **/ = {
-  unit: null | LuaEntity
-  group: null | LuaUnitGroup
+  unit?: LuaEntity
+  group?: LuaUnitGroup
 }
 
 /**
@@ -4908,8 +5691,8 @@ type OnBuiltEntityPayload /** @noSelf **/ = {
   created_entity: LuaEntity
   player_index: number
   stack: LuaItemStack
-  item: null | LuaItemPrototype
-  tags: null | Tags
+  item?: LuaItemPrototype
+  tags?: Tags
 }
 
 /**
@@ -4920,7 +5703,7 @@ type OnBuiltEntityPayload /** @noSelf **/ = {
  */
 type OnCancelledDeconstructionPayload /** @noSelf **/ = {
   entity: LuaEntity
-  player_index: null | number
+  player_index?: number
 }
 
 /**
@@ -4931,7 +5714,7 @@ type OnCancelledDeconstructionPayload /** @noSelf **/ = {
  */
 type OnCancelledUpgradePayload /** @noSelf **/ = {
   entity: LuaEntity
-  player_index: null | number
+  player_index?: number
 }
 
 /**
@@ -4949,7 +5732,7 @@ type OnCharacterCorpseExpiredPayload /** @noSelf **/ = { corpse: LuaEntity }
 type OnChartTagAddedPayload /** @noSelf **/ = {
   tag: LuaCustomChartTag
   force: LuaForce
-  player_index: null | number
+  player_index?: number
 }
 
 /**
@@ -4959,11 +5742,11 @@ type OnChartTagAddedPayload /** @noSelf **/ = {
  */
 type OnChartTagModifiedPayload /** @noSelf **/ = {
   tag: LuaCustomChartTag
-  player_index: null | number
+  player_index?: number
   force: LuaForce
   old_text: string
   old_icon: SignalID
-  old_player_index: null | number
+  old_player_index?: number
 }
 
 /**
@@ -4974,7 +5757,7 @@ type OnChartTagModifiedPayload /** @noSelf **/ = {
 type OnChartTagRemovedPayload /** @noSelf **/ = {
   tag: LuaCustomChartTag
   force: LuaForce
-  player_index: null | number
+  player_index?: number
 }
 
 /**
@@ -5017,7 +5800,7 @@ type OnChunkGeneratedPayload /** @noSelf **/ = {
  */
 type OnCombatRobotExpiredPayload /** @noSelf **/ = {
   robot: LuaEntity
-  owner: null | LuaEntity
+  owner?: LuaEntity
 }
 
 /**
@@ -5026,7 +5809,7 @@ type OnCombatRobotExpiredPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_console_chat on_console_chat}
  */
 type OnConsoleChatPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   message: string
 }
 
@@ -5036,7 +5819,7 @@ type OnConsoleChatPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_console_command on_console_command}
  */
 type OnConsoleCommandPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   command: string
   parameters: string
 }
@@ -5090,8 +5873,8 @@ type OnEntityDamagedPayload /** @noSelf **/ = {
   original_damage_amount: number
   final_damage_amount: number
   final_health: number
-  cause: null | LuaEntity
-  force: null | LuaForce
+  cause?: LuaEntity
+  force?: LuaForce
 }
 
 /**
@@ -5101,7 +5884,7 @@ type OnEntityDamagedPayload /** @noSelf **/ = {
  */
 type OnEntityDestroyedPayload /** @noSelf **/ = {
   registration_number: number
-  unit_number: null | number
+  unit_number?: number
 }
 
 /**
@@ -5112,10 +5895,10 @@ type OnEntityDestroyedPayload /** @noSelf **/ = {
  */
 type OnEntityDiedPayload /** @noSelf **/ = {
   entity: LuaEntity
-  cause: null | LuaEntity
+  cause?: LuaEntity
   loot: LuaInventory
-  force: null | LuaForce
-  damage_type: null | LuaDamagePrototype
+  force?: LuaForce
+  damage_type?: LuaDamagePrototype
 }
 
 /**
@@ -5124,7 +5907,7 @@ type OnEntityDiedPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_entity_renamed on_entity_renamed}
  */
 type OnEntityRenamedPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   by_script: boolean
   entity: LuaEntity
   old_name: string
@@ -5247,13 +6030,13 @@ type OnGuiClickPayload /** @noSelf **/ = {
 type OnGuiClosedPayload /** @noSelf **/ = {
   player_index: number
   gui_type: typeof defines.gui_type
-  entity: null | LuaEntity
-  item: null | LuaItemStack
-  equipment: null | LuaEquipment
-  other_player: null | LuaPlayer
-  element: null | LuaGuiElement
-  technology: null | LuaTechnology
-  tile_position: null | TilePosition
+  entity?: LuaEntity
+  item?: LuaItemStack
+  equipment?: LuaEquipment
+  other_player?: LuaPlayer
+  element?: LuaGuiElement
+  technology?: LuaTechnology
+  tile_position?: TilePosition
 }
 
 /**
@@ -5297,11 +6080,11 @@ type OnGuiLocationChangedPayload /** @noSelf **/ = {
 type OnGuiOpenedPayload /** @noSelf **/ = {
   player_index: number
   gui_type: typeof defines.gui_type
-  entity: null | LuaEntity
-  item: null | LuaItemStack
-  equipment: null | LuaEquipment
-  other_player: null | LuaPlayer
-  element: null | LuaGuiElement
+  entity?: LuaEntity
+  item?: LuaItemStack
+  equipment?: LuaEquipment
+  other_player?: LuaPlayer
+  element?: LuaGuiElement
 }
 
 /**
@@ -5380,7 +6163,7 @@ type OnLuaShortcutPayload /** @noSelf **/ = {
  */
 type OnMarkedForDeconstructionPayload /** @noSelf **/ = {
   entity: LuaEntity
-  player_index: null | number
+  player_index?: number
 }
 
 /**
@@ -5392,8 +6175,8 @@ type OnMarkedForDeconstructionPayload /** @noSelf **/ = {
 type OnMarkedForUpgradePayload /** @noSelf **/ = {
   entity: LuaEntity
   target: LuaEntityPrototype
-  player_index: null | number
-  direction: null | typeof defines.direction
+  player_index?: number
+  direction?: typeof defines.direction
 }
 
 /**
@@ -5511,10 +6294,10 @@ type OnPlayerArmorInventoryChangedPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_player_banned on_player_banned}
  */
 type OnPlayerBannedPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   player_name: string
-  by_player: null | number
-  reason: null | string
+  by_player?: number
+  reason?: string
 }
 
 /**
@@ -5527,8 +6310,8 @@ type OnPlayerBuiltTilePayload /** @noSelf **/ = {
   surface_index: number
   tiles: OldTileAndPosition[]
   tile: LuaTilePrototype
-  item: null | LuaItemPrototype
-  stack: null | LuaItemStack
+  item?: LuaItemPrototype
+  stack?: LuaItemStack
 }
 
 /**
@@ -5670,7 +6453,7 @@ type OnPlayerDemotedPayload /** @noSelf **/ = { player_index: number }
  */
 type OnPlayerDiedPayload /** @noSelf **/ = {
   player_index: number
-  cause: null | LuaEntity
+  cause?: LuaEntity
 }
 
 /**
@@ -5701,7 +6484,7 @@ type OnPlayerDisplayScaleChangedPayload /** @noSelf **/ = {
  */
 type OnPlayerDrivingChangedStatePayload /** @noSelf **/ = {
   player_index: number
-  entity: null | LuaEntity
+  entity?: LuaEntity
 }
 
 /**
@@ -5761,8 +6544,8 @@ type OnPlayerJoinedGamePayload /** @noSelf **/ = { player_index: number }
  */
 type OnPlayerKickedPayload /** @noSelf **/ = {
   player_index: number
-  by_player: null | number
-  reason: null | string
+  by_player?: number
+  reason?: string
 }
 
 /**
@@ -5892,7 +6675,7 @@ type OnPlayerRepairedEntityPayload /** @noSelf **/ = {
  */
 type OnPlayerRespawnedPayload /** @noSelf **/ = {
   player_index: number
-  player_port: null | LuaEntity
+  player_port?: LuaEntity
 }
 
 /**
@@ -5974,10 +6757,10 @@ type OnPlayerTrashInventoryChangedPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_player_unbanned on_player_unbanned}
  */
 type OnPlayerUnbannedPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   player_name: string
-  by_player: null | number
-  reason: null | string
+  by_player?: number
+  reason?: string
 }
 
 /**
@@ -6017,14 +6800,14 @@ type OnPlayerUsedSpiderRemotePayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_post_entity_died on_post_entity_died}
  */
 type OnPostEntityDiedPayload /** @noSelf **/ = {
-  ghost: null | LuaEntity
-  force: null | LuaForce
+  ghost?: LuaEntity
+  force?: LuaForce
   position: Position
   prototype: LuaEntityPrototype
-  damage_type: null | LuaDamagePrototype
+  damage_type?: LuaDamagePrototype
   corpses: LuaEntity[]
   surface_index: number
-  unit_number: null | number
+  unit_number?: number
 }
 
 /**
@@ -6070,7 +6853,7 @@ type OnPreEntitySettingsPastedPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_pre_ghost_deconstructed on_pre_ghost_deconstructed}
  */
 type OnPreGhostDeconstructedPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   ghost: LuaEntity
 }
 
@@ -6112,7 +6895,7 @@ type OnPrePlayerCraftedItemPayload /** @noSelf **/ = {
  */
 type OnPrePlayerDiedPayload /** @noSelf **/ = {
   player_index: number
-  cause: null | LuaEntity
+  cause?: LuaEntity
 }
 
 /**
@@ -6170,7 +6953,7 @@ type OnPreRobotExplodedCliffPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_pre_script_inventory_resized on_pre_script_inventory_resized}
  */
 type OnPreScriptInventoryResizedPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   mod: string
   inventory: LuaInventory
   old_size: number
@@ -6208,7 +6991,7 @@ type OnResearchFinishedPayload /** @noSelf **/ = {
  */
 type OnResearchStartedPayload /** @noSelf **/ = {
   research: LuaTechnology
-  last_research: null | LuaTechnology
+  last_research?: LuaTechnology
 }
 
 /**
@@ -6228,7 +7011,7 @@ type OnRobotBuiltEntityPayload /** @noSelf **/ = {
   robot: LuaEntity
   created_entity: LuaEntity
   stack: LuaItemStack
-  tags: null | Tags
+  tags?: Tags
 }
 
 /**
@@ -6308,7 +7091,7 @@ type OnRobotPreMinedPayload /** @noSelf **/ = {
 type OnRocketLaunchOrderedPayload /** @noSelf **/ = {
   rocket: LuaEntity
   rocket_silo: LuaEntity
-  player_index: null | number
+  player_index?: number
 }
 
 /**
@@ -6318,8 +7101,8 @@ type OnRocketLaunchOrderedPayload /** @noSelf **/ = {
  */
 type OnRocketLaunchedPayload /** @noSelf **/ = {
   rocket: LuaEntity
-  rocket_silo: null | LuaEntity
-  player_index: null | number
+  rocket_silo?: LuaEntity
+  player_index?: number
 }
 
 /**
@@ -6328,7 +7111,7 @@ type OnRocketLaunchedPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_runtime_mod_setting_changed on_runtime_mod_setting_changed}
  */
 type OnRuntimeModSettingChangedPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   setting: string
   setting_type: string
 }
@@ -6339,7 +7122,7 @@ type OnRuntimeModSettingChangedPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_script_inventory_resized on_script_inventory_resized}
  */
 type OnScriptInventoryResizedPayload /** @noSelf **/ = {
-  player_index: null | number
+  player_index?: number
   mod: string
   inventory: LuaInventory
   old_size: number
@@ -6353,7 +7136,7 @@ type OnScriptInventoryResizedPayload /** @noSelf **/ = {
  * {@link https://lua-api.factorio.com/latest/events.html#on_script_path_request_finished on_script_path_request_finished}
  */
 type OnScriptPathRequestFinishedPayload /** @noSelf **/ = {
-  path: null | Waypoint[]
+  path?: Waypoint[]
   id: number
   try_again_later: boolean
 }
@@ -6366,10 +7149,10 @@ type OnScriptPathRequestFinishedPayload /** @noSelf **/ = {
 type OnScriptTriggerEffectPayload /** @noSelf **/ = {
   effect_id: string
   surface_index: number
-  source_position: null | Position
-  source_entity: null | LuaEntity
-  target_position: null | Position
-  target_entity: null | LuaEntity
+  source_position?: Position
+  source_entity?: LuaEntity
+  target_position?: Position
+  target_entity?: LuaEntity
 }
 
 /**
@@ -6391,7 +7174,7 @@ type OnSectorScannedPayload /** @noSelf **/ = {
  */
 type OnSelectedEntityChangedPayload /** @noSelf **/ = {
   player_index: number
-  last_entity: null | LuaEntity
+  last_entity?: LuaEntity
 }
 
 /**
@@ -6479,8 +7262,8 @@ type OnTrainChangedStatePayload /** @noSelf **/ = {
  */
 type OnTrainCreatedPayload /** @noSelf **/ = {
   train: LuaTrain
-  old_train_id_1: null | number
-  old_train_id_2: null | number
+  old_train_id_1?: number
+  old_train_id_2?: number
 }
 
 /**
@@ -6490,7 +7273,7 @@ type OnTrainCreatedPayload /** @noSelf **/ = {
  */
 type OnTrainScheduleChangedPayload /** @noSelf **/ = {
   train: LuaTrain
-  player_index: null | number
+  player_index?: number
 }
 
 /**
@@ -6501,7 +7284,7 @@ type OnTrainScheduleChangedPayload /** @noSelf **/ = {
  */
 type OnTriggerCreatedEntityPayload /** @noSelf **/ = {
   entity: LuaEntity
-  source: null | LuaEntity
+  source?: LuaEntity
 }
 
 /**
@@ -6512,7 +7295,7 @@ type OnTriggerCreatedEntityPayload /** @noSelf **/ = {
  */
 type OnTriggerFiredArtilleryPayload /** @noSelf **/ = {
   entity: LuaEntity
-  source: null | LuaEntity
+  source?: LuaEntity
 }
 
 /**
@@ -6550,6 +7333,28 @@ type OnUnitRemovedFromGroupPayload /** @noSelf **/ = {
   unit: LuaEntity
   group: LuaUnitGroup
 }
+
+type ScriptRaisedBuiltPayload /** @noSelf **/ = {
+  entity: LuaEntity
+}
+
+type ScriptRaisedDestroyPayload /** @noSelf **/ = {
+  entity: LuaEntity
+}
+type ScriptRaisedRevivePayload /** @noSelf **/ = {
+  entity: LuaEntity
+  tags?: Tags
+}
+type ScriptRaisedSetTilesPayload /** @noSelf **/ = {
+  entity: LuaEntity
+  tiles: Tile[]
+}
+
+type Tile /** @noSelf **/ = {
+  position: Position
+  name: string
+}
+
 /** globals */
 /** This is the main object, through which most of the API is accessed. It is, however, not available inside handlers registered with LuaBootstrap::on_load. */
 declare const game: LuaGameScript
@@ -6603,7 +7408,7 @@ type SerpentOptions = {
   /** allows to specify a list of value types to ignore (as keys). */
   valtypeignore: string[]
   /** provide custom output for tables. */
-  custom: (opts: {
+  custom(opts: {
     /**  the componentName of the current rootElement with '=' or an empty string in case of array index, */
     tag: any
     /**  an opening table bracket { and associated indentation and newline (if any), */
@@ -6614,7 +7419,7 @@ type SerpentOptions = {
     tail: any
     /**  the current level. */
     level: any
-  }) => any
+  }): any
   /** componentName; triggers full serialization with self-ref section. */
   name: string
 }
@@ -6642,7 +7447,7 @@ declare const log: (ls: LocalisedString) => void
 /** This function allows printing LocalisedStrings to stdout without polluting the logfile. This is primarily useful for communicating with external tools that launch Factorio as a child process. */
 declare const localised_print: typeof log
 
-declare const table_size: <T extends {}>(v: T) => number
+declare function table_size<T extends {}>(v: T): number
 
 // declare const pairs: <K, V, M extends Map<K, V>>(v: M) => [K, V][];
 
@@ -6653,9 +7458,9 @@ type LuaLazyLoadedValue<T> = {
   /** The class componentName of this object. */
   readonly object_name: string
   /** Gets the value of this lazy loaded value. */
-  get: () => T
+  get(): T
   /** All methods, and properties that this object supports. */
-  help: () => string
+  help(): string
 }
 
 /**

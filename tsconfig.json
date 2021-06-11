@@ -9,12 +9,16 @@
     "types": [
       "typescript-to-lua/language-extensions",
       "lua-types/5.2"
+    ],
+    "plugins": [
+      {
+        "name": "typescript-tstl-plugin"
+      }
     ]
   },
   "tstl": {
     "luaTarget": "5.2",
-    "noHeader": true,
-    "noImplicitSelf": true
+    "noHeader": true
   },
   "include": [
     "./**/*"

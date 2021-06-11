@@ -3,5 +3,8 @@ node_modules/
 .vscode/
 
 **/*.lua
+**/*.lua.map
 
 yarn-error.log
+
+out/

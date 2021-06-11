@@ -1,18 +1,23 @@
 import { deepAssign, isFunction } from "./util"
-import { EventHandler, EventName, registerHandlers } from "./events"
+import { EventHandlerContainer, registerHandlers } from "./events"
 import { FuncRef, getFuncRef } from "./funcRef"
-import { wlog } from "./logging"
+import { userWarning } from "./logging"
 
 // -- Template
 
-export type GuiTemplate<Props = any> = GuiSpec & BaseGuiTemplate<Props>
+export type GuiTemplate<Props = unknown> = GuiSpec & BaseGuiTemplate<Props>
+
+export function GuiTemplate<T extends GuiTemplate>(t: T): T {
+  return t
+}
 
 export interface BaseGuiTemplate<Props> extends BaseGuiSpec, GuiEventHandlers {
   elementMod?: ModOf<BareGuiElementOfType<this["type"]>, Props>
   styleMod?: ModOf<LuaStyle, Props>
 
-  onCreated?: (this: unknown, element: GuiElementOfType<this["type"]>) => void
-  onUpdate?: (this: unknown, element: GuiElementOfType<this["type"]>, props: Props) => void
+  onPreCreated?: (element: GuiElementOfType<this["type"]>) => void
+  onPostCreated?: (element: GuiElementOfType<this["type"]>) => void
+  onUpdate?: (element: GuiElementOfType<this["type"]>, props: Props) => void
   readonly children?: readonly GuiTemplate<Props>[]
 }
 
@@ -43,7 +48,7 @@ const completenessCheck: Record<GuiEventName, unknown> = {} as Required<GuiEvent
 const limitedCheck: Required<GuiEventHandlers> = {} as Record<GuiEventName, any> & { type: any; onAction: any }
 
 /* eslint-enable @typescript-eslint/no-unused-vars */
-type PropFunction<T, Props> = (this: void, props: Props, element: LuaGuiElement) => T
+type PropFunction<T, Props> = (props: Props, element: LuaGuiElement) => T
 
 type ModOf<T, Props> = ValueOrFunction<Writable<T>, Props>
 
@@ -69,14 +74,13 @@ function createRecursive<Props>(parent: BareGuiElement, template: GuiTemplate<Pr
   const element = parent.add(spec)
   if (template.elementMod) assignMod(element, template.elementMod as any, props, element)
   if (template.styleMod) assignMod(element.style, template.styleMod, props, element)
-  if (template.onCreated) {
-    template.onCreated(element as any)
-  }
+  if (template.onPreCreated) template.onPreCreated(element as any)
   if (template.children) {
     for (const childTemplate of template.children) {
       create(element, childTemplate, props)
     }
   }
+  if (template.onPostCreated) template.onPostCreated(element as any)
   return element
 }
 
@@ -91,7 +95,7 @@ export function update<Props>(element: LuaGuiElement, template: GuiTemplate<Prop
   if (template.children) {
     for (const [i, child] of ipairs(element.children)) {
       // ipairs has different indexing
-      if (child) update(child, template.children[i - 1], props!)
+      if (child && template.children[i - 1]) updateFuncOnly(child, template.children[i - 1], props!)
     }
   }
   return element
@@ -111,9 +115,10 @@ function updateFuncOnly<Props>(element: LuaGuiElement, template: GuiTemplate<Pro
 }
 
 const specialFields: Record<Exclude<keyof BaseGuiTemplate<unknown>, keyof BaseGuiSpec>, true> = {
+  onPostCreated: true,
   elementMod: true,
   styleMod: true,
-  onCreated: true,
+  onPreCreated: true,
   onAction: true,
   onUpdate: true,
   onCheckedStateChanged: true,
@@ -153,7 +158,7 @@ function assignMod<T, Props>(
     if (key === "tags") {
       mergeTags(target as any, newValue as Tags)
     } else {
-      target[key] = newValue as any
+      target[key] = newValue
     }
   }
 }
@@ -188,9 +193,10 @@ function extractSpec<Props>(template: GuiTemplate<Props>): GuiSpec {
       throw `GUI element of type ${template.type} does not have an onAction event.
       Tried to register "${template.onAction["#name"]}".`
     }
-    if (handlers[eventName])
+    if (handlers[eventName]) {
       throw `Cannot register 'onAction' handler ("${template.onAction["#name"]}") because
       this element already has an event handler for ${eventName} ("${handlers[eventName]}").`
+    }
     handlers[eventName] = template.onAction["#name"]
   }
   result.tags = result.tags || {}
@@ -236,6 +242,7 @@ const onActionEvents: PRecord<GuiElementType, GuiEventName> = {
 }
 
 function handleGuiEvent(eventName: GuiEventName, event: GuiEventPayload) {
+  // I want optional chaining in tstl!!!
   const element = event.element
   if (!element) return
   const handlers = element.tags["#guiEventHandlers"]
@@ -243,18 +250,18 @@ function handleGuiEvent(eventName: GuiEventName, event: GuiEventPayload) {
   const handlerName = handlers[eventName]
   if (!handlerName) return
   const ref = getFuncRef(handlerName)
-  if (ref) {
-    ref.func(element, event)
+  if (!ref) {
+    userWarning(`There is no gui handler function named ${handlerName}.
+    Try closing and reopening the UI. If error persists, please report to the mod author.
+    Event name: ${eventName}, event: ${serpent.dump(event)}`)
   } else {
-    wlog(`There is no gui handler function named ${handlerName}.
-    Try refreshing the UI; If error persists, please report to the mod author.
-    Event name ${eventName}, event: ${serpent.dump(event)}`)
+    ref.func(element, event)
   }
 }
 
-const handlers: PRecord<EventName, EventHandler> = {}
+const handlers: EventHandlerContainer = {}
 for (const [name, scriptName] of pairs(guiEvents)) {
-  handlers[scriptName] = function (payload) {
+  handlers[scriptName] = (payload: any) => {
     handleGuiEvent(name, payload)
   }
 }

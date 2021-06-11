@@ -1,24 +1,17 @@
-import { DevButton } from "../framework/devButtons"
-import { wlog } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
-import { createLayer } from "./layers"
-
-DevButton("test warning", () => {
-  wlog("WARNING: you have been warned.")
-})
-
-// TODO: make better, obviously
+import { DataLayer, ViewLayer } from "./Layer"
+import { onPlayerInit } from "../framework/playerData"
 
 function generateTestLayers() {
   for (let i = 0; i < 5; i++) {
     const name = "Test layer " + i
-    createLayer(name, "data")
+    DataLayer.create(name)
   }
 
   for (let i = 0; i < 5; i++) {
     const name = "Test view " + i
-    const layer = createLayer(name, "view")
-    layer.include[i] = "force"
+    const layer = ViewLayer.create(name)
+    layer.getRelationTo(i).viewing = true
   }
 }
 
@@ -26,4 +19,7 @@ registerHandlers({
   on_init() {
     generateTestLayers()
   },
+})
+onPlayerInit((player) => {
+  player.teleport([0, 0], DataLayer.getDataLayerUserOrder()[0].surface)
 })

@@ -1,11 +1,19 @@
 import { DEV } from "./DEV"
 
-export function wlog(...args: any[]): void {
-  doLog(args, { r: 255, g: 204, b: 20 })
+export function userWarning(...args: any[]): void {
+  const msg = getMessage(args)
+  log(debugSrc() + msg)
+  if (game) {
+    game.print(msg, { r: 255, g: 204, b: 20 })
+  }
 }
 
 export function dlog(...args: any[]): void {
-  doLog(args, DEV ? 0 : null)
+  const msg = debugSrc() + getMessage(args)
+  log(msg)
+  if (DEV && game) {
+    game.print(msg)
+  }
 }
 
 export function vlog(...args: any[]): void {
@@ -13,26 +21,21 @@ export function vlog(...args: any[]): void {
   dlog(...args)
 }
 
-function doLog(args: any[], colorOrNoPrint: Color | 0 | null) {
-  const tick = game ? game.tick : 0
+function debugSrc(): string {
+  const info = debug.getinfo(3, "Sl")!
+  return info.short_src + ":" + info.currentline + ": "
+}
+
+function getMessage(args: any[]) {
   let msg = ""
-  for (const v of args) {
+  for (const arg of args) {
     if (msg) msg += " "
-    if (type(v) === "table") {
-      msg += serpent.block(v)
+    if (type(arg) === "table") {
+      msg += serpent.line(arg)
     } else {
-      msg += v
+      msg += arg
     }
   }
 
-  log(`${tick} ${msg}`)
-
-  if (colorOrNoPrint !== null && game) {
-    const message = `${tick} ${script.mod_name}: ${msg}`
-    if (colorOrNoPrint === 0) {
-      game.print(message)
-    } else {
-      game.print(message, colorOrNoPrint)
-    }
-  }
+  return msg
 }

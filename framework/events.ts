@@ -6,59 +6,80 @@
 import { DEV } from "./DEV"
 
 /** Custom events added via interface merging + manual assign id/name */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CustomEvents {
 }
 
 export const customEvents: CustomEvents = {} as any
 
-type ScriptEvents = "on_init" | "on_load" | "on_configuration_changed"
+interface ScriptEvents {
+  on_init: EventId<undefined>
+  on_load: EventId<undefined>
+  on_configuration_changed: EventId<ConfigurationChangedData>
+}
 
-export type EventName = keyof typeof defines.events | keyof typeof customEvents | ScriptEvents
+type AllEvents = typeof defines.events & ScriptEvents & CustomEvents
 
-export type EventHandler = (this: unknown, a: any) => void
+export type EventName = keyof AllEvents
+export type PayloadOf<N extends EventName> = AllEvents[N] extends EventId<infer Payload> ? Payload : any
+export type EventHandler<N extends EventName> = (event: PayloadOf<N>) => void
 
-const allEventIds: PRecord<EventName, { eventId?: any }> = {
+// lack of event id => script event
+// Also should check customEvents
+const eventInfos: PRecord<EventName, { eventId?: EventId<any> }> = {
   on_init: {},
   on_load: {},
   on_configuration_changed: {},
 }
 for (const [name, eventId] of pairs(defines.events)) {
-  allEventIds[name] = { eventId }
-}
-for (const [name, eventId] of pairs(customEvents)) {
-  ;(allEventIds as any)[name] = { eventId }
+  eventInfos[name] = { eventId }
 }
 
-const eventHandlers: PRecord<EventName, EventHandler[]> = {}
+const eventHandlers: PRecord<EventName, EventHandler<any>[]> = {}
 
-function registerRootHandler(eventName: EventName, eventId: any | undefined) {
+let lastEventName: EventName
+
+export function getCurrentEventName(): EventName {
+  return lastEventName
+}
+
+function registerRootHandler(eventName: EventName, eventId: EventId<any> | undefined) {
   eventHandlers[eventName] = []
-  const handlers: EventHandler[] = eventHandlers[eventName]!
+  const handlers = eventHandlers[eventName]!
+  /** @noSelf */
   const handleEvent = (event: any) => {
-    for (const handler of handlers) handler(event)
+    // workaround for both with and without "self/this" parameter
+    for (const handler of handlers) {
+      lastEventName = eventName
+      handler(event)
+    }
   }
   if (eventId) {
     script.on_event(eventId, handleEvent)
   } else {
-    const f = (script as any)[eventName] as (handler: any) => void
+    const f = (script as any)[eventName] as (this: void, handler: any) => void
     f(handleEvent)
   }
 }
 
-export function registerHandler(eventName: EventName, handler: EventHandler): void {
-  const eventInfo = allEventIds[eventName]
+export function registerHandler<N extends EventName>(eventName: N, handler: EventHandler<N>): void {
+  const eventInfo = eventInfos[eventName] || (customEvents as any)[eventName]
   if (!eventInfo) {
     throw `no event named ${eventName}`
   }
   if (!eventHandlers[eventName]) {
     registerRootHandler(eventName, eventInfo.eventId)
   }
-  eventHandlers[eventName]!.push(handler)
+  eventHandlers[eventName as EventName]!.push(handler)
 }
 
-export function registerHandlers(handlers: PRecord<EventName, EventHandler>): void {
+export type EventHandlerContainer = {
+  [N in EventName]?: EventHandler<N>
+}
+
+export function registerHandlers(handlers: EventHandlerContainer): void {
   for (const [eventName, handler] of pairs(handlers)) {
-    registerHandler(eventName, handler!)
+    registerHandler<any>(eventName, handler!)
   }
 }
 

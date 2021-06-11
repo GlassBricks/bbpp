@@ -13,14 +13,17 @@
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-promise": "^5.1.0",
     "factorio-type-kit": "^1.1.1",
-    "lua-types": "^2.10.1",
+    "lua-types": "https://github.com/GlassBricks/lua-types/tarball/master",
     "prettier": "^2.3.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "typescript-to-lua": "^0.39.3",
+    "typescript-tstl-plugin": "^0.2.0"
   },
   "scripts": {
     "build": "tstl",
     "watch": "tstl --watch",
     "lint": "eslint **/*.ts",
+    "lint-fix": "eslint **/*.ts --fix",
     "clean": "find . -name node_modules -prune -false -o -name '*.lua*' -print -exec rm {} \\;"
   }
 }

@@ -1,4 +1,4 @@
-declare module "Data" {
+declare module "DataStage" {
   interface Data {
     raw: PRecord<string, any>
 

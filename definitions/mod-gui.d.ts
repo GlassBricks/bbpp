@@ -1,4 +1,4 @@
-/** @noResolution */
+/** @noResolution @noSelfInFile */
 declare module "mod-gui" {
   export function get_button_flow(player: LuaPlayer): FlowGuiElement
 

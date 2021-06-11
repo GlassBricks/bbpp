@@ -1,13 +1,13 @@
 import { registerHandlers } from "./events"
 import { dlog } from "./logging"
 
-declare global {
-  interface Global {
-    "#playerData": Record<string, Record<number, any>>
-  }
+interface PlayerDataGlobal {
+  "#playerData": Record<string, Record<number, any>>
 }
 
-type PlayerData<T> = (playerIndex: number) => T
+declare const global: PlayerDataGlobal
+
+export type PlayerData<T> = (playerIndex: number) => T
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function PlayerData<T extends Object>(uniqueName: string, initData: (player: LuaPlayer) => T): PlayerData<T> {
@@ -28,6 +28,7 @@ export function PlayerData<T extends Object>(uniqueName: string, initData: (play
       playerDatum[e.player_index] = initData(game.get_player(e.player_index))
     },
     on_player_removed(e: OnPlayerRemovedPayload) {
+      if (!playerDatum) return
       playerDatum[e.player_index] = undefined as any
     },
   })

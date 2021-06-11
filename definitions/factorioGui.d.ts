@@ -16,25 +16,25 @@ interface BaseGuiSpec {
 }
 
 /** @noSelf */
-type ButtonGuiSpec = BaseGuiSpec & {
+interface ButtonGuiSpec extends BaseGuiSpec {
   type: "button"
   mouse_button_filter?: MouseButtonFlags
 }
 
 /** @noSelf */
-type FlowGuiSpec = BaseGuiSpec & {
+interface FlowGuiSpec extends BaseGuiSpec {
   type: "flow"
   direction?: Direction
 }
 
 /** @noSelf */
-type FrameGuiSpec = BaseGuiSpec & {
+interface FrameGuiSpec extends BaseGuiSpec {
   type: "frame"
   direction?: Direction
 }
 
 /** @noSelf */
-type TableGuiSpec = BaseGuiSpec & {
+interface TableGuiSpec extends BaseGuiSpec {
   type: "table"
   column_count: number
   draw_vertical_lines?: boolean
@@ -44,7 +44,7 @@ type TableGuiSpec = BaseGuiSpec & {
 }
 
 /** @noSelf */
-type TextfieldGuiSpec = BaseGuiSpec & {
+interface TextfieldGuiSpec extends BaseGuiSpec {
   type: "textfield"
   text?: string
   numeric?: boolean
@@ -56,25 +56,25 @@ type TextfieldGuiSpec = BaseGuiSpec & {
 }
 
 /** @noSelf */
-type ProgressbarGuiSpec = BaseGuiSpec & {
+interface ProgressbarGuiSpec extends BaseGuiSpec {
   type: "progressbar"
   value?: number
 }
 
 /** @noSelf */
-type CheckboxGuiSpec = BaseGuiSpec & {
+interface CheckboxGuiSpec extends BaseGuiSpec {
   type: "checkbox"
   state: boolean
 }
 
 /** @noSelf */
-type RadiobuttonGuiSpec = BaseGuiSpec & {
+interface RadiobuttonGuiSpec extends BaseGuiSpec {
   type: "radiobutton"
   state: boolean
 }
 
 /** @noSelf */
-type SpriteButtonGuiSpec = BaseGuiSpec & {
+interface SpriteButtonGuiSpec extends BaseGuiSpec {
   type: "sprite-button"
   sprite?: SpritePath
   hovered_sprite?: SpritePath
@@ -85,47 +85,48 @@ type SpriteButtonGuiSpec = BaseGuiSpec & {
 }
 
 /** @noSelf */
-type SpriteGuiSpec = BaseGuiSpec & {
+interface SpriteGuiSpec extends BaseGuiSpec {
   type: "sprite"
   sprite?: SpritePath
   resize_to_sprite?: boolean
 }
 
 /** @noSelf */
-type ScrollPaneGuiSpec = BaseGuiSpec & {
+interface ScrollPaneGuiSpec extends BaseGuiSpec {
   type: "scroll-pane"
   horizontal_scroll_policy?: ScrollPolicy
   vertical_scroll_policy?: ScrollPolicy
 }
 
 /** @noSelf */
-type DropDownGuiSpec = BaseGuiSpec & {
+interface DropDownGuiSpec extends BaseGuiSpec {
   type: "drop-down"
   items?: [LocalisedString]
   selected_index?: number
 }
 
 /** @noSelf */
-type LineGuiSpec = BaseGuiSpec & {
+interface LineGuiSpec extends BaseGuiSpec {
   type: "line"
   direction: Direction
 }
 
 /** @noSelf */
-type ListBoxGuiSpec = BaseGuiSpec & {
+interface ListBoxGuiSpec extends BaseGuiSpec {
   type: "list-box"
   items?: LocalisedString[]
   selected_index?: number
 }
 
 /** @noSelf */
-type CameraGuiSpec = BaseGuiSpec & {
+interface CameraGuiSpec extends BaseGuiSpec {
   type: "camera"
   position: Position
   surface_index?: number
   zoom?: number
 }
 
+/** @noSelf */
 interface ChooseElemButtonTypes {
   item: string
   tile: string
@@ -141,23 +142,27 @@ interface ChooseElemButtonTypes {
   technology: string
 }
 
-/** @noSelf */
-type ChooseElemButtonGuiSpec<T extends keyof ChooseElemButtonTypes> = BaseGuiSpec & {
-  type: "choose-elem-button"
-  elem_type: T
-} & {
-  [e in T]?: ChooseElemButtonTypes[T]
+type ChooseElementButtonItem<Type extends keyof ChooseElemButtonTypes> = {
+  [T in keyof ChooseElemButtonTypes]: T extends Type ? ChooseElemButtonTypes[T] | undefined : never
 }
 
 /** @noSelf */
-type TextBoxGuiSpec = BaseGuiSpec & {
+interface ChooseElemButtonGuiSpec<Type extends keyof ChooseElemButtonTypes = keyof ChooseElemButtonTypes>
+  extends BaseGuiSpec,
+    ChooseElementButtonItem<Type> {
+  type: "choose-elem-button"
+  elem_type: Type
+}
+
+/** @noSelf */
+interface TextBoxGuiSpec extends BaseGuiSpec {
   type: "text-box"
   text?: string
   clear_and_focus_on_right_click?: boolean
 }
 
 /** @noSelf */
-type SliderGuiSpec = BaseGuiSpec & {
+interface SliderGuiSpec extends BaseGuiSpec {
   type: "slider"
   minimum_value?: number
   maximum_value?: number
@@ -168,7 +173,7 @@ type SliderGuiSpec = BaseGuiSpec & {
 }
 
 /** @noSelf */
-type MinimapGuiSpec = BaseGuiSpec & {
+interface MinimapGuiSpec extends BaseGuiSpec {
   type: "minimap"
   position?: Position
   surface_index?: number
@@ -178,13 +183,13 @@ type MinimapGuiSpec = BaseGuiSpec & {
 }
 
 /** @noSelf */
-type TabGuiSpec = BaseGuiSpec & {
+interface TabGuiSpec extends BaseGuiSpec {
   type: "tab"
   badge_text?: LocalisedString
 }
 
 /** @noSelf */
-type SwitchGuiSpec = BaseGuiSpec & {
+interface SwitchGuiSpec extends BaseGuiSpec {
   type: "switch"
   switch_state?: SwitchState
   allow_none_state?: boolean
@@ -195,22 +200,22 @@ type SwitchGuiSpec = BaseGuiSpec & {
 }
 
 /** @noSelf */
-type LabelGuiSpec = BaseGuiSpec & {
+interface LabelGuiSpec extends BaseGuiSpec {
   type: "label"
 }
 
 /** @noSelf */
-type EntityPreviewGuiSpec = BaseGuiSpec & {
+interface EntityPreviewGuiSpec extends BaseGuiSpec {
   type: "entity-preview"
 }
 
 /** @noSelf */
-type EmptyWidgetGuiSpec = BaseGuiSpec & {
+interface EmptyWidgetGuiSpec extends BaseGuiSpec {
   type: "empty-widget"
 }
 
 /** @noSelf */
-type TabbedPaneGuiSpec = BaseGuiSpec & {
+interface TabbedPaneGuiSpec extends BaseGuiSpec {
   type: "tabbed-pane"
 }
 
@@ -249,20 +254,19 @@ type GuiSpecOfType<Type extends GuiElementType> = Extract<GuiSpec, { type: Type 
 /** @noSelf */
 interface BaseGuiElement {
   // add<S extends GuiSpec>(element: S): GuiElementOfType<S["type"]>
-
   add<Type extends GuiElementType>(element: GuiSpecOfType<Type>): GuiElementOfType<Type>
 
-  clear(this: void): void
+  clear(): void
 
-  destroy(this: void): void
+  destroy(): void
 
-  get_mod(this: void): void
+  get_mod(): void
 
-  get_index_in_parent(this: void): void
+  get_index_in_parent(): void
 
-  focus(this: void): void
+  focus(): void
 
-  bring_to_front(this: void): void
+  bring_to_front(): void
 
   readonly index: number
   readonly gui: LuaGui
@@ -285,33 +289,35 @@ interface BaseGuiElement {
   readonly valid: boolean
   readonly object_name: string
 
-  help(this: void): void
+  help(): void
 }
 
 /** @noSelf */
-type ButtonGuiElement = BaseGuiElement & {
+interface ButtonGuiElement extends BaseGuiElement {
   type: "button"
   mouse_button_filter: MouseButtonFlags
 }
 
 /** @noSelf */
-type FlowGuiElement = BaseGuiElement & {
+interface FlowGuiElement extends BaseGuiElement {
   type: "flow"
   readonly direction: Direction
   drag_target: LuaGuiElement
 }
 
 /** @noSelf */
-type FrameGuiElement = BaseGuiElement & {
+interface FrameGuiElement extends BaseGuiElement {
   type: "frame"
-  force_auto_center(this: void): void
+
+  force_auto_center(): void
+
   readonly direction: Direction
   auto_center: boolean
   drag_target: LuaGuiElement
 }
 
 /** @noSelf */
-type TableGuiElement = BaseGuiElement & {
+interface TableGuiElement extends BaseGuiElement {
   type: "table"
   draw_vertical_lines: boolean
   draw_horizontal_lines: boolean
@@ -322,10 +328,13 @@ type TableGuiElement = BaseGuiElement & {
 }
 
 /** @noSelf */
-type TextfieldGuiElement = BaseGuiElement & {
+interface TextfieldGuiElement extends BaseGuiElement {
   type: "textfield"
-  select_all(this: void): void
-  select(this: void, start: number, end: number): void
+
+  select_all(): void
+
+  select(start: number, end: number): void
+
   text: string
   numeric: boolean
   allow_decimal: boolean
@@ -336,25 +345,25 @@ type TextfieldGuiElement = BaseGuiElement & {
 }
 
 /** @noSelf */
-type ProgressbarGuiElement = BaseGuiElement & {
+interface ProgressbarGuiElement extends BaseGuiElement {
   type: "progressbar"
   value: number
 }
 
 /** @noSelf */
-type CheckboxGuiElement = BaseGuiElement & {
+interface CheckboxGuiElement extends BaseGuiElement {
   type: "checkbox"
   state: boolean
 }
 
 /** @noSelf */
-type RadiobuttonGuiElement = BaseGuiElement & {
+interface RadiobuttonGuiElement extends BaseGuiElement {
   type: "radiobutton"
   state: boolean
 }
 
 /** @noSelf */
-type SpriteButtonGuiElement = BaseGuiElement & {
+interface SpriteButtonGuiElement extends BaseGuiElement {
   type: "sprite-button"
   sprite: SpritePath
   resize_to_sprite: boolean
@@ -366,55 +375,74 @@ type SpriteButtonGuiElement = BaseGuiElement & {
 }
 
 /** @noSelf */
-type SpriteGuiElement = BaseGuiElement & {
+interface SpriteGuiElement extends BaseGuiElement {
   type: "sprite"
   sprite: SpritePath
   resize_to_sprite: boolean
 }
 
 /** @noSelf */
-type ScrollPaneGuiElement = BaseGuiElement & {
+interface ScrollPaneGuiElement extends BaseGuiElement {
   type: "scroll-pane"
-  scroll_to_top(this: void): void
-  scroll_to_bottom(this: void): void
-  scroll_to_left(this: void): void
-  scroll_to_right(this: void): void
-  scroll_to_element(this: void, element: LuaGuiElement, scroll_mode?: ScrollMode): void
+
+  scroll_to_top(): void
+
+  scroll_to_bottom(): void
+
+  scroll_to_left(): void
+
+  scroll_to_right(): void
+
+  scroll_to_element(element: LuaGuiElement, scroll_mode?: ScrollMode): void
+
   horizontal_scroll_policy: ScrollPolicy
   vertical_scroll_policy: ScrollPolicy
 }
 
 /** @noSelf */
-type LineGuiElement = BaseGuiElement & {
+interface LineGuiElement extends BaseGuiElement {
   type: "line"
   readonly direction: Direction
 }
 
 /** @noSelf */
-type DropDownGuiElement = BaseGuiElement & {
+interface DropDownGuiElement extends BaseGuiElement {
   type: "drop-down"
-  clear_items(this: void): void
-  get_item(this: void, index: number): LocalisedString
-  set_item(this: void, index: number, arg_1: LocalisedString): void
-  add_item(this: void, string: LocalisedString, index?: number): void
-  remove_item(this: void, index: number): void
+
+  clear_items(): void
+
+  get_item(index: number): LocalisedString
+
+  set_item(index: number, arg_1: LocalisedString): void
+
+  add_item(string: LocalisedString, index?: number): void
+
+  remove_item(index: number): void
+
   selected_index: number
 }
 
 /** @noSelf */
-type ListBoxGuiElement = BaseGuiElement & {
-  type: "list-box"
-  clear_items(this: void): void
-  get_item(this: void, index: number): LocalisedString
-  set_item(this: void, index: number, arg_1: LocalisedString): void
-  add_item(this: void, string: LocalisedString, index?: number): void
-  remove_item(this: void, index: number): void
-  scroll_to_item(this: void, index: number, scroll_mode?: ScrollMode): void
+interface ListBoxGuiElement extends BaseGuiElement {
+  /** @noSelf */ type: "list-box"
+
+  clear_items(): void
+
+  get_item(index: number): LocalisedString
+
+  set_item(index: number, arg_1: LocalisedString): void
+
+  add_item(string: LocalisedString, index?: number): void
+
+  remove_item(index: number): void
+
+  scroll_to_item(index: number, scroll_mode?: ScrollMode): void
+
   selected_index: number
 }
 
 /** @noSelf */
-type CameraGuiElement = BaseGuiElement & {
+interface CameraGuiElement extends BaseGuiElement {
   type: "camera"
   position: Position
   surface_index: number
@@ -423,7 +451,7 @@ type CameraGuiElement = BaseGuiElement & {
 }
 
 /** @noSelf */
-type MinimapGuiElement = BaseGuiElement & {
+interface MinimapGuiElement extends BaseGuiElement {
   type: "minimap"
   position: Position
   surface_index: number
@@ -434,24 +462,30 @@ type MinimapGuiElement = BaseGuiElement & {
 }
 
 /** @noSelf */
-type ChooseElemButtonGuiElement = BaseGuiElement & {
+interface ChooseElemButtonGuiElement extends BaseGuiElement {
   type: "choose-elem-button"
   readonly elem_type: string
   elem_value: string | SignalID
-
   elem_filters?: AnyPrototypeFilters
   locked: boolean
 }
 
 /** @noSelf */
-type TextBoxGuiElement = BaseGuiElement & {
+interface TextBoxGuiElement extends BaseGuiElement {
   type: "text-box"
-  scroll_to_top(this: void): void
-  scroll_to_bottom(this: void): void
-  scroll_to_left(this: void): void
-  scroll_to_right(this: void): void
-  select_all(this: void): void
-  select(this: void, start: number, end: number): void
+
+  scroll_to_top(): void
+
+  scroll_to_bottom(): void
+
+  scroll_to_left(): void
+
+  scroll_to_right(): void
+
+  select_all(): void
+
+  select(start: number, end: number): void
+
   text: string
   selectable: boolean
   word_wrap: boolean
@@ -460,28 +494,38 @@ type TextBoxGuiElement = BaseGuiElement & {
 }
 
 /** @noSelf */
-type SliderGuiElement = BaseGuiElement & {
+interface SliderGuiElement extends BaseGuiElement {
   type: "slider"
-  get_slider_minimum(this: void): void
-  get_slider_maximum(this: void): void
-  set_slider_minimum_maximum(this: void, minimum: number, maximum: number): void
-  get_slider_value_step(this: void): void
-  get_slider_discrete_slider(this: void): void
-  get_slider_discrete_values(this: void): void
-  set_slider_value_step(this: void, value: number): void
-  set_slider_discrete_slider(this: void, value: boolean): void
-  set_slider_discrete_values(this: void, value: boolean): void
+
+  get_slider_minimum(): void
+
+  get_slider_maximum(): void
+
+  set_slider_minimum_maximum(minimum: number, maximum: number): void
+
+  get_slider_value_step(): void
+
+  get_slider_discrete_slider(): void
+
+  get_slider_discrete_values(): void
+
+  set_slider_value_step(value: number): void
+
+  set_slider_discrete_slider(value: boolean): void
+
+  set_slider_discrete_values(value: boolean): void
+
   slider_value: number
 }
 
 /** @noSelf */
-type TabGuiElement = BaseGuiElement & {
+interface TabGuiElement extends BaseGuiElement {
   type: "tab"
   badge_text: LocalisedString
 }
 
 /** @noSelf */
-type SwitchGuiElement = BaseGuiElement & {
+interface SwitchGuiElement extends BaseGuiElement {
   type: "switch"
   switch_state: SwitchState
   allow_none_state: boolean
@@ -492,28 +536,31 @@ type SwitchGuiElement = BaseGuiElement & {
 }
 
 /** @noSelf */
-type LabelGuiElement = BaseGuiElement & {
+interface LabelGuiElement extends BaseGuiElement {
   type: "label"
   drag_target: LuaGuiElement
 }
 
 /** @noSelf */
-type EntityPreviewGuiElement = BaseGuiElement & {
+interface EntityPreviewGuiElement extends BaseGuiElement {
   type: "entity-preview"
   entity?: LuaEntity
 }
 
 /** @noSelf */
-type EmptyWidgetGuiElement = BaseGuiElement & {
+interface EmptyWidgetGuiElement extends BaseGuiElement {
   type: "empty-widget"
   drag_target: LuaGuiElement
 }
 
 /** @noSelf */
-type TabbedPaneGuiElement = BaseGuiElement & {
+interface TabbedPaneGuiElement extends BaseGuiElement {
   type: "tabbed-pane"
-  add_tab(this: void, tab: TabGuiElement, content: LuaGuiElement): void
-  remove_tab(this: void, tab: LuaGuiElement): void
+
+  add_tab(tab: TabGuiElement, content: LuaGuiElement): void
+
+  remove_tab(tab: LuaGuiElement): void
+
   selected_tab_index: number
   readonly tabs: {
     tab: TabGuiElement

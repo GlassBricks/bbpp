@@ -1,42 +1,31 @@
 import * as gui from "../../framework/gui"
-import { create, GuiTemplate, update } from "../../framework/gui"
+import { GuiTemplate } from "../../framework/gui"
 import { CloseButton } from "../../framework/guicomponents/buttons"
 import { OpenedGuis } from "./openedGuis"
 import { onPlayerInit } from "../../framework/playerData"
 import * as modGui from "mod-gui"
-import { funcRefs } from "../../framework/funcRef"
-import { registerHandlers } from "../../framework/events"
+import { namedFuncRefs } from "../../framework/funcRef"
 import { destroyIfValid } from "../../framework/util"
+import { DataLayer, Layer, ViewLayer } from "../Layer"
+import { PREFIX } from "../../constants"
 
-export const { openLayerNavigator, closeLayerNavigator, updateLayerNavigator, layerNavigatorTeleportPlayer } = funcRefs(
-  {
-    openLayerNavigator({ player_index: playerIndex }: { player_index: number }) {
-      if (!OpenedGuis(playerIndex).layerNavigator) {
-        create(game.get_player(playerIndex).gui.screen, LayerNavigator)
-      }
-    },
-    closeLayerNavigator({ player_index: playerIndex }: { player_index: number }) {
-      const openedGui = OpenedGuis(playerIndex)
-      if (openedGui.layerNavigator) {
-        openedGui.layerNavigator.destroy()
-        openedGui.layerNavigator = undefined
-      }
-    },
-    updateLayerNavigator({ player_index: playerIndex }: { player_index: number }) {
-      const openedGui = OpenedGuis(playerIndex)
-      if (openedGui.layerNavigator) {
-        update(openedGui.layerNavigator, LayerNavigator)
-      }
-    },
-    layerNavigatorTeleportPlayer(element: ListBoxGuiElement) {
-      const index = element.selected_index
-      const layerName = global.layerOrder[index - 1]
-      const surfaceName = global.layers[layerName].surfaceName
-      const player = game.get_player(element.player_index)
-      player.teleport(player.position, surfaceName)
-    },
-  }
-)
+const LayerNavFuncs = namedFuncRefs("LayerNavigator:", {
+  toggle({ player_index: playerIndex }: { player_index: number }) {
+    const openedGui = OpenedGuis(playerIndex)
+    if (openedGui.layerNavigator) {
+      openedGui.layerNavigator.destroy()
+      openedGui.layerNavigator = undefined
+    } else {
+      openedGui.layerNavigator = gui.create(game.get_player(playerIndex).gui.screen, LayerNavigator)
+    }
+  },
+  teleportClick(element: ListBoxGuiElement) {
+    const layerOrder = element.parent.name === "data" ? DataLayer.getDataLayerUserOrder() : ViewLayer.getOrder()
+    const layer = layerOrder[element.selected_index - 1]
+    const player = game.get_player(element.player_index)
+    player.teleport(player.position, layer.surface)
+  },
+})
 const TitleBar: gui.GuiTemplate = {
   type: "flow",
   direction: "horizontal",
@@ -61,70 +50,78 @@ const TitleBar: gui.GuiTemplate = {
     },
     {
       ...CloseButton,
-      onClick: closeLayerNavigator,
+      onClick: LayerNavFuncs.toggle,
     },
   ],
 }
-const LayersList: gui.GuiTemplate = {
-  type: "list-box",
-  // style: "inside_shallow_frame"
-  styleMod: {
-    width: 400,
+const LayersList: GuiTemplate<string> = {
+  type: "flow",
+  direction: "vertical",
+  elementMod: {
+    name: (p) => p,
   },
-  onUpdate(element: ListBoxGuiElement) {
-    element.clear_items()
-
-    const currentSurface = game.get_player(element.player_index).surface.name
-    let selectedIndex = 0
-    for (const [i, layerName] of ipairs(global.layerOrder)) {
-      element.add_item(layerName)
-      if (currentSurface === global.layers[layerName].surfaceName) {
-        selectedIndex = i
-      }
+  onUpdate(element, type) {
+    const layers = type === "data" ? DataLayer.getDataLayerUserOrder() : ViewLayer.getOrder()
+    if (layers.length === 0) {
+      if (!element.noLayersLabel)
+        gui.create(element, {
+          type: "label",
+          name: "noLayersLabel",
+          caption: "No layers",
+        })
+    } else {
+      destroyIfValid(element.noLayersLabel)
     }
-    element.selected_index = selectedIndex
   },
-  onSelectionStateChanged: layerNavigatorTeleportPlayer,
+  children: [
+    {
+      type: "list-box",
+      styleMod: {
+        width: 300,
+      },
+      onUpdate(element: ListBoxGuiElement, type): void {
+        const currentSurface = game.get_player(element.player_index).index
+        element.clear_items()
+        let selectedIndex = 0
+        const layers: Layer[] = type === "data" ? DataLayer.getDataLayerUserOrder() : ViewLayer.getOrder()
+        for (const [i, layer] of ipairs(layers)) {
+          element.add_item(layer.name)
+          if (currentSurface === layer.surface.index) {
+            selectedIndex = i
+          }
+        }
+        element.selected_index = selectedIndex
+      },
+      onSelectionStateChanged: LayerNavFuncs.teleportClick,
+    },
+  ],
 }
-export const LayerNavigator: gui.GuiTemplate = {
+const LayerNavigator: gui.GuiTemplate = {
   type: "frame",
   name: "bbpp:layer-navigator",
   direction: "vertical",
   elementMod: {
     auto_center: true,
   },
-  onCreated(element) {
-    OpenedGuis(element.player_index).layerNavigator = element
+  onPostCreated(element) {
+    gui.create(element, LayersList, "data")
+    gui.create(element, LayersList, "view")
   },
   onUpdate(element) {
-    if (global.layerOrder.length === 0) {
-      gui.create(element, {
-        type: "label",
-        name: "noLayersLabel",
-        caption: "No layers",
-      })
-    } else {
-      destroyIfValid(element.noLayersLabel)
-    }
-  },
-  children: [TitleBar, LayersList],
+    gui.update(element, LayersList, "data")
+    gui.update(element, LayersList, "view")
+  }, // TODO: something better with this?
+  children: [TitleBar],
 }
 onPlayerInit((player) => {
-  const Button: GuiTemplate = {
+  const Button: gui.GuiTemplate = {
     type: "button",
+    name: PREFIX + "LayerNavigator",
     style: modGui.button_style,
     caption: "LN", // TODO: make fancy image
     mouse_button_filter: ["left"],
-    onClick: openLayerNavigator,
+    onClick: LayerNavFuncs.toggle,
   }
   gui.create(modGui.get_button_flow(player), Button)
 })
-
-registerHandlers({
-  // TODO: on layers updated event, as this is kinda bad
-  on_player_changed_surface: updateLayerNavigator.func,
-  on_surface_created: updateLayerNavigator.func,
-  on_surface_deleted: updateLayerNavigator.func,
-  on_surface_renamed: updateLayerNavigator.func,
-  on_surface_imported: updateLayerNavigator.func,
-})
+// TODO: make hotbar key thing too
