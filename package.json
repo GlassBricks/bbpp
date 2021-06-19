@@ -2,9 +2,9 @@
   "name": "bp-layers",
   "license": "MIT",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.26.0",
-    "@typescript-eslint/parser": "^4.26.0",
-    "eslint": "^7.27.0",
+    "@typescript-eslint/eslint-plugin": "^4.27.0",
+    "@typescript-eslint/parser": "^4.27.0",
+    "eslint": "^7.29.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-import-resolver-typescript": "^2.4.0",
@@ -15,8 +15,8 @@
     "factorio-type-kit": "^1.1.1",
     "lua-types": "https://github.com/GlassBricks/lua-types/tarball/master",
     "prettier": "^2.3.0",
-    "typescript": "^4.2.4",
-    "typescript-to-lua": "^0.39.3",
+    "typescript": "^4.3",
+    "typescript-to-lua": "^0.40.0",
     "typescript-tstl-plugin": "^0.2.0"
   },
   "scripts": {
