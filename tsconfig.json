@@ -10,6 +10,8 @@
       "typescript-to-lua/language-extensions",
       "lua-types/5.2"
     ],
+    "jsx": "react",
+    "jsxFactory": "createComponent",
     "plugins": [
       {
         "name": "typescript-tstl-plugin"
@@ -18,10 +20,18 @@
   },
   "tstl": {
     "luaTarget": "5.2",
-    "noHeader": true
+    "noHeader": true,
+    "luaPlugins": [
+      {
+        "name": "./luaPlugins/jsx.ts"
+      }
+    ]
   },
   "include": [
     "./**/*"
     //    "./node_modules/factorio-type-kit/factorio.d.ts"
+  ],
+  "exclude": [
+    "./luaPlugins/*"
   ]
 }

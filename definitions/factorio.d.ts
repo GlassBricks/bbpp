@@ -2,7 +2,6 @@
 // noinspection JSUnusedGlobalSymbols
 
 /** @noSelfInFile */
-// noinspection JSUnusedGlobalSymbols
 
 /** defines */
 declare const defines: Defines
@@ -900,10 +899,10 @@ interface Vector {}
 /** @noSelf **/
 type BoundingBox =
   | {
-  left_top: Position
-  right_bottom: Position
-  orientation?: number
-}
+      left_top: Position
+      right_bottom: Position
+      orientation?: number
+    }
   | [PositionIn, PositionIn]
 
 /** @noSelf **/
@@ -916,10 +915,13 @@ interface ScriptArea {
 
 /** @noSelf **/
 interface ScriptPosition {
-  position: Position
   name: string
   color: Color
   id: number
+
+  set position(position: PositionIn)
+
+  get position(): Position
 }
 
 /** @noSelf **/
@@ -1506,8 +1508,7 @@ interface VehicleAutomaticTargetingParameters {
 }
 
 /** @noSelf **/
-interface SoundType {
-}
+interface SoundType {}
 
 /** @noSelf **/
 interface AnyPrototypeFilters {
@@ -1601,13 +1602,13 @@ interface LuaAISettings {
 
 /** @noSelf **/
 interface LuaControlBehavior {
+  readonly type: typeof defines.control_behavior.type
+  readonly entity: LuaEntity
+
   get_circuit_network(
     wire: typeof defines.wire_type,
     circuit_connector?: typeof defines.circuit_connector_id
   ): LuaCircuitNetwork | undefined
-
-  readonly type: typeof defines.control_behavior.type
-  readonly entity: LuaEntity
 }
 
 /** @noSelf **/
@@ -1621,22 +1622,22 @@ interface LuaAccumulatorControlBehavior extends LuaControlBehavior {
 
 /** @noSelf **/
 interface LuaCombinatorControlBehavior extends LuaControlBehavior {
-  get_signal_last_tick(signal: SignalID): number | undefined
-
   readonly signals_last_tick: Signal[]
+
+  get_signal_last_tick(signal: SignalID): number | undefined
 }
 
 /** @noSelf **/
 interface LuaConstantCombinatorControlBehavior extends LuaControlBehavior {
-  set_signal(index: number, signal: Signal): void
-
-  get_signal(index: number): Signal
-
   parameters: ConstantCombinatorParameters
   enabled: boolean
   readonly signals_count: number
   readonly valid: boolean
   readonly object_name: string
+
+  set_signal(index: number, signal: Signal): void
+
+  get_signal(index: number): Signal
 
   help(): void
 }
@@ -1867,6 +1868,11 @@ interface CustomEventId {}
 
 /** @noSelf **/
 interface LuaBootstrap {
+  readonly mod_name: string
+  readonly level: any
+  readonly active_mods: Record<string, string>
+  readonly object_name: string
+
   on_init(e: () => void): void
 
   on_load(e: () => void): void
@@ -1910,11 +1916,6 @@ interface LuaBootstrap {
   raise_script_revive(table: RaiseEventParameters): void
 
   raise_script_set_tiles(table: RaiseEventParameters): void
-
-  readonly mod_name: string
-  readonly level: any
-  readonly active_mods: Record<string, string>
-  readonly object_name: string
 }
 
 /** @noSelf **/
@@ -1961,8 +1962,6 @@ interface LuaChunkIterator {
 
 /** @noSelf **/
 interface LuaCircuitNetwork {
-  get_signal(signal: SignalID): number
-
   readonly entity: LuaEntity
   readonly wire_type: typeof defines.wire_type
   readonly circuit_connector_id: typeof defines.circuit_connector_id
@@ -1972,22 +1971,78 @@ interface LuaCircuitNetwork {
   readonly valid: boolean
   readonly object_name: string
 
+  get_signal(signal: SignalID): number
+
   help(): void
 }
 
 /** @noSelf **/
 interface LuaCommandProcessor {
-  add_command(name: string, help: LocalisedString, fn: (...args: any[]) => any): void
-
-  remove_command(): boolean
-
   readonly commands: Record<string, LocalisedString>
   readonly game_commands: Record<string, LocalisedString>
   readonly object_name: string
+
+  add_command(name: string, help: LocalisedString, fn: (...args: any[]) => any): void
+
+  remove_command(): boolean
 }
 
 /** @noSelf **/
 interface LuaControl {
+  readonly surface: LuaSurface
+  readonly position: Position
+  readonly vehicle: LuaEntity
+  force: ForceSpecification
+  selected: LuaEntity
+  opened:
+    | LuaEntity
+    | LuaItemStack
+    | LuaEquipment
+    | LuaEquipmentGrid
+    | LuaPlayer
+    | LuaGuiElement
+    | typeof defines.gui_type
+  readonly crafting_queue_size: number
+  readonly crafting_queue_progress: number
+  walking_state: any
+  riding_state: RidingState
+  mining_state: any
+  shooting_state: any
+  picking_state: boolean
+  repair_state: any
+  readonly cursor_stack: LuaItemStack
+  cursor_ghost: ItemPrototypeSpecification
+  driving: boolean
+  readonly crafting_queue: any[]
+  readonly following_robots: LuaEntity[]
+  cheat_mode: boolean
+  character_crafting_speed_modifier: number
+  character_mining_speed_modifier: number
+  character_additional_mining_categories: string[]
+  character_running_speed_modifier: number
+  character_build_distance_bonus: number
+  character_item_drop_distance_bonus: number
+  character_reach_distance_bonus: number
+  character_resource_reach_distance_bonus: number
+  character_item_pickup_distance_bonus: number
+  character_loot_pickup_distance_bonus: number
+  character_inventory_slots_bonus: number
+  character_trash_slot_count_bonus: number
+  character_maximum_following_robot_count_bonus: number
+  character_health_bonus: number
+  character_personal_logistic_requests_enabled: boolean
+  vehicle_logistic_requests_enabled: boolean
+  readonly opened_gui_type: typeof defines.gui_type
+  readonly build_distance: number
+  readonly drop_item_distance: number
+  readonly reach_distance: number
+  readonly item_pickup_distance: number
+  readonly loot_pickup_distance: number
+  readonly resource_reach_distance: number
+  readonly in_combat: boolean
+  readonly character_running_speed: number
+  readonly character_mining_progress: number
+
   get_inventory(inventory: typeof defines.inventory): LuaInventory | undefined
 
   get_main_inventory(): LuaInventory
@@ -2051,66 +2106,10 @@ interface LuaControl {
   is_cursor_blueprint(): void
 
   get_blueprint_entities(): void
-
-  readonly surface: LuaSurface
-  readonly position: Position
-  readonly vehicle: LuaEntity
-  force: ForceSpecification
-  selected: LuaEntity
-  opened:
-    | LuaEntity
-    | LuaItemStack
-    | LuaEquipment
-    | LuaEquipmentGrid
-    | LuaPlayer
-    | LuaGuiElement
-    | typeof defines.gui_type
-  readonly crafting_queue_size: number
-  readonly crafting_queue_progress: number
-  walking_state: any
-  riding_state: RidingState
-  mining_state: any
-  shooting_state: any
-  picking_state: boolean
-  repair_state: any
-  readonly cursor_stack: LuaItemStack
-  cursor_ghost: ItemPrototypeSpecification
-  driving: boolean
-  readonly crafting_queue: any[]
-  readonly following_robots: LuaEntity[]
-  cheat_mode: boolean
-  character_crafting_speed_modifier: number
-  character_mining_speed_modifier: number
-  character_additional_mining_categories: string[]
-  character_running_speed_modifier: number
-  character_build_distance_bonus: number
-  character_item_drop_distance_bonus: number
-  character_reach_distance_bonus: number
-  character_resource_reach_distance_bonus: number
-  character_item_pickup_distance_bonus: number
-  character_loot_pickup_distance_bonus: number
-  character_inventory_slots_bonus: number
-  character_trash_slot_count_bonus: number
-  character_maximum_following_robot_count_bonus: number
-  character_health_bonus: number
-  character_personal_logistic_requests_enabled: boolean
-  vehicle_logistic_requests_enabled: boolean
-  readonly opened_gui_type: typeof defines.gui_type
-  readonly build_distance: number
-  readonly drop_item_distance: number
-  readonly reach_distance: number
-  readonly item_pickup_distance: number
-  readonly loot_pickup_distance: number
-  readonly resource_reach_distance: number
-  readonly in_combat: boolean
-  readonly character_running_speed: number
-  readonly character_mining_progress: number
 }
 
 /** @noSelf **/
 interface LuaCustomChartTag {
-  destroy(): void
-
   icon: SignalID
   last_user: LuaPlayer
   readonly position: Position
@@ -2120,6 +2119,8 @@ interface LuaCustomChartTag {
   readonly surface: LuaSurface
   readonly valid: boolean
   readonly object_name: string
+
+  destroy(): void
 
   help(): void
 }
@@ -2198,6 +2199,176 @@ interface LuaElectricEnergySourcePrototype {
 
 /** @noSelf **/
 interface LuaEntity extends LuaControl {
+  readonly name: string
+  readonly ghost_name: string
+  readonly localised_name: LocalisedString
+  readonly localised_description: LocalisedString
+  readonly ghost_localised_name: LocalisedString
+  readonly ghost_localised_description: LocalisedString
+  readonly type: string
+  readonly ghost_type: string
+  active: boolean
+  destructible: boolean
+  minable: boolean
+  rotatable: boolean
+  operable: boolean
+  health: number
+  direction: typeof defines.direction
+  readonly supports_direction: boolean
+  orientation: number
+  readonly cliff_orientation: string
+  relative_turret_orientation: number
+  torso_orientation: number
+  amount: number
+  initial_amount: number
+  effectivity_modifier: number
+  consumption_modifier: number
+  friction_modifier: number
+  driver_is_gunner: boolean
+  vehicle_automatic_targeting_parameters: VehicleAutomaticTargetingParameters
+  speed: number
+  readonly effective_speed: number
+  readonly stack: LuaItemStack
+  readonly prototype: LuaEntityPrototype
+  readonly ghost_prototype: LuaEntityPrototype | LuaTilePrototype
+  drop_position: Position
+  pickup_position: Position
+  drop_target: LuaEntity
+  pickup_target: LuaEntity
+  selected_gun_index: number
+  energy: number
+  temperature: number
+  readonly previous_recipe: LuaRecipe
+  readonly held_stack: LuaItemStack
+  readonly held_stack_position: Position
+  readonly train: LuaTrain
+  readonly neighbours: Record<string, LuaEntity[] | LuaEntity[][] | LuaEntity>
+  readonly belt_neighbours: Record<string, LuaEntity[]>
+  fluidbox: LuaFluidBox
+  backer_name: string
+  entity_label: string
+  time_to_live: number
+  color: Color
+  text: LocalisedString
+  readonly signal_state: typeof defines.signal_state
+  readonly chain_signal_state: typeof defines.chain_signal_state
+  to_be_looted: boolean
+  readonly crafting_speed: number
+  crafting_progress: number
+  bonus_progress: number
+  readonly productivity_bonus: number
+  readonly pollution_bonus: number
+  readonly speed_bonus: number
+  readonly consumption_bonus: number
+  readonly belt_to_ground_type: string
+  loader_type: string
+  rocket_parts: number
+  logistic_network: LuaLogisticNetwork
+  readonly logistic_cell: LuaLogisticCell
+  item_requests: Record<string, number>
+  readonly player: LuaPlayer
+  readonly unit_group: LuaUnitGroup
+  damage_dealt: number
+  kills: number
+  last_user: LuaPlayer
+  electric_buffer_size: number
+  readonly electric_input_flow_limit: number
+  readonly electric_output_flow_limit: number
+  readonly electric_drain: number
+  readonly electric_emissions: number
+  readonly unit_number?: number
+  readonly ghost_unit_number?: number
+  mining_progress: number
+  bonus_mining_progress: number
+  power_production: number
+  power_usage: number
+  readonly bounding_box: BoundingBox
+  readonly secondary_bounding_box: BoundingBox
+  readonly selection_box: BoundingBox
+  readonly secondary_selection_box: BoundingBox
+  readonly mining_target: LuaEntity
+  readonly circuit_connected_entities: any
+  readonly circuit_connection_definitions: any[]
+  readonly request_slot_count: number
+  readonly filter_slot_count: number
+  readonly loader_container: LuaEntity
+  readonly grid: LuaEquipmentGrid
+  graphics_variation: number
+  tree_color_index: number
+  readonly tree_color_index_max: number
+  tree_stage_index: number
+  readonly tree_stage_index_max: number
+  tree_gray_stage_index: number
+  readonly tree_gray_stage_index_max: number
+  readonly burner: LuaBurner
+  shooting_target: LuaEntity
+  readonly proxy_target: LuaEntity
+  readonly stickers: LuaEntity[]
+  readonly sticked_to: LuaEntity
+  parameters: ProgrammableSpeakerParameters
+  alert_parameters: ProgrammableSpeakerAlertParameters
+  readonly electric_network_statistics: LuaFlowStatistics
+  inserter_stack_size_override: number
+  products_finished: number
+  readonly spawner: LuaEntity
+  readonly units: LuaEntity[]
+  power_switch_state: boolean
+  readonly effects: Effects
+  infinity_container_filters: InfinityInventoryFilter[]
+  remove_unfiltered_items: boolean
+  character_corpse_player_index: number
+  character_corpse_tick_of_death: number
+  character_corpse_death_cause: LocalisedString
+  associated_player: LuaPlayer
+  tick_of_last_attack: number
+  tick_of_last_damage: number
+  splitter_filter: LuaItemPrototype
+  inserter_filter_mode: string
+  splitter_input_priority: string
+  splitter_output_priority: string
+  readonly armed: boolean
+  recipe_locked: boolean
+  readonly connected_rail: LuaEntity
+  readonly trains_in_block: number
+  timeout: number
+  readonly neighbour_bonus: number
+  readonly ai_settings: LuaAISettings
+  highlight_box_type: string
+  highlight_box_blink_interval: number
+  readonly status: typeof defines.entity_status
+  enable_logistics_while_moving: boolean
+  render_player: LuaPlayer
+  render_to_forces: ForceSpecification[]
+  readonly pump_rail_target: LuaEntity
+  readonly moving: boolean
+  readonly electric_network_id: number
+  allow_dispatching_robots: boolean
+  auto_launch: boolean
+  readonly energy_generated_last_tick: number
+  storage_filter: LuaItemPrototype
+  request_from_buffers: boolean
+  corpse_expires: boolean
+  corpse_immune_to_entity_placement: boolean
+  tags?: Tags
+  readonly command: Command
+  readonly distraction_command: Command
+  time_to_next_effect: number
+  autopilot_destination: Position
+  readonly autopilot_destinations: Position[]
+  readonly trains_count: number
+  trains_limit: number
+  readonly is_entity_with_force: boolean
+  readonly is_entity_with_owner: boolean
+  readonly is_entity_with_health: boolean
+  combat_robot_owner: LuaEntity
+  link_id: number
+  follow_target: LuaEntity
+  follow_offset: Position
+  linked_belt_type: string
+  readonly linked_belt_neighbour: LuaEntity
+  readonly valid: boolean
+  readonly object_name: string
+
   get_output_inventory(): void
 
   get_module_inventory(): void
@@ -2451,185 +2622,11 @@ interface LuaEntity extends LuaControl {
 
   disconnect_linked_belts(): void
 
-  readonly name: string
-  readonly ghost_name: string
-  readonly localised_name: LocalisedString
-  readonly localised_description: LocalisedString
-  readonly ghost_localised_name: LocalisedString
-  readonly ghost_localised_description: LocalisedString
-  readonly type: string
-  readonly ghost_type: string
-  active: boolean
-  destructible: boolean
-  minable: boolean
-  rotatable: boolean
-  operable: boolean
-  health: number
-  direction: typeof defines.direction
-  readonly supports_direction: boolean
-  orientation: number
-  readonly cliff_orientation: string
-  relative_turret_orientation: number
-  torso_orientation: number
-  amount: number
-  initial_amount: number
-  effectivity_modifier: number
-  consumption_modifier: number
-  friction_modifier: number
-  driver_is_gunner: boolean
-  vehicle_automatic_targeting_parameters: VehicleAutomaticTargetingParameters
-  speed: number
-  readonly effective_speed: number
-  readonly stack: LuaItemStack
-  readonly prototype: LuaEntityPrototype
-  readonly ghost_prototype: LuaEntityPrototype | LuaTilePrototype
-  drop_position: Position
-  pickup_position: Position
-  drop_target: LuaEntity
-  pickup_target: LuaEntity
-  selected_gun_index: number
-  energy: number
-  temperature: number
-  readonly previous_recipe: LuaRecipe
-  readonly held_stack: LuaItemStack
-  readonly held_stack_position: Position
-  readonly train: LuaTrain
-  readonly neighbours: Record<string, LuaEntity[] | LuaEntity[][] | LuaEntity>
-  readonly belt_neighbours: Record<string, LuaEntity[]>
-  fluidbox: LuaFluidBox
-  backer_name: string
-  entity_label: string
-  time_to_live: number
-  color: Color
-  text: LocalisedString
-  readonly signal_state: typeof defines.signal_state
-  readonly chain_signal_state: typeof defines.chain_signal_state
-  to_be_looted: boolean
-  readonly crafting_speed: number
-  crafting_progress: number
-  bonus_progress: number
-  readonly productivity_bonus: number
-  readonly pollution_bonus: number
-  readonly speed_bonus: number
-  readonly consumption_bonus: number
-  readonly belt_to_ground_type: string
-  loader_type: string
-  rocket_parts: number
-  logistic_network: LuaLogisticNetwork
-  readonly logistic_cell: LuaLogisticCell
-  item_requests: Record<string, number>
-  readonly player: LuaPlayer
-  readonly unit_group: LuaUnitGroup
-  damage_dealt: number
-  kills: number
-  last_user: LuaPlayer
-  electric_buffer_size: number
-  readonly electric_input_flow_limit: number
-  readonly electric_output_flow_limit: number
-  readonly electric_drain: number
-  readonly electric_emissions: number
-  readonly unit_number?: number
-  readonly ghost_unit_number?: number
-  mining_progress: number
-  bonus_mining_progress: number
-  power_production: number
-  power_usage: number
-  readonly bounding_box: BoundingBox
-  readonly secondary_bounding_box: BoundingBox
-  readonly selection_box: BoundingBox
-  readonly secondary_selection_box: BoundingBox
-  readonly mining_target: LuaEntity
-  readonly circuit_connected_entities: any
-  readonly circuit_connection_definitions: any[]
-  readonly request_slot_count: number
-  readonly filter_slot_count: number
-  readonly loader_container: LuaEntity
-  readonly grid: LuaEquipmentGrid
-  graphics_variation: number
-  tree_color_index: number
-  readonly tree_color_index_max: number
-  tree_stage_index: number
-  readonly tree_stage_index_max: number
-  tree_gray_stage_index: number
-  readonly tree_gray_stage_index_max: number
-  readonly burner: LuaBurner
-  shooting_target: LuaEntity
-  readonly proxy_target: LuaEntity
-  readonly stickers: LuaEntity[]
-  readonly sticked_to: LuaEntity
-  parameters: ProgrammableSpeakerParameters
-  alert_parameters: ProgrammableSpeakerAlertParameters
-  readonly electric_network_statistics: LuaFlowStatistics
-  inserter_stack_size_override: number
-  products_finished: number
-  readonly spawner: LuaEntity
-  readonly units: LuaEntity[]
-  power_switch_state: boolean
-  readonly effects: Effects
-  infinity_container_filters: InfinityInventoryFilter[]
-  remove_unfiltered_items: boolean
-  character_corpse_player_index: number
-  character_corpse_tick_of_death: number
-  character_corpse_death_cause: LocalisedString
-  associated_player: LuaPlayer
-  tick_of_last_attack: number
-  tick_of_last_damage: number
-  splitter_filter: LuaItemPrototype
-  inserter_filter_mode: string
-  splitter_input_priority: string
-  splitter_output_priority: string
-  readonly armed: boolean
-  recipe_locked: boolean
-  readonly connected_rail: LuaEntity
-  readonly trains_in_block: number
-  timeout: number
-  readonly neighbour_bonus: number
-  readonly ai_settings: LuaAISettings
-  highlight_box_type: string
-  highlight_box_blink_interval: number
-  readonly status: typeof defines.entity_status
-  enable_logistics_while_moving: boolean
-  render_player: LuaPlayer
-  render_to_forces: ForceSpecification[]
-  readonly pump_rail_target: LuaEntity
-  readonly moving: boolean
-  readonly electric_network_id: number
-  allow_dispatching_robots: boolean
-  auto_launch: boolean
-  readonly energy_generated_last_tick: number
-  storage_filter: LuaItemPrototype
-  request_from_buffers: boolean
-  corpse_expires: boolean
-  corpse_immune_to_entity_placement: boolean
-  tags?: Tags
-  readonly command: Command
-  readonly distraction_command: Command
-  time_to_next_effect: number
-  autopilot_destination: Position
-  readonly autopilot_destinations: Position[]
-  readonly trains_count: number
-  trains_limit: number
-  readonly is_entity_with_force: boolean
-  readonly is_entity_with_owner: boolean
-  readonly is_entity_with_health: boolean
-  combat_robot_owner: LuaEntity
-  link_id: number
-  follow_target: LuaEntity
-  follow_offset: Position
-  linked_belt_type: string
-  readonly linked_belt_neighbour: LuaEntity
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
 /** @noSelf **/
 interface LuaEntityPrototype {
-  has_flag(flag: string): boolean
-
-  get_inventory_size(index: typeof defines.inventory): number
-
   readonly type: string
   readonly name: string
   readonly localised_name: LocalisedString
@@ -2835,6 +2832,10 @@ interface LuaEntityPrototype {
   readonly valid: boolean
   readonly object_name: string
 
+  has_flag(flag: string): boolean
+
+  get_inventory_size(index: typeof defines.inventory): number
+
   help(): void
 }
 
@@ -2873,6 +2874,20 @@ interface LuaEquipmentCategoryPrototype {
 
 /** @noSelf **/
 interface LuaEquipmentGrid {
+  readonly prototype: LuaEquipmentGridPrototype
+  readonly width: number
+  readonly height: number
+  readonly equipment: LuaEquipment[]
+  readonly generator_energy: number
+  readonly max_solar_energy: number
+  readonly available_in_batteries: number
+  readonly battery_capacity: number
+  readonly shield: number
+  readonly max_shield: number
+  inhibit_movement_bonus: boolean
+  readonly valid: boolean
+  readonly object_name: string
+
   take(tbl?: {
     position?: PositionIn
     equipment?: LuaEquipment
@@ -2892,20 +2907,6 @@ interface LuaEquipmentGrid {
   get(position: PositionIn): LuaEquipment | undefined
 
   get_contents(): void
-
-  readonly prototype: LuaEquipmentGridPrototype
-  readonly width: number
-  readonly height: number
-  readonly equipment: LuaEquipment[]
-  readonly generator_energy: number
-  readonly max_solar_energy: number
-  readonly available_in_batteries: number
-  readonly battery_capacity: number
-  readonly shield: number
-  readonly max_shield: number
-  inhibit_movement_bonus: boolean
-  readonly valid: boolean
-  readonly object_name: string
 
   help(): void
 }
@@ -2956,6 +2957,12 @@ interface LuaEquipmentPrototype {
 
 /** @noSelf **/
 interface LuaFlowStatistics {
+  readonly input_counts: Record<string, number[] | number>
+  readonly output_counts: Record<string, number[] | number>
+  readonly force: LuaForce
+  readonly valid: boolean
+  readonly object_name: string
+
   get_input_count(arg_0: string): number
 
   set_input_count(arg_0: string, count: number): void
@@ -2975,17 +2982,17 @@ interface LuaFlowStatistics {
 
   clear(): void
 
-  readonly input_counts: Record<string, number[] | number>
-  readonly output_counts: Record<string, number[] | number>
-  readonly force: LuaForce
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
 /** @noSelf **/
 interface LuaFluidBox {
+  readonly "operator #": number
+  readonly owner: LuaEntity
+  readonly "operator []": Fluid | undefined
+  readonly valid: boolean
+  readonly object_name: string
+
   get_prototype(index: number): LuaFluidBoxPrototype
 
   get_capacity(index: number): number
@@ -3009,12 +3016,6 @@ interface LuaFluidBox {
   get_locked_fluid(index: number): string
 
   flush(index: number, fluid?: FluidSpecification): Record<string, number>
-
-  readonly "operator #": number
-  readonly owner: LuaEntity
-  readonly "operator []": Fluid | undefined
-  readonly valid: boolean
-  readonly object_name: string
 
   help(): void
 }
@@ -3098,6 +3099,69 @@ interface LuaFontPrototype {
 
 /** @noSelf **/
 interface LuaForce {
+  readonly name: string
+  readonly technologies: Record<string, LuaTechnology>
+  readonly recipes: Record<string, LuaRecipe>
+  manual_mining_speed_modifier: number
+  manual_crafting_speed_modifier: number
+  laboratory_speed_modifier: number
+  laboratory_productivity_bonus: number
+  worker_robots_speed_modifier: number
+  worker_robots_battery_modifier: number
+  worker_robots_storage_bonus: number
+  readonly current_research: LuaTechnology
+  research_progress: number
+  previous_research: LuaTechnology
+  inserter_stack_size_bonus: number
+  stack_inserter_capacity_bonus: number
+  character_trash_slot_count: number
+  maximum_following_robot_count: number
+  following_robots_lifetime_modifier: number
+  ghost_time_to_live: number
+  readonly players: LuaPlayer[]
+  ai_controllable: boolean
+  readonly logistic_networks: Record<string, LuaLogisticNetwork[]>
+  readonly item_production_statistics: LuaFlowStatistics
+  readonly fluid_production_statistics: LuaFlowStatistics
+  readonly kill_count_statistics: LuaFlowStatistics
+  readonly entity_build_count_statistics: LuaFlowStatistics
+  character_running_speed_modifier: number
+  artillery_range_modifier: number
+  character_build_distance_bonus: number
+  character_item_drop_distance_bonus: number
+  character_reach_distance_bonus: number
+  character_resource_reach_distance_bonus: number
+  character_item_pickup_distance_bonus: number
+  character_loot_pickup_distance_bonus: number
+  character_inventory_slots_bonus: number
+  deconstruction_time_to_live: number
+  character_health_bonus: number
+  max_successful_attempts_per_tick_per_construction_queue: number
+  max_failed_attempts_per_tick_per_construction_queue: number
+  zoom_to_world_enabled: boolean
+  zoom_to_world_ghost_building_enabled: boolean
+  zoom_to_world_blueprint_enabled: boolean
+  zoom_to_world_deconstruction_planner_enabled: boolean
+  zoom_to_world_selection_tool_enabled: boolean
+  character_logistic_requests: boolean
+  rockets_launched: number
+  readonly items_launched: Record<string, number>
+  readonly connected_players: LuaPlayer[]
+  mining_drill_productivity_bonus: number
+  train_braking_force_bonus: number
+  evolution_factor: number
+  evolution_factor_by_pollution: number
+  evolution_factor_by_time: number
+  evolution_factor_by_killing_spawners: number
+  friendly_fire: boolean
+  share_chart: boolean
+  research_queue_enabled: boolean
+  readonly index: number
+  research_queue: TechnologySpecification[]
+  readonly research_enabled: boolean
+  readonly valid: boolean
+  readonly object_name: string
+
   get_entity_count(name: string): number
 
   disable_research(): void
@@ -3213,69 +3277,6 @@ interface LuaForce {
 
   get_linked_inventory(prototype: EntityPrototypeSpecification, link_id: number): LuaInventory
 
-  readonly name: string
-  readonly technologies: Record<string, LuaTechnology>
-  readonly recipes: Record<string, LuaRecipe>
-  manual_mining_speed_modifier: number
-  manual_crafting_speed_modifier: number
-  laboratory_speed_modifier: number
-  laboratory_productivity_bonus: number
-  worker_robots_speed_modifier: number
-  worker_robots_battery_modifier: number
-  worker_robots_storage_bonus: number
-  readonly current_research: LuaTechnology
-  research_progress: number
-  previous_research: LuaTechnology
-  inserter_stack_size_bonus: number
-  stack_inserter_capacity_bonus: number
-  character_trash_slot_count: number
-  maximum_following_robot_count: number
-  following_robots_lifetime_modifier: number
-  ghost_time_to_live: number
-  readonly players: LuaPlayer[]
-  ai_controllable: boolean
-  readonly logistic_networks: Record<string, LuaLogisticNetwork[]>
-  readonly item_production_statistics: LuaFlowStatistics
-  readonly fluid_production_statistics: LuaFlowStatistics
-  readonly kill_count_statistics: LuaFlowStatistics
-  readonly entity_build_count_statistics: LuaFlowStatistics
-  character_running_speed_modifier: number
-  artillery_range_modifier: number
-  character_build_distance_bonus: number
-  character_item_drop_distance_bonus: number
-  character_reach_distance_bonus: number
-  character_resource_reach_distance_bonus: number
-  character_item_pickup_distance_bonus: number
-  character_loot_pickup_distance_bonus: number
-  character_inventory_slots_bonus: number
-  deconstruction_time_to_live: number
-  character_health_bonus: number
-  max_successful_attempts_per_tick_per_construction_queue: number
-  max_failed_attempts_per_tick_per_construction_queue: number
-  zoom_to_world_enabled: boolean
-  zoom_to_world_ghost_building_enabled: boolean
-  zoom_to_world_blueprint_enabled: boolean
-  zoom_to_world_deconstruction_planner_enabled: boolean
-  zoom_to_world_selection_tool_enabled: boolean
-  character_logistic_requests: boolean
-  rockets_launched: number
-  readonly items_launched: Record<string, number>
-  readonly connected_players: LuaPlayer[]
-  mining_drill_productivity_bonus: number
-  train_braking_force_bonus: number
-  evolution_factor: number
-  evolution_factor_by_pollution: number
-  evolution_factor_by_time: number
-  evolution_factor_by_killing_spawners: number
-  friendly_fire: boolean
-  share_chart: boolean
-  research_queue_enabled: boolean
-  readonly index: number
-  research_queue: TechnologySpecification[]
-  readonly research_enabled: boolean
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
@@ -3293,6 +3294,70 @@ interface LuaFuelCategoryPrototype {
 
 /** @noSelf **/
 interface LuaGameScript {
+  readonly object_name: string
+  readonly player: LuaPlayer
+  readonly players: Record<number | string, LuaPlayer>
+  readonly map_settings: MapSettings
+  readonly difficulty_settings: DifficultySettings
+  readonly difficulty: typeof defines.difficulty
+  readonly forces: Record<number | string, LuaForce>
+  readonly entity_prototypes: Record<string, LuaEntityPrototype>
+  readonly item_prototypes: Record<string, LuaItemPrototype>
+  readonly fluid_prototypes: Record<string, LuaFluidPrototype>
+  readonly tile_prototypes: Record<string, LuaTilePrototype>
+  readonly equipment_prototypes: Record<string, LuaEquipmentPrototype>
+  readonly damage_prototypes: Record<string, LuaDamagePrototype>
+  readonly virtual_signal_prototypes: Record<string, LuaVirtualSignalPrototype>
+  readonly equipment_grid_prototypes: Record<string, LuaEquipmentGridPrototype>
+  readonly recipe_prototypes: Record<string, LuaRecipePrototype>
+  readonly technology_prototypes: Record<string, LuaTechnologyPrototype>
+  readonly decorative_prototypes: Record<string, LuaDecorativePrototype>
+  readonly particle_prototypes: Record<string, LuaParticlePrototype>
+  readonly autoplace_control_prototypes: Record<string, LuaAutoplaceControlPrototype>
+  readonly noise_layer_prototypes: Record<string, LuaNoiseLayerPrototype>
+  readonly mod_setting_prototypes: Record<string, LuaModSettingPrototype>
+  readonly custom_input_prototypes: Record<string, LuaCustomInputPrototype>
+  readonly ammo_category_prototypes: Record<string, LuaAmmoCategoryPrototype>
+  readonly named_noise_expressions: Record<string, LuaNamedNoiseExpression>
+  readonly item_subgroup_prototypes: Record<string, LuaGroup>
+  readonly item_group_prototypes: Record<string, LuaGroup>
+  readonly fuel_category_prototypes: Record<string, LuaFuelCategoryPrototype>
+  readonly resource_category_prototypes: Record<string, LuaResourceCategoryPrototype>
+  readonly achievement_prototypes: Record<string, LuaAchievementPrototype>
+  readonly module_category_prototypes: Record<string, LuaModuleCategoryPrototype>
+  readonly equipment_category_prototypes: Record<string, LuaEquipmentCategoryPrototype>
+  readonly trivial_smoke_prototypes: Record<string, LuaTrivialSmokePrototype>
+  readonly shortcut_prototypes: Record<string, LuaShortcutPrototype>
+  readonly recipe_category_prototypes: Record<string, LuaRecipeCategoryPrototype>
+  readonly font_prototypes: Record<string, LuaFontPrototype>
+  readonly map_gen_presets: Record<string, any>
+  readonly styles: Record<string, string>
+  readonly tick: number
+  readonly ticks_played: number
+  tick_paused: boolean
+  ticks_to_run: number
+  readonly finished: boolean
+  speed: number
+  readonly surfaces: Record<number | string, LuaSurface>
+  readonly active_mods: Record<string, string>
+  readonly connected_players: LuaPlayer[]
+  readonly permissions: LuaPermissionGroups
+  readonly backer_names: Record<number, string>
+  readonly default_map_gen_settings: MapGenSettings
+  enemy_has_vision_on_land_mines: boolean
+  autosave_enabled: boolean
+  draw_resource_selection: boolean
+  readonly pollution_statistics: LuaFlowStatistics
+  readonly max_force_distraction_distance: number
+  readonly max_force_distraction_chunk_distance: number
+  readonly max_electric_pole_supply_area_distance: number
+  readonly max_electric_pole_connection_distance: number
+  readonly max_beacon_supply_area_distance: number
+  readonly max_gate_activation_distance: number
+  readonly max_inserter_reach_distance: number
+  readonly max_pipe_to_ground_distance: number
+  readonly max_underground_belt_distance: number
+
   set_game_state(table_0: {
     game_finished: boolean
     player_won: boolean
@@ -3465,70 +3530,6 @@ interface LuaGameScript {
   encode_string(string: string): string | undefined
 
   decode_string(string: string): string | undefined
-
-  readonly object_name: string
-  readonly player: LuaPlayer
-  readonly players: Record<number | string, LuaPlayer>
-  readonly map_settings: MapSettings
-  readonly difficulty_settings: DifficultySettings
-  readonly difficulty: typeof defines.difficulty
-  readonly forces: Record<number | string, LuaForce>
-  readonly entity_prototypes: Record<string, LuaEntityPrototype>
-  readonly item_prototypes: Record<string, LuaItemPrototype>
-  readonly fluid_prototypes: Record<string, LuaFluidPrototype>
-  readonly tile_prototypes: Record<string, LuaTilePrototype>
-  readonly equipment_prototypes: Record<string, LuaEquipmentPrototype>
-  readonly damage_prototypes: Record<string, LuaDamagePrototype>
-  readonly virtual_signal_prototypes: Record<string, LuaVirtualSignalPrototype>
-  readonly equipment_grid_prototypes: Record<string, LuaEquipmentGridPrototype>
-  readonly recipe_prototypes: Record<string, LuaRecipePrototype>
-  readonly technology_prototypes: Record<string, LuaTechnologyPrototype>
-  readonly decorative_prototypes: Record<string, LuaDecorativePrototype>
-  readonly particle_prototypes: Record<string, LuaParticlePrototype>
-  readonly autoplace_control_prototypes: Record<string, LuaAutoplaceControlPrototype>
-  readonly noise_layer_prototypes: Record<string, LuaNoiseLayerPrototype>
-  readonly mod_setting_prototypes: Record<string, LuaModSettingPrototype>
-  readonly custom_input_prototypes: Record<string, LuaCustomInputPrototype>
-  readonly ammo_category_prototypes: Record<string, LuaAmmoCategoryPrototype>
-  readonly named_noise_expressions: Record<string, LuaNamedNoiseExpression>
-  readonly item_subgroup_prototypes: Record<string, LuaGroup>
-  readonly item_group_prototypes: Record<string, LuaGroup>
-  readonly fuel_category_prototypes: Record<string, LuaFuelCategoryPrototype>
-  readonly resource_category_prototypes: Record<string, LuaResourceCategoryPrototype>
-  readonly achievement_prototypes: Record<string, LuaAchievementPrototype>
-  readonly module_category_prototypes: Record<string, LuaModuleCategoryPrototype>
-  readonly equipment_category_prototypes: Record<string, LuaEquipmentCategoryPrototype>
-  readonly trivial_smoke_prototypes: Record<string, LuaTrivialSmokePrototype>
-  readonly shortcut_prototypes: Record<string, LuaShortcutPrototype>
-  readonly recipe_category_prototypes: Record<string, LuaRecipeCategoryPrototype>
-  readonly font_prototypes: Record<string, LuaFontPrototype>
-  readonly map_gen_presets: Record<string, any>
-  readonly styles: Record<string, string>
-  readonly tick: number
-  readonly ticks_played: number
-  tick_paused: boolean
-  ticks_to_run: number
-  readonly finished: boolean
-  speed: number
-  readonly surfaces: Record<number | string, LuaSurface>
-  readonly active_mods: Record<string, string>
-  readonly connected_players: LuaPlayer[]
-  readonly permissions: LuaPermissionGroups
-  readonly backer_names: Record<number, string>
-  readonly default_map_gen_settings: MapGenSettings
-  enemy_has_vision_on_land_mines: boolean
-  autosave_enabled: boolean
-  draw_resource_selection: boolean
-  readonly pollution_statistics: LuaFlowStatistics
-  readonly max_force_distraction_distance: number
-  readonly max_force_distraction_chunk_distance: number
-  readonly max_electric_pole_supply_area_distance: number
-  readonly max_electric_pole_connection_distance: number
-  readonly max_beacon_supply_area_distance: number
-  readonly max_gate_activation_distance: number
-  readonly max_inserter_reach_distance: number
-  readonly max_pipe_to_ground_distance: number
-  readonly max_underground_belt_distance: number
 }
 
 /** @noSelf **/
@@ -3548,8 +3549,6 @@ interface LuaGroup {
 
 /** @noSelf **/
 interface LuaGui {
-  is_valid_sprite_path(sprite_path: SpritePath): boolean
-
   readonly player: LuaPlayer
   readonly children: Record<string, LuaGuiElement>
   readonly top: LuaGuiElement
@@ -3560,6 +3559,8 @@ interface LuaGui {
   readonly relative: LuaGuiElement
   readonly valid: boolean
   readonly object_name: string
+
+  is_valid_sprite_path(sprite_path: SpritePath): boolean
 
   help(): void
 }
@@ -3585,6 +3586,16 @@ interface LuaHeatEnergySourcePrototype {
 
 /** @noSelf **/
 interface LuaInventoryBase {
+  readonly "operator #": number
+  readonly index: typeof defines.inventory
+  readonly entity_owner: LuaEntity
+  readonly player_owner: LuaPlayer
+  readonly equipment_owner: LuaEquipment
+  readonly mod_owner: string
+  readonly "operator []": LuaItemStack
+  readonly valid: boolean
+  readonly object_name: string
+
   clear(): void
 
   can_insert(items: ItemStackSpecification): boolean
@@ -3629,16 +3640,6 @@ interface LuaInventoryBase {
 
   destroy(): void
 
-  readonly "operator #": number
-  readonly index: typeof defines.inventory
-  readonly entity_owner: LuaEntity
-  readonly player_owner: LuaPlayer
-  readonly equipment_owner: LuaEquipment
-  readonly mod_owner: string
-  readonly "operator []": LuaItemStack
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
@@ -3649,10 +3650,6 @@ type LuaInventory = LuaInventoryBase & {
 
 /** @noSelf **/
 interface LuaItemPrototype {
-  has_flag(flag: string): boolean
-
-  get_ammo_type(ammo_source_type?: string): AmmoType
-
   readonly type: string
   readonly name: string
   readonly localised_name: LocalisedString
@@ -3728,6 +3725,10 @@ interface LuaItemPrototype {
   readonly valid: boolean
   readonly object_name: string
 
+  has_flag(flag: string): boolean
+
+  get_ammo_type(ammo_source_type?: string): AmmoType
+
   help(): void
 }
 
@@ -3739,17 +3740,70 @@ interface BlueprintControlBehavior {}
 interface BlueprintEntity {
   entity_number: number
   name: string
-  position: Position
   direction?: any
   tags?: Tags
   items?: Record<string, number>
   connections?: BlueprintCircuitConnection
   control_behavior?: BlueprintControlBehavior
   schedule?: TrainScheduleRecord[]
+
+  set position(position: PositionIn)
+
+  get position(): Position
 }
 
 /** @noSelf **/
 interface LuaItemStack {
+  readonly valid_for_read: boolean
+  readonly prototype: LuaItemPrototype
+  readonly name: string
+  readonly type: string
+  count: number
+  readonly grid: LuaEquipmentGrid
+  health: number
+  durability: number
+  ammo: number
+  blueprint_icons: any[]
+  blueprint_snap_to_grid: Position
+  blueprint_position_relative_to_grid: Position
+  blueprint_absolute_snapping: boolean
+  label: string
+  label_color: Color
+  allow_manual_label_change: boolean
+  readonly cost_to_build: Record<string, number>
+  extends_inventory: boolean
+  prioritize_insertion_mode: string
+  readonly default_icons: any[]
+  tags: Tags
+  custom_description: LocalisedString
+  entity_filters: string[]
+  tile_filters: string[]
+  entity_filter_mode: typeof defines.deconstruction_item.entity_filter_mode
+  tile_filter_mode: typeof defines.deconstruction_item.tile_filter_mode
+  tile_selection_mode: typeof defines.deconstruction_item.tile_selection_mode
+  trees_and_rocks_only: boolean
+  readonly entity_filter_count: number
+  readonly tile_filter_count: number
+  active_index: number
+  readonly item_number: number
+  connected_entity: any
+  readonly is_blueprint: boolean
+  readonly is_blueprint_book: boolean
+  readonly is_module: boolean
+  readonly is_tool: boolean
+  readonly is_mining_tool: boolean
+  readonly is_armor: boolean
+  readonly is_repair_tool: boolean
+  readonly is_item_with_label: boolean
+  readonly is_item_with_inventory: boolean
+  readonly is_item_with_entity_data: boolean
+  readonly is_selection_tool: boolean
+  readonly is_item_with_tags: boolean
+  readonly is_deconstruction_item: boolean
+  readonly is_upgrade_item: boolean
+  readonly valid: boolean
+  readonly object_name: string
+
   is_blueprint_setup(): boolean
 
   get_blueprint_entities(): BlueprintEntity[]
@@ -3859,67 +3913,11 @@ interface LuaItemStack {
 
   create_grid(): LuaEquipmentGrid
 
-  readonly valid_for_read: boolean
-  readonly prototype: LuaItemPrototype
-  readonly name: string
-  readonly type: string
-  count: number
-  readonly grid: LuaEquipmentGrid
-  health: number
-  durability: number
-  ammo: number
-  blueprint_icons: any[]
-  blueprint_snap_to_grid: Position
-  blueprint_position_relative_to_grid: Position
-  blueprint_absolute_snapping: boolean
-  label: string
-  label_color: Color
-  allow_manual_label_change: boolean
-  readonly cost_to_build: Record<string, number>
-  extends_inventory: boolean
-  prioritize_insertion_mode: string
-  readonly default_icons: any[]
-  tags: Tags
-  custom_description: LocalisedString
-  entity_filters: string[]
-  tile_filters: string[]
-  entity_filter_mode: typeof defines.deconstruction_item.entity_filter_mode
-  tile_filter_mode: typeof defines.deconstruction_item.tile_filter_mode
-  tile_selection_mode: typeof defines.deconstruction_item.tile_selection_mode
-  trees_and_rocks_only: boolean
-  readonly entity_filter_count: number
-  readonly tile_filter_count: number
-  active_index: number
-  readonly item_number: number
-  connected_entity: any
-  readonly is_blueprint: boolean
-  readonly is_blueprint_book: boolean
-  readonly is_module: boolean
-  readonly is_tool: boolean
-  readonly is_mining_tool: boolean
-  readonly is_armor: boolean
-  readonly is_repair_tool: boolean
-  readonly is_item_with_label: boolean
-  readonly is_item_with_inventory: boolean
-  readonly is_item_with_entity_data: boolean
-  readonly is_selection_tool: boolean
-  readonly is_item_with_tags: boolean
-  readonly is_deconstruction_item: boolean
-  readonly is_upgrade_item: boolean
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
 /** @noSelf **/
 interface LuaLogisticCell {
-  is_in_logistic_range(position: PositionIn): boolean
-
-  is_in_construction_range(position: PositionIn): boolean
-
-  is_neighbour_with(other: LuaLogisticCell): boolean
-
   readonly logistic_radius: number
   readonly logistics_connection_distance: number
   readonly construction_radius: number
@@ -3938,30 +3936,17 @@ interface LuaLogisticCell {
   readonly valid: boolean
   readonly object_name: string
 
+  is_in_logistic_range(position: PositionIn): boolean
+
+  is_in_construction_range(position: PositionIn): boolean
+
+  is_neighbour_with(other: LuaLogisticCell): boolean
+
   help(): void
 }
 
 /** @noSelf **/
 interface LuaLogisticNetwork {
-  get_item_count(item?: string, member?: string): number
-
-  get_contents(): void
-
-  remove_item(item: ItemStackSpecification, members?: string): number
-
-  insert(item: ItemStackSpecification, members?: string): number
-
-  find_cell_closest_to(position: PositionIn): LuaLogisticCell
-
-  select_pickup_point(table_0: {
-    name: string
-    position?: PositionIn
-    include_buffers?: boolean
-    members?: string
-  }): LuaLogisticPoint
-
-  select_drop_point(table_0: { stack: ItemStackSpecification; members?: string }): LuaLogisticPoint
-
   readonly force: LuaForce
   readonly available_logistic_robots: number
   readonly all_logistic_robots: number
@@ -3985,6 +3970,25 @@ interface LuaLogisticNetwork {
   readonly logistic_robots: LuaEntity[]
   readonly valid: boolean
   readonly object_name: string
+
+  get_item_count(item?: string, member?: string): number
+
+  get_contents(): void
+
+  remove_item(item: ItemStackSpecification, members?: string): number
+
+  insert(item: ItemStackSpecification, members?: string): number
+
+  find_cell_closest_to(position: PositionIn): LuaLogisticCell
+
+  select_pickup_point(table_0: {
+    name: string
+    position?: PositionIn
+    include_buffers?: boolean
+    members?: string
+  }): LuaLogisticPoint
+
+  select_drop_point(table_0: { stack: ItemStackSpecification; members?: string }): LuaLogisticPoint
 
   help(): void
 }
@@ -4088,6 +4092,12 @@ interface LuaParticlePrototype {
 
 /** @noSelf **/
 interface LuaPermissionGroup {
+  name: string
+  readonly players: LuaPlayer[]
+  readonly group_id: number
+  readonly valid: boolean
+  readonly object_name: string
+
   add_player(player: PlayerSpecification): boolean
 
   remove_player(player: PlayerSpecification): boolean
@@ -4098,30 +4108,60 @@ interface LuaPermissionGroup {
 
   destroy(): void
 
-  name: string
-  readonly players: LuaPlayer[]
-  readonly group_id: number
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
 /** @noSelf **/
 interface LuaPermissionGroups {
-  create_group(name?: string): LuaPermissionGroup
-
-  get_group(group: string | number): LuaPermissionGroup
-
   readonly groups: LuaPermissionGroup[]
   readonly valid: boolean
   readonly object_name: string
+
+  create_group(name?: string): LuaPermissionGroup
+
+  get_group(group: string | number): LuaPermissionGroup
 
   help(): void
 }
 
 /** @noSelf **/
 interface LuaPlayer extends LuaControl {
+  character: LuaEntity
+  readonly cutscene_character: LuaEntity
+  readonly index: number
+  readonly gui: LuaGui
+  readonly opened_self: boolean
+  readonly controller_type: typeof defines.controllers
+  readonly stashed_controller_type: typeof defines.controllers
+  game_view_settings: GameViewSettings
+  minimap_enabled: boolean
+  color: Color
+  chat_color: Color
+  readonly name: string
+  tag: string
+  readonly connected: boolean
+  admin: boolean
+  readonly entity_copy_source: LuaEntity
+  readonly afk_time: number
+  readonly online_time: number
+  readonly last_online: number
+  permission_group: LuaPermissionGroup
+  readonly mod_settings: Record<string, ModSetting>
+  ticks_to_respawn: number
+  readonly display_resolution: DisplayResolution
+  readonly display_scale: number
+  readonly blueprint_to_setup: LuaItemStack
+  readonly render_mode: typeof defines.render_mode
+  spectator: boolean
+  remove_unfiltered_items: boolean
+  infinity_inventory_filters: InfinityInventoryFilter[]
+  readonly auto_sort_main_inventory: boolean
+  hand_location: ItemStackLocation
+  zoom: number
+  map_view_settings: MapViewSettings
+  readonly valid: boolean
+  readonly object_name: string
+
   set_ending_screen_data(message: LocalisedString, file?: string): void
 
   print(message: LocalisedString, color?: Color): void
@@ -4301,47 +4341,14 @@ interface LuaPlayer extends LuaControl {
 
   activate_paste(): void
 
-  character: LuaEntity
-  readonly cutscene_character: LuaEntity
-  readonly index: number
-  readonly gui: LuaGui
-  readonly opened_self: boolean
-  readonly controller_type: typeof defines.controllers
-  readonly stashed_controller_type: typeof defines.controllers
-  game_view_settings: GameViewSettings
-  minimap_enabled: boolean
-  color: Color
-  chat_color: Color
-  readonly name: string
-  tag: string
-  readonly connected: boolean
-  admin: boolean
-  readonly entity_copy_source: LuaEntity
-  readonly afk_time: number
-  readonly online_time: number
-  readonly last_online: number
-  permission_group: LuaPermissionGroup
-  readonly mod_settings: Record<string, ModSetting>
-  ticks_to_respawn: number
-  readonly display_resolution: DisplayResolution
-  readonly display_scale: number
-  readonly blueprint_to_setup: LuaItemStack
-  readonly render_mode: typeof defines.render_mode
-  spectator: boolean
-  remove_unfiltered_items: boolean
-  infinity_inventory_filters: InfinityInventoryFilter[]
-  readonly auto_sort_main_inventory: boolean
-  hand_location: ItemStackLocation
-  zoom: number
-  map_view_settings: MapViewSettings
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
 /** @noSelf **/
 interface LuaProfiler {
+  readonly valid: boolean
+  readonly object_name: string
+
   reset(): void
 
   stop(): void
@@ -4352,17 +4359,14 @@ interface LuaProfiler {
 
   divide(number: number): void
 
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
 /** @noSelf **/
 interface LuaRCON {
-  print(message: LocalisedString): void
-
   readonly object_name: string
+
+  print(message: LocalisedString): void
 }
 
 /** @noSelf **/
@@ -4381,19 +4385,16 @@ interface LuaRailPath {
 /** @noSelf **/
 interface LuaRandomGenerator {
   "operator ()": () => void
-
-  re_seed(seed: number): void
-
   readonly valid: boolean
   readonly object_name: string
+
+  re_seed(seed: number): void
 
   help(): void
 }
 
 /** @noSelf **/
 interface LuaRecipe {
-  reload(): void
-
   readonly name: string
   readonly localised_name: LocalisedString
   readonly localised_description: LocalisedString
@@ -4411,6 +4412,8 @@ interface LuaRecipe {
   readonly force: LuaForce
   readonly valid: boolean
   readonly object_name: string
+
+  reload(): void
 
   help(): void
 }
@@ -4463,18 +4466,20 @@ interface LuaRecipePrototype {
 
 /** @noSelf **/
 interface LuaRemote {
+  readonly object_name: string
+  readonly interfaces: Record<string, Record<string, boolean>>
+
   add_interface(name: string, functions: Record<string, (...args: any[]) => any>): void
 
   remove_interface(name: string): boolean
 
   call(intfc: string, fn: string, ...args: any[]): any
-
-  readonly object_name: string
-  readonly interfaces: Record<string, Record<string, boolean>>
 }
 
 /** @noSelf **/
 interface LuaRendering {
+  readonly object_name: string
+
   draw_line(table_0: {
     color: Color
     width: number
@@ -4828,8 +4833,6 @@ interface LuaRendering {
   get_animation_offset(id: number): number
 
   set_animation_offset(id: number, animation_offset: number): void
-
-  readonly object_name: string
 }
 
 /** @noSelf **/
@@ -4846,12 +4849,12 @@ interface LuaResourceCategoryPrototype {
 
 /** @noSelf **/
 interface LuaSettings {
-  get_player_settings(player: PlayerSpecification): Record<string, ModSetting>
-
   readonly object_name: string
   readonly startup: Record<string, ModSetting>
   readonly global: Record<string, ModSetting>
   readonly player: Record<string, ModSetting>
+
+  get_player_settings(player: PlayerSpecification): Record<string, ModSetting>
 }
 
 /** @noSelf **/
@@ -4947,6 +4950,30 @@ interface LuaStyle {
 
 /** @noSelf **/
 interface LuaSurface {
+  name: string
+  readonly index: number
+  map_gen_settings: MapGenSettings
+  generate_with_lab_tiles: boolean
+  always_day: boolean
+  daytime: number
+  readonly darkness: number
+  wind_speed: number
+  wind_orientation: number
+  wind_orientation_change: number
+  peaceful_mode: boolean
+  freeze_daytime: boolean
+  ticks_per_day: number
+  dusk: number
+  dawn: number
+  evening: number
+  morning: number
+  solar_power_multiplier: number
+  min_brightness: number
+  brightness_visual_weights: ColorModifier
+  show_clouds: boolean
+  readonly valid: boolean
+  readonly object_name: string
+
   get_pollution(position: PositionIn): number
 
   can_place_entity(table_0: {
@@ -5298,37 +5325,11 @@ interface LuaSurface {
 
   build_checkerboard(area: BoundingBox): void
 
-  name: string
-  readonly index: number
-  map_gen_settings: MapGenSettings
-  generate_with_lab_tiles: boolean
-  always_day: boolean
-  daytime: number
-  readonly darkness: number
-  wind_speed: number
-  wind_orientation: number
-  wind_orientation_change: number
-  peaceful_mode: boolean
-  freeze_daytime: boolean
-  ticks_per_day: number
-  dusk: number
-  dawn: number
-  evening: number
-  morning: number
-  solar_power_multiplier: number
-  min_brightness: number
-  brightness_visual_weights: ColorModifier
-  show_clouds: boolean
-  readonly valid: boolean
-  readonly object_name: string
-
   help(): void
 }
 
 /** @noSelf **/
 interface LuaTechnology {
-  reload(): void
-
   readonly force: LuaForce
   readonly name: string
   readonly localised_name: LocalisedString
@@ -5348,6 +5349,8 @@ interface LuaTechnology {
   readonly research_unit_count_formula: string
   readonly valid: boolean
   readonly object_name: string
+
+  reload(): void
 
   help(): void
 }
@@ -5379,14 +5382,6 @@ interface LuaTechnologyPrototype {
 
 /** @noSelf **/
 interface LuaTile {
-  collides_with(layer: CollisionMaskLayer): boolean
-
-  to_be_deconstructed(): void
-
-  order_deconstruction(force: ForceSpecification, player?: PlayerSpecification): LuaEntity | undefined
-
-  cancel_deconstruction(force: ForceSpecification, player?: PlayerSpecification): void
-
   readonly name: string
   readonly prototype: LuaTilePrototype
   readonly position: Position
@@ -5394,6 +5389,14 @@ interface LuaTile {
   readonly surface: LuaSurface
   readonly valid: boolean
   readonly object_name: string
+
+  collides_with(layer: CollisionMaskLayer): boolean
+
+  to_be_deconstructed(): void
+
+  order_deconstruction(force: ForceSpecification, player?: PlayerSpecification): LuaEntity | undefined
+
+  cancel_deconstruction(force: ForceSpecification, player?: PlayerSpecification): void
 
   help(): void
 }
@@ -5428,32 +5431,6 @@ interface LuaTilePrototype {
 
 /** @noSelf **/
 interface LuaTrain {
-  get_item_count(item?: string): number
-
-  get_contents(): void
-
-  remove_item(stack: ItemStackSpecification): number
-
-  insert(stack: ItemStackSpecification): void
-
-  clear_items_inside(): void
-
-  recalculate_path(force?: boolean): boolean
-
-  get_fluid_count(fluid?: string): number
-
-  get_fluid_contents(): void
-
-  remove_fluid(fluid: Fluid): number
-
-  insert_fluid(fluid: Fluid): number
-
-  clear_fluids_inside(): void
-
-  go_to_station(index: number): void
-
-  get_rails(): void
-
   manual_mode: boolean
   speed: number
   readonly max_forward_speed: number
@@ -5485,11 +5462,45 @@ interface LuaTrain {
   readonly valid: boolean
   readonly object_name: string
 
+  get_item_count(item?: string): number
+
+  get_contents(): void
+
+  remove_item(stack: ItemStackSpecification): number
+
+  insert(stack: ItemStackSpecification): void
+
+  clear_items_inside(): void
+
+  recalculate_path(force?: boolean): boolean
+
+  get_fluid_count(fluid?: string): number
+
+  get_fluid_contents(): void
+
+  remove_fluid(fluid: Fluid): number
+
+  insert_fluid(fluid: Fluid): number
+
+  clear_fluids_inside(): void
+
+  go_to_station(index: number): void
+
+  get_rails(): void
+
   help(): void
 }
 
 /** @noSelf **/
 interface LuaTransportLine {
+  readonly "operator #": number
+  readonly owner: LuaEntity
+  readonly output_lines: LuaTransportLine[]
+  readonly input_lines: LuaTransportLine[]
+  readonly "operator []": LuaItemStack
+  readonly valid: boolean
+  readonly object_name: string
+
   clear(): void
 
   get_item_count(item?: string): number
@@ -5507,14 +5518,6 @@ interface LuaTransportLine {
   get_contents(): void
 
   line_equals(other: LuaTransportLine): boolean
-
-  readonly "operator #": number
-  readonly owner: LuaEntity
-  readonly output_lines: LuaTransportLine[]
-  readonly input_lines: LuaTransportLine[]
-  readonly "operator []": LuaItemStack
-  readonly valid: boolean
-  readonly object_name: string
 
   help(): void
 }
@@ -5547,16 +5550,6 @@ interface LuaTrivialSmokePrototype {
 
 /** @noSelf **/
 interface LuaUnitGroup {
-  add_member(unit: LuaEntity): void
-
-  set_command(command: Command): void
-
-  set_autonomous(): void
-
-  start_moving(): void
-
-  destroy(): void
-
   readonly members: LuaEntity[]
   readonly position: Position
   readonly state: typeof defines.group_state
@@ -5568,6 +5561,16 @@ interface LuaUnitGroup {
   readonly distraction_command: Command
   readonly valid: boolean
   readonly object_name: string
+
+  add_member(unit: LuaEntity): void
+
+  set_command(command: Command): void
+
+  set_autonomous(): void
+
+  start_moving(): void
+
+  destroy(): void
 
   help(): void
 }

@@ -17,7 +17,19 @@ type NonFunctionKeys<T> = {
   [K in keyof T]: T[K] extends Function ? never : K
 }[keyof T]
 
+type FunctionKeys<T> = {
+  [K in keyof T]: T[K] extends Function ? K : never
+}[keyof T]
+
+type OptionalKeys<T> = {
+  [K in keyof T]: T extends Record<K, T[K]> ? K : never
+}[keyof T]
+
 /**
  * Gets only the assignable properties of T (excludes readonly and function keys).
  */
-type Writable<T> = Pick<T, WritableKeys<T> & NonFunctionKeys<T>>
+type Writable<T> = Omit<T, ReadonlyKeys<T> | FunctionKeys<T>>
+
+type ModOf<T> = Partial<Writable<T>>
+
+type AnyFunction = (...args: any) => unknown

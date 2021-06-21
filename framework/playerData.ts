@@ -22,7 +22,12 @@ export function PlayerData<T extends Object>(uniqueName: string, initData: (play
   }
 
   registerHandlers({
-    on_init: loadData,
+    on_init() {
+      loadData()
+      for (const [index] of pairs(game.players)) {
+        playerDatum[index as number] = initData(game.get_player(index))
+      }
+    },
     on_load: loadData,
     on_player_created(e: OnPlayerCreatedPayload) {
       playerDatum[e.player_index] = initData(game.get_player(e.player_index))

@@ -48,9 +48,8 @@ declare module "Settings" {
     | StringSettingDefinition
 
   interface SettingsData {
-    // raw: any,
+    raw: Record<string, any>
+
     extend(data: SettingDefinition[]): void
   }
-
-  // const data: SettingsData
 }

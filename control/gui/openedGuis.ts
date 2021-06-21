@@ -1,7 +1,7 @@
 import { PlayerData } from "../../framework/playerData"
 
 export interface OpenedGuis {
-  layerNavigator?: GuiElement
+  layerNavigator?: LuaGuiElement
 }
 
 export const OpenedGuis = PlayerData<OpenedGuis>("openedGuis", () => ({}))

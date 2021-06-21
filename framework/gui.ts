@@ -1,219 +1,414 @@
-import { deepAssign, isFunction } from "./util"
-import { EventHandlerContainer, registerHandlers } from "./events"
-import { FuncRef, getFuncRef } from "./funcRef"
-import { userWarning } from "./logging"
+import { EventHandlerContainer, PayloadOf, registerHandlers } from "./events"
+import { getFuncName, getFuncOrNil } from "./funcRef"
+import { dlog, userWarning } from "./logging"
 
-// -- Template
+/*
+Terminology:
+LuaElement = LuaGuiElement (to disambiguate from "Element", below)
+Spec = GuiSpec; the table that is passed to LuaGuiElement::add.
+LuaElementSpec = LuaGui element spec
+FC = functional component
+Element = LuaElementSpec or functional component (returned by JSX, given to render)
+ElementInstance = virtual dom instance of an Element
+ */
 
-export type GuiTemplate<Props = unknown> = GuiSpec & BaseGuiTemplate<Props>
+// <editor-fold desc="Component Spec">
+// element
+type GuiEventHandlers<Element extends BaseGuiElement> = {
+  [N in GuiEventName]?: (element: Element, payload: PayloadOf<typeof guiEventNameMapping[N]>) => void
+}
+// This type is separate from LuaElementSpecOfType as it is used by jsx.ts
+export type LuaElementSpecProps<Element extends BaseGuiElement> = GuiEventHandlers<Element> & {
+  onCreated?: (element: Element) => void
+  onUpdate?: (element: Element) => void
+  onAction?: (element: Element, payload: AnyGuiEventPayload) => void
 
-export function GuiTemplate<T extends GuiTemplate>(t: T): T {
-  return t
+  styleMod?: ModOf<LuaStyle>
+  key?: string
 }
 
-export interface BaseGuiTemplate<Props> extends BaseGuiSpec, GuiEventHandlers {
-  elementMod?: ModOf<BareGuiElementOfType<this["type"]>, Props>
-  styleMod?: ModOf<LuaStyle, Props>
-
-  onPreCreated?: (element: GuiElementOfType<this["type"]>) => void
-  onPostCreated?: (element: GuiElementOfType<this["type"]>) => void
-  onUpdate?: (element: GuiElementOfType<this["type"]>, props: Props) => void
-  readonly children?: readonly GuiTemplate<Props>[]
+export type LuaElementSpecOfType<Type extends GuiElementType> = LuaElementSpecProps<GuiElementOfType<Type>> & {
+  creationSpec: Omit<GuiSpecOfType<Type>, "type" | "index">
+  elementMod?: ModOf<GuiElementOfType<Type>>
+  children?: ElementSpec[]
+  type: Type
 }
 
-// This has to be an interface to get access to "this" type
-interface GuiEventHandlers {
-  readonly type: GuiElementType
-  onAction?: FuncRef<[element: GuiElementOfType<this["type"]>, event: GuiEventPayload]>
-  onCheckedStateChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiCheckedStateChangedPayload]>
-  onClick?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiClickPayload]>
-  onClosed?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiClosedPayload]>
-  onConfirmed?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiConfirmedPayload]>
-  onElemChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiElemChangedPayload]>
-  onLocationChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiLocationChangedPayload]>
-  onOpened?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiOpenedPayload]>
-  onSelectedTabChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiSelectedTabChangedPayload]>
-  onSelectionStateChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiSelectionStateChangedPayload]>
-  onSwitchStateChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiSwitchStateChangedPayload]>
-  onTextChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiTextChangedPayload]>
-  onValueChanged?: FuncRef<[element: GuiElementOfType<this["type"]>, event: OnGuiValueChangedPayload]>
-}
+export type LuaElementSpec = {
+  [T in GuiElementType]: LuaElementSpecOfType<T>
+}[GuiElementType]
 
-// typescript will complain if a method is missing or shouldn't be there
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// noinspection JSUnusedLocalSymbols
-const completenessCheck: Record<GuiEventName, unknown> = {} as Required<GuiEventHandlers>
+// FC
+export type FC<Props = Record<string, never>> = (props: Props) => ElementSpec
 
-// noinspection JSUnusedLocalSymbols
-const limitedCheck: Required<GuiEventHandlers> = {} as Record<GuiEventName, any> & { type: any; onAction: any }
-
-/* eslint-enable @typescript-eslint/no-unused-vars */
-type PropFunction<T, Props> = (props: Props, element: LuaGuiElement) => T
-
-type ModOf<T, Props> = ValueOrFunction<Writable<T>, Props>
-
-type ValueOrFunction<T, Props> = {
-  [P in keyof T]?: T[P] | PropFunction<T[P], Props>
-}
-
-export function create<T extends GuiTemplate<Props>, Props>(
-  parent: BareGuiElement,
-  template: T,
+export type FCSpec<Props> = {
+  type: FC<Props>
   props: Props
-): GuiElementOfType<T["type"]>
-export function create<T extends GuiTemplate>(parent: BareGuiElement, template: T): GuiElementOfType<T["type"]>
-
-export function create<Props>(parent: BareGuiElement, template: GuiTemplate<Props>, props?: Props): GuiElement {
-  const element = createRecursive(parent, template, props!)
-  updateFuncOnly(element, template, props!)
-  return element
+  shouldUpdate?: boolean
+  key?: string
 }
 
-function createRecursive<Props>(parent: BareGuiElement, template: GuiTemplate<Props>, props: Props): GuiElement {
-  const spec: GuiSpec = extractSpec(template)
-  const element = parent.add(spec)
-  if (template.elementMod) assignMod(element, template.elementMod as any, props, element)
-  if (template.styleMod) assignMod(element.style, template.styleMod, props, element)
-  if (template.onPreCreated) template.onPreCreated(element as any)
-  if (template.children) {
-    for (const childTemplate of template.children) {
-      create(element, childTemplate, props)
+export type ElementSpec = LuaElementSpec | FCSpec<any>
+// </editor-fold>
+// <editor-fold desc="Rendering">
+// <editor-fold desc="Instance">
+interface BaseInstance {
+  luaElement: LuaGuiElement
+  key: string | number
+}
+
+interface LuaElementInstance extends BaseInstance {
+  element: LuaElementSpec
+  childInstances: ElementInstance[]
+  keyToIndex?: PRecord<string | number, number>
+}
+
+interface FCInstance extends BaseInstance {
+  element: FCSpec<unknown>
+  childInstance: ElementInstance
+}
+
+type ElementInstance = LuaElementInstance | FCInstance
+// </editor-fold>
+
+// <editor-fold desc="Instantiate">
+function instantiateLuaElement(
+  parent: LuaGuiElement,
+  indexInParent: number,
+  element: LuaElementSpec
+): LuaElementInstance {
+  const luaElement = parent.add(getSpec(element, indexInParent))
+
+  if (element.onCreated) element.onCreated(luaElement as any)
+  updateInstance(luaElement, {} as LuaElementSpec, element)
+
+  const children = element.children || []
+  const childInstances: ElementInstance[] = []
+  for (const [, child] of ipairs(children)) {
+    childInstances[childInstances.length] = instantiate(luaElement, indexInParent, child)
+  }
+  return {
+    element,
+    luaElement,
+    childInstances,
+    key: element.key || indexInParent,
+  }
+}
+
+// empty components not supported yet
+function instantiateFC(parent: LuaGuiElement, indexInParent: number, element: FCSpec<unknown>): FCInstance {
+  const rendered = element.type(element.props)
+  const childInstance = instantiate(parent, indexInParent, rendered)
+  const luaElement = childInstance.luaElement
+
+  return {
+    luaElement,
+    element,
+    childInstance,
+    key: element.key || indexInParent,
+  }
+}
+
+function instantiate(parent: LuaGuiElement, indexInParent: number, element: ElementSpec): ElementInstance {
+  const type = element.type
+  if (typeof type === "string") {
+    return instantiateLuaElement(parent, indexInParent, element as LuaElementSpec)
+  } else {
+    return instantiateFC(parent, indexInParent, element as FCSpec<unknown>)
+  }
+}
+
+/**
+ * Only _creates_ a new gui element from a ElementSpec. Does not support updating.
+ *
+ * You do NOT need to use {@link destroy} on the returned element for proper cleanup.
+ *
+ * @return LuaGuiElement the topmost created lua gui element.
+ */
+export function create(parent: LuaGuiElement, component: ElementSpec): LuaGuiElement {
+  return instantiate(parent, 0, component).luaElement
+}
+
+// </editor-fold>
+// <editor-fold desc="Update and reconcile">
+function applyMod<T>(target: T, prevMod: ModOf<T>, nextMod: ModOf<T>) {
+  // in nextMod, different from prevMod
+  for (const [key, value] of pairs(nextMod)) {
+    if (value !== prevMod[key]) {
+      target[key] = value
     }
   }
-  if (template.onPostCreated) template.onPostCreated(element as any)
-  return element
-}
-
-export function update(element: LuaGuiElement, template: GuiTemplate): GuiElement
-export function update<Props>(element: LuaGuiElement, template: GuiTemplate<Props>, props: Props): GuiElement
-export function update<Props>(element: LuaGuiElement, template: GuiTemplate<Props>, props?: Props): GuiElement {
-  if (template.elementMod) assignMod(element, template.elementMod as any, props, element, true)
-  if (template.styleMod) assignMod(element.style, template.styleMod, props!, element, true)
-  if (template.onUpdate) {
-    template.onUpdate(element as any, props!)
-  }
-  if (template.children) {
-    for (const [i, child] of ipairs(element.children)) {
-      // ipairs has different indexing
-      if (child && template.children[i - 1]) updateFuncOnly(child, template.children[i - 1], props!)
+  // in prevMod but not in nextMod (should set to nil)
+  for (const [key] of pairs(prevMod)) {
+    if (nextMod[key] === undefined) {
+      target[key] = undefined as any
     }
   }
-  return element
 }
 
-function updateFuncOnly<Props>(element: LuaGuiElement, template: GuiTemplate<Props>, props: Props) {
-  if (template.onUpdate) {
-    template.onUpdate(element as any, props)
-  }
-  if (template.children) {
-    for (const [i, child] of ipairs(element.children)) {
-      // ipairs has different indexing
-      if (child && template.children[i - 1]) updateFuncOnly(child, template.children[i - 1], props)
+function updateInstance(luaElement: LuaGuiElement, oldElement: LuaElementSpec, newElement: LuaElementSpec) {
+  applyMod(luaElement, oldElement.elementMod || {}, newElement.elementMod || {})
+  applyMod(luaElement.style, oldElement.styleMod || {}, newElement.styleMod || {})
+  luaElement.tags = getTags(newElement)
+  if (newElement.onUpdate) newElement.onUpdate(luaElement as any)
+}
+
+function getKeyToIndex(element: LuaElementSpec) {
+  const childComponents = element.children || []
+  const keyToIndex: PRecord<string | number, number> = {}
+  for (let i = 0; i < childComponents.length; i++) {
+    const childComponent = childComponents[i]
+    const key = childComponent.key || i + 1 // indexInParent
+    if (keyToIndex[key]) {
+      dlog(`Children with same key ${key} found, this may cause issues`)
     }
+    keyToIndex[key] = i
   }
-  return element
+  return keyToIndex
 }
 
-const specialFields: Record<Exclude<keyof BaseGuiTemplate<unknown>, keyof BaseGuiSpec>, true> = {
-  onPostCreated: true,
-  elementMod: true,
-  styleMod: true,
-  onPreCreated: true,
-  onAction: true,
-  onUpdate: true,
-  onCheckedStateChanged: true,
-  onClick: true,
-  onClosed: true,
-  onConfirmed: true,
-  onElemChanged: true,
-  onLocationChanged: true,
-  onOpened: true,
-  onSelectedTabChanged: true,
-  onSelectionStateChanged: true,
-  onSwitchStateChanged: true,
-  onTextChanged: true,
-  onValueChanged: true,
-  children: true,
-}
-declare global {
-  interface Tags {
-    "#guiEventHandlers"?: PRecord<GuiEventName, string>
-  }
-}
+/**
+ * This includes children reconciliation.
+ *
+ * The only available operations are to delete and add at index, no rearranging elements.
+ * The reconciliation algorithm matches by key. If no keyed elements are _rearranged_ (only added or deleted), then this
+ * is most optimal; else it may delete some other keyed elements to reuse a keyed element.
+ *
+ * This definitely has room for (constant time) optimization.
+ */
+function reconcileTemplate(instance: LuaElementInstance, template: LuaElementSpec): LuaElementInstance {
+  // update this instance
+  updateInstance(instance.luaElement, instance.element, template)
 
-function assignMod<T, Props>(
-  target: T,
-  mod: ModOf<T, Props>,
-  props: Props,
-  element: LuaGuiElement,
-  functionsOnly = false
-) {
-  for (const [key, value] of pairs(mod)) {
-    let newValue: any
-    if (isFunction(value)) {
-      newValue = (value as PropFunction<any, Props>)(props, element)
-    } else if (!functionsOnly) {
-      newValue = value
-    } else continue
-    if (key === "tags") {
-      mergeTags(target as any, newValue as Tags)
+  // update children
+  const luaElement = instance.luaElement
+  const oldChildInstances = instance.childInstances || []
+  const newChildInstances: ElementInstance[] = []
+  const newChildElements: ElementSpec[] = template.children || []
+  const oldKeyToIndex = instance.keyToIndex || getKeyToIndex(instance.element)
+  const nextKeyToIndex = getKeyToIndex(template)
+
+  // iterate through both the old elements and the new instances at once. Try to match new elements
+  // with old elements in order, deleting and adding as needed.
+  // If elements are REARRANGED, then existing elements between the old position and new position are deleted, regardless
+  // of any matching keyed elements that already existed there (those elements are re-instantiated).
+  // Otherwise, every keyed element is reused.
+  let oldIndex = 0
+  for (let newIndex = 0; newIndex < newChildElements.length; newIndex++) {
+    const newElement = newChildElements[newIndex]
+    const key = newElement.key || newIndex + 1
+
+    const existingIndex = oldKeyToIndex[key]
+    // element with matching key?
+    if (existingIndex && oldIndex <= existingIndex) {
+      // delete everything from here to the matching element.
+      // If this includes keyed elements, treat them as if they didn't exist (re-instantiate them later).
+      while (oldIndex !== existingIndex) {
+        const deletingInstance = oldChildInstances[oldIndex]
+        oldKeyToIndex[deletingInstance.key] = undefined // don't match deleted elements for future keyed children
+        deletingInstance.luaElement.destroy()
+        oldIndex++
+      }
+      // update the instance.
+      newChildInstances[newIndex] = reconcile(luaElement, newIndex + 1, oldChildInstances[existingIndex], newElement)
+      oldIndex++
     } else {
-      target[key] = newValue
+      // delete everything from the old elements that don't match a current element key.
+      while (oldIndex < oldChildInstances.length) {
+        const oldInstance = oldChildInstances[oldIndex]
+        if (nextKeyToIndex[oldInstance.key]) break
+        oldInstance.luaElement.destroy()
+        oldIndex++
+      }
+      // add the element.
+      newChildInstances[newIndex] = instantiate(luaElement, newIndex + 1, newElement)
+    }
+  }
+  // delete remaining elements, if any.
+  for (; oldIndex < oldChildInstances.length; oldIndex++) {
+    const oldInstance = oldChildInstances[oldIndex]
+    oldInstance.luaElement.destroy()
+  }
+
+  // reuse past instance
+  instance.childInstances = newChildInstances
+  instance.keyToIndex = nextKeyToIndex
+  instance.element = template
+  return instance
+}
+
+function reconcileFC(
+  instance: FCInstance,
+  element: FCSpec<unknown>,
+  parent: LuaGuiElement,
+  indexInParent: number
+): FCInstance {
+  // TODO: better should update
+  const shouldUpdate = element.shouldUpdate !== false
+  if (!shouldUpdate) return instance
+  const rendered = element.type(element.props)
+  const oldChildInstance = instance.childInstance
+  const childInstance = reconcile(parent, indexInParent, oldChildInstance, rendered)!
+  instance.luaElement = childInstance.luaElement
+  instance.childInstance = childInstance
+  instance.element = element
+  return instance
+}
+
+// elements should already have same key (or be root element).
+function reconcile(
+  parent: LuaGuiElement,
+  indexInParent: number,
+  oldInstance: ElementInstance | undefined,
+  element: ElementSpec
+): ElementInstance {
+  if (oldInstance === undefined) {
+    // new
+    return instantiate(parent, indexInParent, element)
+  } else if (oldInstance.element.type !== element.type) {
+    // replace
+    oldInstance.luaElement.destroy()
+    return instantiate(parent, indexInParent, element)
+  } else if (typeof element.type === "string") {
+    // update template
+    return reconcileTemplate(oldInstance as LuaElementInstance, element as LuaElementSpec)
+  } else {
+    // update FC
+    return reconcileFC(oldInstance as FCInstance, element as FCSpec<unknown>, parent, indexInParent)
+  }
+}
+
+// </editor-fold>
+
+// <editor-fold desc="Render">
+declare const global: {
+  rootInstances: Record<number, ElementInstance | undefined>
+  referencedElements: Record<number, LuaGuiElement | undefined>
+}
+
+function cleanGlobal() {
+  // clean rootInstances table
+  // if things are handled properly this wouldn't be necessary, but defensive programming
+  // also, size of this table is not expected to be too large
+  for (const [index, element] of pairs(global.referencedElements)) {
+    if (!element.valid) {
+      global.referencedElements[index] = undefined
+      global.rootInstances[index] = undefined
     }
   }
 }
 
-export function mergeTags(element: LuaGuiElement, tags: Tags): void {
-  const oldTags = element.tags
-  deepAssign(oldTags, tags)
-  element.tags = oldTags
+registerHandlers({
+  on_init() {
+    global.rootInstances = {}
+    global.referencedElements = {}
+  },
+  on_load: cleanGlobal,
+  on_player_removed: cleanGlobal,
+})
+
+function render(parent: LuaGuiElement, existing: LuaGuiElement | undefined, element: ElementSpec): ElementInstance {
+  const prevInstance = existing && global.rootInstances[existing.index]
+  const nextInstance = reconcile(parent, 0, prevInstance, element)
+  if (prevInstance) {
+    global.rootInstances[existing!.index] = undefined
+    global.referencedElements[existing!.index] = undefined
+  }
+  const luaElement = existing || nextInstance.luaElement
+  global.rootInstances[luaElement.index] = nextInstance
+  global.referencedElements[luaElement.index] = luaElement
+  return nextInstance
 }
 
-function extractSpec<Props>(template: GuiTemplate<Props>): GuiSpec {
-  const result: Record<string, unknown> = {}
+/**
+ * Renders an element inside a container.
+ *
+ * In order to destroy properly, use the {@link destroy} function on the returned LuaGuiElement.
+ *
+ * If you only want to create something but don't need to update it, you can use {@link create} instead.
+ *
+ *
+ * @return GuiElement the first lua gui element. You can use {@link rerenderSelf} on this element for future updates.
+ *  You should pass this into {@link destroy} to destroy properly.
+ *
+ */
+export function renderIn(parent: LuaGuiElement, name: string, component: ElementSpec): LuaGuiElement {
+  const instance = render(parent, parent.get(name), component)
+  const element = instance.luaElement
+  element.name = name // todo: this causes problems. Do better stuff?
+  return element
+}
 
-  // copy GuiSpec fields
-  for (const [key, value] of pairs(template)) {
-    if (!(specialFields as any)[key]) result[key] = value
-  }
+/**
+ * Updates rendering on an existing rendered element, obtained from {@link renderIn}
+ */
+export function rerenderSelf(existingElement: LuaGuiElement, component: ElementSpec): void {
+  render(existingElement.parent, existingElement, component)
+}
 
-  // extract handlers
-  const handlers: Tags["#guiEventHandlers"] = {}
+/**
+ * Properly disposes of a gui element tree created using {@link renderIn}.
+ */
+export function destroy(existingElement: LuaGuiElement): void {
+  global.rootInstances[existingElement.index] = undefined
+  global.referencedElements[existingElement.index] = undefined
+  existingElement.destroy()
+}
+
+// </editor-fold>
+
+// <editor-fold desc="Extract Spec">
+
+function getSpec(template: LuaElementSpec, index?: number): GuiSpec {
+  const spec: Partial<GuiSpec> = template.creationSpec
+  spec.type = template.type
+  spec.index = index
+  return spec as GuiSpec
+}
+
+const guiEventHandlersTag = "#guiEventHandlers"
+
+// adds guiEventHandlers tags
+function getTags(template: LuaElementSpec): Tags {
+  const handlers: Record<string, string> = {}
 
   let name: GuiEventName
-  for (name in guiEvents) {
-    const handler = template[name] as FuncRef<[GuiElement, GuiEventPayload]>
+  for (name in guiEventNameMapping) {
+    const handler = template[name] as AnyFunction
     if (handler) {
-      handlers[name] = handler["#name"]
+      handlers[name] = getFuncName(handler) ?? error(`The function for ${name} was not a registered function ref`)
     }
   }
   if (template.onAction) {
+    const funcName =
+      getFuncName(template.onAction) ?? error("The function for onAction was not a registered function ref")
     const eventName = onActionEvents[template.type]
     if (!eventName) {
       throw `GUI element of type ${template.type} does not have an onAction event.
-      Tried to register "${template.onAction["#name"]}".`
+      Tried to register function "${funcName}".`
     }
     if (handlers[eventName]) {
-      throw `Cannot register 'onAction' handler ("${template.onAction["#name"]}") because
+      throw `Cannot register 'onAction' handler "${funcName}" because
       this element already has an event handler for ${eventName} ("${handlers[eventName]}").`
     }
-    handlers[eventName] = template.onAction["#name"]
+    handlers[eventName] = funcName
   }
-  result.tags = result.tags || {}
-  ;(result.tags as Tags)["#guiEventHandlers"] = handlers
-
-  return result as any
+  const tags = (template.elementMod && template.elementMod.tags) || {}
+  tags[guiEventHandlersTag] = handlers
+  return tags
 }
 
+// </editor-fold>
+
+// </editor-fold>
+// <editor-fold desc="Gui events">
 // some events have more fields
-export interface GuiEventPayload {
+export interface AnyGuiEventPayload {
   element: LuaGuiElement
   player_index: number
 }
 
-// -- GUI events
-
-const guiEvents = {
+export const guiEventNameMapping = {
   onCheckedStateChanged: "on_gui_checked_state_changed",
   onClick: "on_gui_click",
   onClosed: "on_gui_closed",
@@ -227,7 +422,7 @@ const guiEvents = {
   onTextChanged: "on_gui_text_changed",
   onValueChanged: "on_gui_value_changed",
 } as const
-export type GuiEventName = keyof typeof guiEvents
+export type GuiEventName = keyof typeof guiEventNameMapping
 
 const onActionEvents: PRecord<GuiElementType, GuiEventName> = {
   checkbox: "onCheckedStateChanged",
@@ -241,28 +436,29 @@ const onActionEvents: PRecord<GuiElementType, GuiEventName> = {
   switch: "onSwitchStateChanged",
 }
 
-function handleGuiEvent(eventName: GuiEventName, event: GuiEventPayload) {
-  // I want optional chaining in tstl!!!
+function handleGuiEvent(eventName: GuiEventName, event: AnyGuiEventPayload) {
+  // I want optional chaining!
   const element = event.element
   if (!element) return
-  const handlers = element.tags["#guiEventHandlers"]
+  const handlers = element.tags[guiEventHandlersTag] as PRecord<string, string>
   if (!handlers) return
   const handlerName = handlers[eventName]
   if (!handlerName) return
-  const ref = getFuncRef(handlerName)
+  const ref = getFuncOrNil(handlerName)
   if (!ref) {
     userWarning(`There is no gui handler function named ${handlerName}.
-    Try closing and reopening the UI. If error persists, please report to the mod author.
+    The mod author probably forgot to migrate something. If error persists, please report to the mod author.
     Event name: ${eventName}, event: ${serpent.dump(event)}`)
   } else {
-    ref.func(element, event)
+    ref(element, event)
   }
 }
 
 const handlers: EventHandlerContainer = {}
-for (const [name, scriptName] of pairs(guiEvents)) {
-  handlers[scriptName] = (payload: any) => {
+for (const [name, gameName] of pairs(guiEventNameMapping)) {
+  handlers[gameName] = (payload: any) => {
     handleGuiEvent(name, payload)
   }
 }
 registerHandlers(handlers)
+// </editor-fold>

@@ -12,9 +12,9 @@ export abstract class Layer {
   readonly surface: LuaSurface
   readonly surfaceIndex: number
   readonly area: BoundingBox
+  valid = true
   protected lastUpdated: number = game.ticks_played
   protected lastBlueprinted: number = this.lastUpdated - 1
-  valid = true
 
   protected constructor(
     public readonly id: LayerId,
@@ -27,17 +27,6 @@ export abstract class Layer {
     this.surfaceIndex = this.surface.index
     global.layerBySurfaceIndex[this.surfaceIndex] = this
     this.area = position.sizeToArea(size)
-  }
-
-  protected createSurface(typeName: string, size: Position): LuaSurface {
-    const surfaceName = `${PREFIX}layer${this.id}-${typeName}`
-    const surface = game.create_surface(surfaceName, {
-      width: size.x,
-      height: size.y,
-    })
-    surface.generate_with_lab_tiles = true
-    surface.freeze_daytime = true
-    return surface
   }
 
   static getBySurfaceIndex(surfaceIndex: number): Layer | undefined {
@@ -59,6 +48,17 @@ export abstract class Layer {
   markUpdated(): void {
     this.lastUpdated = game.ticks_played
   }
+
+  protected createSurface(typeName: string, size: Position): LuaSurface {
+    const surfaceName = `${PREFIX}layer${this.id}-${typeName}`
+    const surface = game.create_surface(surfaceName, {
+      width: size.x,
+      height: size.y,
+    })
+    surface.generate_with_lab_tiles = true
+    surface.freeze_daytime = true
+    return surface
+  }
 }
 
 export class DataLayer extends Layer {
@@ -73,8 +73,7 @@ export class DataLayer extends Layer {
   ) {
     super(id, name, "data", size)
     global.dataLayers[id] = this
-    /* if (isUserLayer) */
-    global.dataLayerUserOrder.push(this)
+    if (isUserLayer) global.dataLayerUserOrder.push(this)
   }
 
   static create(name: string, size: Position = Defaults.layerSize): DataLayer {
@@ -83,7 +82,7 @@ export class DataLayer extends Layer {
 
   static createAssociated(viewLayer: ViewLayer): DataLayer {
     // TODO change this to 'false' eventually
-    return new DataLayer(viewLayer.id, "Associated with " + viewLayer.id, viewLayer.size, false, viewLayer)
+    return new DataLayer(viewLayer.id, "Associated with " + viewLayer.id, viewLayer.size, true, viewLayer)
   }
 
   static getById(id: LayerId): DataLayer {

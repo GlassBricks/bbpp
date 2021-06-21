@@ -1,13 +1,5 @@
-export function isValid(a: any): boolean {
-  return typeof a === "object" && a.valid
-}
-
-export function destroyIfValid(a: any): void {
-  if (isValid(a)) (a.destroy as (this: void) => void)()
-}
-
 // eslint-disable-next-line @typescript-eslint/ban-types
-export function isFunction(a: any): a is Function {
+export function isFunction(a: any): a is AnyFunction {
   return type(a) === "function"
 }
 
@@ -16,7 +8,7 @@ export function isEmpty(a: any): boolean {
   return !x
 }
 
-export function deepAssign(target: Record<string, unknown>, source: PRecord<string, unknown>): void {
+export function deepAssign(target: Record<string | number, unknown>, source: PRecord<string | number, unknown>): void {
   for (const [key, value] of pairs(source)) {
     if (value && typeof value === "object") {
       target[key] = target[key] || {}
@@ -27,6 +19,15 @@ export function deepAssign(target: Record<string, unknown>, source: PRecord<stri
   }
 }
 
+export function deepCopy<T>(t: T): T {
+  if (type(t) !== "table") return t
+  const result: Record<any, unknown> = {}
+  for (const [k, v] of pairs(t)) {
+    result[k] = v
+  }
+  return result as T
+}
+
 export function arrayRemoveElement<T>(arr: T[], item: T): void {
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] === item) {
@@ -34,4 +35,12 @@ export function arrayRemoveElement<T>(arr: T[], item: T): void {
       break
     }
   }
+}
+
+export function isValid(a: any): boolean {
+  return typeof a === "object" && a.valid
+}
+
+export function destroyIfValid(a: any): void {
+  if (isValid(a)) (a.destroy as (this: void) => void)()
 }

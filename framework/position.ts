@@ -1,4 +1,3 @@
-
 export function sizeToArea({ x, y }: Position): BoundingBox {
   return [
     { x: -x / 2 - 1, y: -y / 2 - 1 },

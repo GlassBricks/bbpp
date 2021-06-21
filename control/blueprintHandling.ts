@@ -40,7 +40,7 @@ function createBpHandlingChest(set: number, layer: number) {
     force: "neutral",
   })
   if (chest === undefined) {
-    throw "Couldn't create bp handling chest"
+    error("Couldn't create bp handling chest")
   }
   chest.destructible = false
   return chest

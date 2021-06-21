@@ -1,5 +1,32 @@
 /** @noSelfInFile */
 
+type GuiElementType =
+  | "choose-elem-button"
+  | "drop-down"
+  | "empty-widget"
+  | "entity-preview"
+  | "list-box"
+  | "scroll-pane"
+  | "sprite-button"
+  | "tabbed-pane"
+  | "text-box"
+  | "button"
+  | "camera"
+  | "checkbox"
+  | "flow"
+  | "frame"
+  | "label"
+  | "line"
+  | "minimap"
+  | "progressbar"
+  | "radiobutton"
+  | "slider"
+  | "sprite"
+  | "switch"
+  | "tab"
+  | "table"
+  | "textfield"
+
 /** @noSelf */
 interface BaseGuiSpec {
   readonly type: GuiElementType
@@ -121,9 +148,12 @@ interface ListBoxGuiSpec extends BaseGuiSpec {
 /** @noSelf */
 interface CameraGuiSpec extends BaseGuiSpec {
   type: "camera"
-  position: Position
   surface_index?: number
   zoom?: number
+
+  set position(position: PositionIn)
+
+  get position(): Position
 }
 
 /** @noSelf */
@@ -143,7 +173,7 @@ interface ChooseElemButtonTypes {
 }
 
 type ChooseElementButtonItem<Type extends keyof ChooseElemButtonTypes> = {
-  [T in keyof ChooseElemButtonTypes]: T extends Type ? ChooseElemButtonTypes[T] | undefined : never
+  [T in keyof ChooseElemButtonTypes as T extends Type ? T : never]?: ChooseElemButtonTypes[T]
 }
 
 /** @noSelf */
@@ -252,7 +282,28 @@ type GuiSpecOfType<Type extends GuiElementType> = Extract<GuiSpec, { type: Type 
 
 // Element
 /** @noSelf */
-interface BaseGuiElement {
+interface BaseGuiElement extends LuaReadonlyIndexing<string, LuaGuiElement | undefined> {
+  readonly type: GuiElementType
+  readonly index: number
+  readonly gui: LuaGui
+  readonly parent: LuaGuiElement
+  name: string
+  caption: LocalisedString
+  // todo: different input/output props WITH selection?
+  style: LuaStyle | string
+  visible: boolean
+  readonly children_names: string[]
+  readonly player_index: number
+  tooltip: LocalisedString
+  readonly children: LuaGuiElement[]
+  location?: GuiLocation
+  enabled: boolean
+  ignored_by_interaction: boolean
+  anchor: GuiAnchor
+  tags: Tags
+  readonly valid: boolean
+  readonly object_name: string
+
   // add<S extends GuiSpec>(element: S): GuiElementOfType<S["type"]>
   add<Type extends GuiElementType>(element: GuiSpecOfType<Type>): GuiElementOfType<Type>
 
@@ -267,27 +318,6 @@ interface BaseGuiElement {
   focus(): void
 
   bring_to_front(): void
-
-  readonly index: number
-  readonly gui: LuaGui
-  readonly parent: LuaGuiElement
-  name: string
-  caption: LocalisedString
-  // TODO when Typescript 4.3 supported, different read/write types
-  style: LuaStyle // | string
-  visible: boolean
-  readonly children_names: string[]
-  readonly player_index: number
-  tooltip: LocalisedString
-  readonly type: string
-  readonly children: LuaGuiElement[]
-  location?: GuiLocation
-  enabled: boolean
-  ignored_by_interaction: boolean
-  anchor: GuiAnchor
-  tags: Tags
-  readonly valid: boolean
-  readonly object_name: string
 
   help(): void
 }
@@ -308,12 +338,11 @@ interface FlowGuiElement extends BaseGuiElement {
 /** @noSelf */
 interface FrameGuiElement extends BaseGuiElement {
   type: "frame"
-
-  force_auto_center(): void
-
   readonly direction: Direction
   auto_center: boolean
   drag_target: LuaGuiElement
+
+  force_auto_center(): void
 }
 
 /** @noSelf */
@@ -330,11 +359,6 @@ interface TableGuiElement extends BaseGuiElement {
 /** @noSelf */
 interface TextfieldGuiElement extends BaseGuiElement {
   type: "textfield"
-
-  select_all(): void
-
-  select(start: number, end: number): void
-
   text: string
   numeric: boolean
   allow_decimal: boolean
@@ -342,6 +366,10 @@ interface TextfieldGuiElement extends BaseGuiElement {
   is_password: boolean
   lose_focus_on_confirm: boolean
   clear_and_focus_on_right_click: boolean
+
+  select_all(): void
+
+  select(start: number, end: number): void
 }
 
 /** @noSelf */
@@ -384,6 +412,8 @@ interface SpriteGuiElement extends BaseGuiElement {
 /** @noSelf */
 interface ScrollPaneGuiElement extends BaseGuiElement {
   type: "scroll-pane"
+  horizontal_scroll_policy: ScrollPolicy
+  vertical_scroll_policy: ScrollPolicy
 
   scroll_to_top(): void
 
@@ -394,9 +424,6 @@ interface ScrollPaneGuiElement extends BaseGuiElement {
   scroll_to_right(): void
 
   scroll_to_element(element: LuaGuiElement, scroll_mode?: ScrollMode): void
-
-  horizontal_scroll_policy: ScrollPolicy
-  vertical_scroll_policy: ScrollPolicy
 }
 
 /** @noSelf */
@@ -408,6 +435,7 @@ interface LineGuiElement extends BaseGuiElement {
 /** @noSelf */
 interface DropDownGuiElement extends BaseGuiElement {
   type: "drop-down"
+  selected_index: number
 
   clear_items(): void
 
@@ -418,13 +446,12 @@ interface DropDownGuiElement extends BaseGuiElement {
   add_item(string: LocalisedString, index?: number): void
 
   remove_item(index: number): void
-
-  selected_index: number
 }
 
 /** @noSelf */
 interface ListBoxGuiElement extends BaseGuiElement {
   /** @noSelf */ type: "list-box"
+  selected_index: number
 
   clear_items(): void
 
@@ -437,28 +464,32 @@ interface ListBoxGuiElement extends BaseGuiElement {
   remove_item(index: number): void
 
   scroll_to_item(index: number, scroll_mode?: ScrollMode): void
-
-  selected_index: number
 }
 
 /** @noSelf */
 interface CameraGuiElement extends BaseGuiElement {
   type: "camera"
-  position: Position
   surface_index: number
   zoom: number
   entity?: LuaEntity
+
+  set position(position: PositionIn)
+
+  get position(): Position
 }
 
 /** @noSelf */
 interface MinimapGuiElement extends BaseGuiElement {
   type: "minimap"
-  position: Position
   surface_index: number
   zoom: number
   minimap_player_index: number
   force?: string
   entity?: LuaEntity
+
+  set position(position: PositionIn)
+
+  get position(): Position
 }
 
 /** @noSelf */
@@ -473,6 +504,11 @@ interface ChooseElemButtonGuiElement extends BaseGuiElement {
 /** @noSelf */
 interface TextBoxGuiElement extends BaseGuiElement {
   type: "text-box"
+  text: string
+  selectable: boolean
+  word_wrap: boolean
+  read_only: boolean
+  clear_and_focus_on_right_click: boolean
 
   scroll_to_top(): void
 
@@ -485,17 +521,12 @@ interface TextBoxGuiElement extends BaseGuiElement {
   select_all(): void
 
   select(start: number, end: number): void
-
-  text: string
-  selectable: boolean
-  word_wrap: boolean
-  read_only: boolean
-  clear_and_focus_on_right_click: boolean
 }
 
 /** @noSelf */
 interface SliderGuiElement extends BaseGuiElement {
   type: "slider"
+  slider_value: number
 
   get_slider_minimum(): void
 
@@ -514,8 +545,6 @@ interface SliderGuiElement extends BaseGuiElement {
   set_slider_discrete_slider(value: boolean): void
 
   set_slider_discrete_values(value: boolean): void
-
-  slider_value: number
 }
 
 /** @noSelf */
@@ -556,19 +585,19 @@ interface EmptyWidgetGuiElement extends BaseGuiElement {
 /** @noSelf */
 interface TabbedPaneGuiElement extends BaseGuiElement {
   type: "tabbed-pane"
-
-  add_tab(tab: TabGuiElement, content: LuaGuiElement): void
-
-  remove_tab(tab: LuaGuiElement): void
-
   selected_tab_index: number
   readonly tabs: {
     tab: TabGuiElement
     content: LuaGuiElement
   }[]
+
+  add_tab(tab: TabGuiElement, content: LuaGuiElement): void
+
+  remove_tab(tab: LuaGuiElement): void
 }
 
-type BareGuiElement =
+/** @noSelf */
+type LuaGuiElement =
   | ButtonGuiElement
   | SpriteButtonGuiElement
   | CheckboxGuiElement
@@ -596,18 +625,6 @@ type BareGuiElement =
   | SwitchGuiElement
 
 /** @noSelf */
-type GuiElement = BareGuiElement &
-  {
-    [K in string]?: LuaGuiElement
-  }
-
-/** @noSelf */
-type LuaGuiElement = GuiElement
-
-/** @noSelf */
-type BareGuiElementOfType<Type extends GuiElementType> = Extract<BareGuiElement, { type: Type }>
-
-/** @noSelf */
 type GuiElementOfType<Type extends GuiElementType> = Extract<LuaGuiElement, { type: Type }>
 
 // Concepts
@@ -619,5 +636,3 @@ type ScrollPolicy = "auto" | "never" | "always" | "auto-and-reserve-space" | "do
 type ScrollMode = "in-view" | "top-third"
 
 type SwitchState = "left" | "right" | "none"
-
-type GuiElementType = LuaGuiElement["type"]
