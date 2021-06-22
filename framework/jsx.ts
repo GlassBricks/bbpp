@@ -1,18 +1,18 @@
-import { ElementSpec, FC, FCSpec, LuaElementSpec, LuaElementSpecOfType, LuaElementSpecProps } from "./gui"
+import { AnySpec, ElementSpec, ElementSpecOfType, ElementSpecProps, FC, FCSpec } from "./gui"
 
 type PrependCreated<T> = {
   [K in keyof T as K extends string ? `created_${K}` : never]: T[K]
 }
 
-type IntrinsicElement<Element extends BaseGuiElement, Spec extends BaseGuiSpec> = LuaElementSpecProps<Element> &
+type IntrinsicElement<Element extends BaseGuiElement, Spec extends BaseGuiSpec> = ElementSpecProps<Element> &
   PrependCreated<Omit<Spec, "type" | "index">> &
   ModOf<Element> & {
-    children?: ElementSpec | ElementSpec[]
+    children?: AnySpec | AnySpec[]
   }
 
 // Props which are NOT elementMod or creationMod
 const extraProps: Record<
-  keyof LuaElementSpecProps<any> | keyof JSX.IntrinsicAttributes | keyof JSX.ElementChildrenAttribute,
+  keyof ElementSpecProps<any> | keyof JSX.IntrinsicAttributes | keyof JSX.ElementChildrenAttribute,
   true
 > = {
   key: true,
@@ -42,9 +42,9 @@ const extraProps: Record<
 function createElementComponent(
   type: GuiElementType,
   props: IntrinsicElement<any, any>,
-  flattenedChildren: ElementSpec[] | undefined
-): LuaElementSpec {
-  const result: Partial<LuaElementSpecOfType<any>> = {}
+  flattenedChildren: AnySpec[] | undefined
+): ElementSpec {
+  const result: Partial<ElementSpecOfType<any>> = {}
   const creationSpec: Record<string, unknown> = {}
   const elementMod: Record<string, unknown> = {}
   for (const [k, value] of pairs(props as Record<string, unknown>)) {
@@ -62,13 +62,13 @@ function createElementComponent(
   result.elementMod = elementMod
   result.type = type
   result.children = flattenedChildren
-  return result as LuaElementSpec
+  return result as ElementSpec
 }
 
 function createFunctionalComponent<T>(
   type: FC<T>,
   props: T & JSX.IntrinsicAttributes,
-  flattenedChildren: ElementSpec[] | undefined
+  flattenedChildren: AnySpec[] | undefined
 ): FCSpec<T> {
   return {
     type,
@@ -78,15 +78,15 @@ function createFunctionalComponent<T>(
   }
 }
 
-function flattenChildren(children: Children | undefined): ElementSpec[] | undefined {
+function flattenChildren(children: Children | undefined): AnySpec[] | undefined {
   if (!children) return undefined
   if (!Array.isArray(children)) return [children]
-  const result: ElementSpec[] = []
+  const result: AnySpec[] = []
   for (const elem of children) {
     if (elem === undefined) continue
     if (Array.isArray(elem)) {
-      for (const template of elem) {
-        result[result.length] = template
+      for (const spec of elem) {
+        result[result.length] = spec
       }
     } else {
       result[result.length] = elem
@@ -95,26 +95,21 @@ function flattenChildren(children: Children | undefined): ElementSpec[] | undefi
   return result.length === 0 ? undefined : result
 }
 
-type Children = ElementSpec | (ElementSpec | ElementSpec[] | undefined)[]
+type Children = AnySpec | (AnySpec | AnySpec[] | undefined)[]
 
-function createComponent<Type extends GuiElementType>(
+function createElement<Type extends GuiElementType>(
   this: void,
   type: Type,
   props: IntrinsicElement<GuiElementOfType<Type>, GuiSpecOfType<Type>>,
   children?: Children
-): LuaElementSpecOfType<Type>
-function createComponent<T>(
-  this: void,
-  type: FC<T>,
-  props: T & Partial<JSX.IntrinsicAttributes>,
-  children?: Children
-): FCSpec<T>
-function createComponent(
+): ElementSpecOfType<Type>
+function createElement<T>(this: void, type: FC<T>, props: T & JSX.IntrinsicAttributes, children?: Children): FCSpec<T>
+function createElement(
   this: void,
   type: GuiElementType | FC<unknown>,
-  props?: Record<any, unknown>,
+  props?: Record<any, any>,
   children?: Children
-): ElementSpec | LuaElementSpecOfType<any> {
+): AnySpec {
   props = props || {}
   const flattenedChildren = flattenChildren(children)
   if (typeof type === "string") {
@@ -124,12 +119,12 @@ function createComponent(
   }
 }
 
-export default createComponent
+export default createElement
 
 /* eslint-disable */
 declare global {
   namespace JSX {
-    type Element = ElementSpec
+    type Element = AnySpec
     type ElementClass = never
 
     interface ElementChildrenAttribute {

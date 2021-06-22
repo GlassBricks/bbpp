@@ -8,7 +8,7 @@ import { DataLayer, Layer, ViewLayer } from "../Layer"
 import { PREFIX } from "../../constants"
 import { registerFuncs } from "../../framework/funcRef"
 import { registerHandlers } from "../../framework/events"
-import createComponent from "../../framework/jsx"
+import createElement from "../../framework/jsx"
 
 let LayersList: FC<{ type: "data" | "view" }>
 let LayerNavigator: FC

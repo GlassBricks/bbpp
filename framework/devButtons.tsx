@@ -5,7 +5,7 @@ import { dlog } from "./logging"
 import { registerFunc } from "./funcRef"
 import { registerHandler } from "./events"
 import { destroyIfValid } from "./util"
-import createComponent from "./jsx"
+import createElement from "./jsx"
 
 const devActions: Record<string, (player: LuaPlayer) => void> = {}
 

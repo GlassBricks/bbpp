@@ -1,15 +1,16 @@
 import { EventHandlerContainer, PayloadOf, registerHandlers } from "./events"
-import { getFuncName, getFuncOrNil } from "./funcRef"
+import { getFunc, getFuncName, registerFunc } from "./funcRef"
 import { dlog, userWarning } from "./logging"
+import { isFunction } from "./util"
 
 /*
 Terminology:
-LuaElement = LuaGuiElement (to disambiguate from "Element", below)
-Spec = GuiSpec; the table that is passed to LuaGuiElement::add.
-LuaElementSpec = LuaGui element spec
+GuiElement = LuaGuiElement (to disambiguate from "Element", below)
+CreationSpec = GuiSpec; the table that is passed to LuaGuiElement::add.
+ElementSpec = Actual DomElement spec
 FC = functional component
-Element = LuaElementSpec or functional component (returned by JSX, given to render)
-ElementInstance = virtual dom instance of an Element
+AnySpec = Element or functional component spec (returned by JSX, given to render)
+Instance = virtual dom instance of an Element
  */
 
 // <editor-fold desc="Component Spec">
@@ -17,8 +18,9 @@ ElementInstance = virtual dom instance of an Element
 type GuiEventHandlers<Element extends BaseGuiElement> = {
   [N in GuiEventName]?: (element: Element, payload: PayloadOf<typeof guiEventNameMapping[N]>) => void
 }
+
 // This type is separate from LuaElementSpecOfType as it is used by jsx.ts
-export type LuaElementSpecProps<Element extends BaseGuiElement> = GuiEventHandlers<Element> & {
+export interface ElementSpecProps<Element extends BaseGuiElement> extends GuiEventHandlers<Element> {
   onCreated?: (element: Element) => void
   onUpdate?: (element: Element) => void
   onAction?: (element: Element, payload: AnyGuiEventPayload) => void
@@ -27,19 +29,19 @@ export type LuaElementSpecProps<Element extends BaseGuiElement> = GuiEventHandle
   key?: string
 }
 
-export type LuaElementSpecOfType<Type extends GuiElementType> = LuaElementSpecProps<GuiElementOfType<Type>> & {
+export interface ElementSpecOfType<Type extends GuiElementType> extends ElementSpecProps<GuiElementOfType<Type>> {
   creationSpec: Omit<GuiSpecOfType<Type>, "type" | "index">
   elementMod?: ModOf<GuiElementOfType<Type>>
-  children?: ElementSpec[]
+  children?: AnySpec[]
   type: Type
 }
 
-export type LuaElementSpec = {
-  [T in GuiElementType]: LuaElementSpecOfType<T>
+export type ElementSpec = {
+  [T in GuiElementType]: ElementSpecOfType<T>
 }[GuiElementType]
 
 // FC
-export type FC<Props = Record<string, never>> = (props: Props) => ElementSpec
+export type FC<Props = Record<string, never>> = (props: Props) => AnySpec
 
 export type FCSpec<Props> = {
   type: FC<Props>
@@ -48,48 +50,44 @@ export type FCSpec<Props> = {
   key?: string
 }
 
-export type ElementSpec = LuaElementSpec | FCSpec<any>
+export type AnySpec = ElementSpec | FCSpec<any>
 // </editor-fold>
 // <editor-fold desc="Rendering">
 // <editor-fold desc="Instance">
 interface BaseInstance {
-  luaElement: LuaGuiElement
+  guiElement: LuaGuiElement
   key: string | number
 }
 
-interface LuaElementInstance extends BaseInstance {
-  element: LuaElementSpec
-  childInstances: ElementInstance[]
+interface ElementInstance extends BaseInstance {
+  element: ElementSpec
+  childInstances: Instance[]
   keyToIndex?: PRecord<string | number, number>
 }
 
 interface FCInstance extends BaseInstance {
   element: FCSpec<unknown>
-  childInstance: ElementInstance
+  childInstance: Instance
 }
 
-type ElementInstance = LuaElementInstance | FCInstance
+type Instance = ElementInstance | FCInstance
 // </editor-fold>
 
 // <editor-fold desc="Instantiate">
-function instantiateLuaElement(
-  parent: LuaGuiElement,
-  indexInParent: number,
-  element: LuaElementSpec
-): LuaElementInstance {
-  const luaElement = parent.add(getSpec(element, indexInParent))
+function instantiateElement(parent: LuaGuiElement, indexInParent: number, element: ElementSpec): ElementInstance {
+  const guiElement = parent.add(getCreationSpec(element, indexInParent))
 
-  if (element.onCreated) element.onCreated(luaElement as any)
-  updateInstance(luaElement, {} as LuaElementSpec, element)
+  if (element.onCreated) element.onCreated(guiElement as any)
+  updateElement(guiElement, {} as ElementSpec, element)
 
   const children = element.children || []
-  const childInstances: ElementInstance[] = []
+  const childInstances: Instance[] = []
   for (const [, child] of ipairs(children)) {
-    childInstances[childInstances.length] = instantiate(luaElement, indexInParent, child)
+    childInstances[childInstances.length] = instantiate(guiElement, indexInParent, child)
   }
   return {
     element,
-    luaElement,
+    guiElement,
     childInstances,
     key: element.key || indexInParent,
   }
@@ -99,20 +97,20 @@ function instantiateLuaElement(
 function instantiateFC(parent: LuaGuiElement, indexInParent: number, element: FCSpec<unknown>): FCInstance {
   const rendered = element.type(element.props)
   const childInstance = instantiate(parent, indexInParent, rendered)
-  const luaElement = childInstance.luaElement
+  const guiElement = childInstance.guiElement
 
   return {
-    luaElement,
+    guiElement,
     element,
     childInstance,
     key: element.key || indexInParent,
   }
 }
 
-function instantiate(parent: LuaGuiElement, indexInParent: number, element: ElementSpec): ElementInstance {
+function instantiate(parent: LuaGuiElement, indexInParent: number, element: AnySpec): Instance {
   const type = element.type
   if (typeof type === "string") {
-    return instantiateLuaElement(parent, indexInParent, element as LuaElementSpec)
+    return instantiateElement(parent, indexInParent, element as ElementSpec)
   } else {
     return instantiateFC(parent, indexInParent, element as FCSpec<unknown>)
   }
@@ -125,8 +123,8 @@ function instantiate(parent: LuaGuiElement, indexInParent: number, element: Elem
  *
  * @return LuaGuiElement the topmost created lua gui element.
  */
-export function create(parent: LuaGuiElement, component: ElementSpec): LuaGuiElement {
-  return instantiate(parent, 0, component).luaElement
+export function create(parent: LuaGuiElement, spec: AnySpec): LuaGuiElement {
+  return instantiate(parent, 0, spec).guiElement
 }
 
 // </editor-fold>
@@ -146,18 +144,18 @@ function applyMod<T>(target: T, prevMod: ModOf<T>, nextMod: ModOf<T>) {
   }
 }
 
-function updateInstance(luaElement: LuaGuiElement, oldElement: LuaElementSpec, newElement: LuaElementSpec) {
-  applyMod(luaElement, oldElement.elementMod || {}, newElement.elementMod || {})
-  applyMod(luaElement.style, oldElement.styleMod || {}, newElement.styleMod || {})
-  luaElement.tags = getTags(newElement)
-  if (newElement.onUpdate) newElement.onUpdate(luaElement as any)
+function updateElement(guiElement: LuaGuiElement, oldElement: ElementSpec, newElement: ElementSpec) {
+  applyMod(guiElement, oldElement.elementMod || {}, newElement.elementMod || {})
+  applyMod(guiElement.style, oldElement.styleMod || {}, newElement.styleMod || {})
+  guiElement.tags = getTags(newElement)
+  if (newElement.onUpdate) newElement.onUpdate(guiElement as any)
 }
 
-function getKeyToIndex(element: LuaElementSpec) {
-  const childComponents = element.children || []
+function getKeyToIndex(element: ElementSpec) {
+  const childSpecs = element.children || []
   const keyToIndex: PRecord<string | number, number> = {}
-  for (let i = 0; i < childComponents.length; i++) {
-    const childComponent = childComponents[i]
+  for (let i = 0; i < childSpecs.length; i++) {
+    const childComponent = childSpecs[i]
     const key = childComponent.key || i + 1 // indexInParent
     if (keyToIndex[key]) {
       dlog(`Children with same key ${key} found, this may cause issues`)
@@ -176,17 +174,17 @@ function getKeyToIndex(element: LuaElementSpec) {
  *
  * This definitely has room for (constant time) optimization.
  */
-function reconcileTemplate(instance: LuaElementInstance, template: LuaElementSpec): LuaElementInstance {
+function reconcileElement(instance: ElementInstance, element: ElementSpec): ElementInstance {
   // update this instance
-  updateInstance(instance.luaElement, instance.element, template)
+  updateElement(instance.guiElement, instance.element, element)
 
   // update children
-  const luaElement = instance.luaElement
+  const guiElement = instance.guiElement
   const oldChildInstances = instance.childInstances || []
-  const newChildInstances: ElementInstance[] = []
-  const newChildElements: ElementSpec[] = template.children || []
+  const newChildInstances: Instance[] = []
+  const newChildElements: AnySpec[] = element.children || []
   const oldKeyToIndex = instance.keyToIndex || getKeyToIndex(instance.element)
-  const nextKeyToIndex = getKeyToIndex(template)
+  const nextKeyToIndex = getKeyToIndex(element)
 
   // iterate through both the old elements and the new instances at once. Try to match new elements
   // with old elements in order, deleting and adding as needed.
@@ -206,34 +204,34 @@ function reconcileTemplate(instance: LuaElementInstance, template: LuaElementSpe
       while (oldIndex !== existingIndex) {
         const deletingInstance = oldChildInstances[oldIndex]
         oldKeyToIndex[deletingInstance.key] = undefined // don't match deleted elements for future keyed children
-        deletingInstance.luaElement.destroy()
+        deletingInstance.guiElement.destroy()
         oldIndex++
       }
       // update the instance.
-      newChildInstances[newIndex] = reconcile(luaElement, newIndex + 1, oldChildInstances[existingIndex], newElement)
+      newChildInstances[newIndex] = reconcile(guiElement, newIndex + 1, oldChildInstances[existingIndex], newElement)
       oldIndex++
     } else {
       // delete everything from the old elements that don't match a current element key.
       while (oldIndex < oldChildInstances.length) {
         const oldInstance = oldChildInstances[oldIndex]
         if (nextKeyToIndex[oldInstance.key]) break
-        oldInstance.luaElement.destroy()
+        oldInstance.guiElement.destroy()
         oldIndex++
       }
       // add the element.
-      newChildInstances[newIndex] = instantiate(luaElement, newIndex + 1, newElement)
+      newChildInstances[newIndex] = instantiate(guiElement, newIndex + 1, newElement)
     }
   }
   // delete remaining elements, if any.
   for (; oldIndex < oldChildInstances.length; oldIndex++) {
     const oldInstance = oldChildInstances[oldIndex]
-    oldInstance.luaElement.destroy()
+    oldInstance.guiElement.destroy()
   }
 
   // reuse past instance
   instance.childInstances = newChildInstances
   instance.keyToIndex = nextKeyToIndex
-  instance.element = template
+  instance.element = element
   return instance
 }
 
@@ -249,7 +247,7 @@ function reconcileFC(
   const rendered = element.type(element.props)
   const oldChildInstance = instance.childInstance
   const childInstance = reconcile(parent, indexInParent, oldChildInstance, rendered)!
-  instance.luaElement = childInstance.luaElement
+  instance.guiElement = childInstance.guiElement
   instance.childInstance = childInstance
   instance.element = element
   return instance
@@ -259,19 +257,19 @@ function reconcileFC(
 function reconcile(
   parent: LuaGuiElement,
   indexInParent: number,
-  oldInstance: ElementInstance | undefined,
-  element: ElementSpec
-): ElementInstance {
+  oldInstance: Instance | undefined,
+  element: AnySpec
+): Instance {
   if (oldInstance === undefined) {
     // new
     return instantiate(parent, indexInParent, element)
   } else if (oldInstance.element.type !== element.type) {
     // replace
-    oldInstance.luaElement.destroy()
+    oldInstance.guiElement.destroy()
     return instantiate(parent, indexInParent, element)
   } else if (typeof element.type === "string") {
-    // update template
-    return reconcileTemplate(oldInstance as LuaElementInstance, element as LuaElementSpec)
+    // update element
+    return reconcileElement(oldInstance as ElementInstance, element as ElementSpec)
   } else {
     // update FC
     return reconcileFC(oldInstance as FCInstance, element as FCSpec<unknown>, parent, indexInParent)
@@ -282,7 +280,7 @@ function reconcile(
 
 // <editor-fold desc="Render">
 declare const global: {
-  rootInstances: Record<number, ElementInstance | undefined>
+  rootInstances: Record<number, Instance | undefined>
   referencedElements: Record<number, LuaGuiElement | undefined>
 }
 
@@ -307,43 +305,45 @@ registerHandlers({
   on_player_removed: cleanGlobal,
 })
 
-function render(parent: LuaGuiElement, existing: LuaGuiElement | undefined, element: ElementSpec): ElementInstance {
+function render(parent: LuaGuiElement, existing: LuaGuiElement | undefined, element: AnySpec): Instance {
   const prevInstance = existing && global.rootInstances[existing.index]
   const nextInstance = reconcile(parent, 0, prevInstance, element)
   if (prevInstance) {
     global.rootInstances[existing!.index] = undefined
     global.referencedElements[existing!.index] = undefined
   }
-  const luaElement = existing || nextInstance.luaElement
-  global.rootInstances[luaElement.index] = nextInstance
-  global.referencedElements[luaElement.index] = luaElement
+  const guiElement = existing || nextInstance.guiElement
+  global.rootInstances[guiElement.index] = nextInstance
+  global.referencedElements[guiElement.index] = guiElement
   return nextInstance
 }
 
 /**
- * Renders an element inside a container.
+ * Renders elements a container.
+ *
+ * NOTE: the given `name` will override the name of the topmost lua gui element, always, in order to
+ * refer to it for future updates.
  *
  * In order to destroy properly, use the {@link destroy} function on the returned LuaGuiElement.
  *
  * If you only want to create something but don't need to update it, you can use {@link create} instead.
  *
- *
  * @return GuiElement the first lua gui element. You can use {@link rerenderSelf} on this element for future updates.
  *  You should pass this into {@link destroy} to destroy properly.
- *
  */
-export function renderIn(parent: LuaGuiElement, name: string, component: ElementSpec): LuaGuiElement {
-  const instance = render(parent, parent.get(name), component)
-  const element = instance.luaElement
-  element.name = name // todo: this causes problems. Do better stuff?
+// TODO: name better?
+export function renderIn(parent: LuaGuiElement, name: string, spec: AnySpec): LuaGuiElement {
+  const instance = render(parent, parent.get(name), spec)
+  const element = instance.guiElement
+  element.name = name
   return element
 }
 
 /**
  * Updates rendering on an existing rendered element, obtained from {@link renderIn}
  */
-export function rerenderSelf(existingElement: LuaGuiElement, component: ElementSpec): void {
-  render(existingElement.parent, existingElement, component)
+export function rerenderSelf(existingElement: LuaGuiElement, spec: AnySpec): void {
+  render(existingElement.parent, existingElement, spec)
 }
 
 /**
@@ -359,9 +359,9 @@ export function destroy(existingElement: LuaGuiElement): void {
 
 // <editor-fold desc="Extract Spec">
 
-function getSpec(template: LuaElementSpec, index?: number): GuiSpec {
-  const spec: Partial<GuiSpec> = template.creationSpec
-  spec.type = template.type
+function getCreationSpec(element: ElementSpec, index?: number): GuiSpec {
+  const spec: Partial<GuiSpec> = element.creationSpec
+  spec.type = element.type
   spec.index = index
   return spec as GuiSpec
 }
@@ -369,22 +369,22 @@ function getSpec(template: LuaElementSpec, index?: number): GuiSpec {
 const guiEventHandlersTag = "#guiEventHandlers"
 
 // adds guiEventHandlers tags
-function getTags(template: LuaElementSpec): Tags {
+function getTags(element: ElementSpec): Tags {
   const handlers: Record<string, string> = {}
 
   let name: GuiEventName
   for (name in guiEventNameMapping) {
-    const handler = template[name] as AnyFunction
+    const handler = element[name] as AnyFunction
     if (handler) {
       handlers[name] = getFuncName(handler) ?? error(`The function for ${name} was not a registered function ref`)
     }
   }
-  if (template.onAction) {
+  if (element.onAction) {
     const funcName =
-      getFuncName(template.onAction) ?? error("The function for onAction was not a registered function ref")
-    const eventName = onActionEvents[template.type]
+      getFuncName(element.onAction) ?? error("The function for onAction was not a registered function ref")
+    const eventName = onActionEvents[element.type]
     if (!eventName) {
-      throw `GUI element of type ${template.type} does not have an onAction event.
+      throw `GUI element of type ${element.type} does not have an onAction event.
       Tried to register function "${funcName}".`
     }
     if (handlers[eventName]) {
@@ -393,7 +393,7 @@ function getTags(template: LuaElementSpec): Tags {
     }
     handlers[eventName] = funcName
   }
-  const tags = (template.elementMod && template.elementMod.tags) || {}
+  const tags = (element.elementMod && element.elementMod.tags) || {}
   tags[guiEventHandlersTag] = handlers
   return tags
 }
@@ -444,7 +444,7 @@ function handleGuiEvent(eventName: GuiEventName, event: AnyGuiEventPayload) {
   if (!handlers) return
   const handlerName = handlers[eventName]
   if (!handlerName) return
-  const ref = getFuncOrNil(handlerName)
+  const ref = getFunc(handlerName)
   if (!ref) {
     userWarning(`There is no gui handler function named ${handlerName}.
     The mod author probably forgot to migrate something. If error persists, please report to the mod author.

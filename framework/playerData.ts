@@ -2,7 +2,7 @@ import { registerHandlers } from "./events"
 import { dlog } from "./logging"
 
 interface PlayerDataGlobal {
-  "#playerData": Record<string, Record<number, any>>
+  playerData: Record<string, Record<number, any>>
 }
 
 declare const global: PlayerDataGlobal
@@ -15,10 +15,10 @@ export function PlayerData<T extends Object>(uniqueName: string, initData: (play
   let playerDatum: Record<number, T>
 
   function loadData() {
-    if (!global["#playerData"][uniqueName]) {
-      global["#playerData"][uniqueName] = {}
+    if (!global.playerData[uniqueName]) {
+      global.playerData[uniqueName] = {}
     }
-    playerDatum = global["#playerData"][uniqueName]!
+    playerDatum = global.playerData[uniqueName]!
   }
 
   registerHandlers({
@@ -55,6 +55,6 @@ export function onPlayerInit(init: (player: LuaPlayer) => void): void {
 
 registerHandlers({
   on_init() {
-    global["#playerData"] = {}
+    global.playerData = {}
   },
 })

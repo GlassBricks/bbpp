@@ -1,5 +1,5 @@
 import { FC } from "../gui"
-import createComponent from "../jsx"
+import createElement from "../jsx"
 
 export const CloseButton: FC<{ onClick: (element: SpriteButtonGuiElement, payload: OnGuiClickPayload) => void }> = ({
   onClick,

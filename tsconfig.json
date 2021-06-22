@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "experimentalDecorators": true,
     "target": "esnext",
     "lib": [
       "esnext"
@@ -11,7 +12,7 @@
       "lua-types/5.2"
     ],
     "jsx": "react",
-    "jsxFactory": "createComponent",
+    "jsxFactory": "createElement",
     "plugins": [
       {
         "name": "typescript-tstl-plugin"

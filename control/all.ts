@@ -1,8 +1,6 @@
 import "./Layer"
 import "./blueprintHandling"
 
-import "./gui/LayerNavigator"
-import "./gui/ViewConfiguration"
+import "./gui/LayerNavigator.tsx"
 
 import "./dev"
-import "./ugg"
