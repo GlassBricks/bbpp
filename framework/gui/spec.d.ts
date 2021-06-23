@@ -16,7 +16,7 @@ type GuiEventHandlers<Type extends GuiElementType, Events> = {
 
 type MergeKeys<T> = T extends infer I ? keyof I : never // union of keys instead of intersection of keys
 // This type is separate from LuaElementSpecOfType as it is used by jsx defs
-export type ElementSpecProps<Type extends GuiElementType> = GuiEventHandlers<Type, MergeKeys<GuiEventsByType[Type]>> & {
+export type ElementSpecProps<Type extends GuiElementType> = {
   onCreated?: (element: GuiElementByType[Type]) => void
   onUpdate?: (element: GuiElementByType[Type]) => void
 
@@ -24,12 +24,13 @@ export type ElementSpecProps<Type extends GuiElementType> = GuiEventHandlers<Typ
   key?: string
 }
 
-export type ElementSpecOfType<Type extends GuiElementType> = ElementSpecProps<Type> & {
-  creationSpec: Omit<GuiSpecByType[Type], "type" | "index">
-  elementMod?: ModOf<GuiElementByType[Type]>
-  children?: AnySpec[]
-  type: Type
-}
+export type ElementSpecOfType<Type extends GuiElementType> = ElementSpecProps<Type> &
+  GuiEventHandlers<Type, keyof GuiEventsByType[Type]> & {
+    creationSpec: Omit<GuiSpecByType[Type], "type" | "index">
+    elementMod?: ModOf<GuiElementByType[Type]>
+    children?: AnySpec[]
+    type: Type
+  }
 
 export type ElementSpec = {
   [T in GuiElementType]: ElementSpecOfType<T>

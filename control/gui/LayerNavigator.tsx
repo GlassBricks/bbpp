@@ -1,5 +1,12 @@
 /* eslint-disable prefer-const */
-import createElement, { AnySpec, Component, create, renderToggleIn, rerenderIfPresentIn } from "../../framework/gui"
+import createElement, {
+  AnySpec,
+  Component,
+  create,
+  registerComponent,
+  renderToggleIn,
+  rerenderIfPresentIn,
+} from "../../framework/gui"
 import { CloseButton } from "../../framework/gui/components/buttons"
 import { onPlayerInit } from "../../framework/playerData"
 import * as modGui from "mod-gui"
@@ -9,18 +16,19 @@ import { registerFuncs } from "../../framework/funcRef"
 import { registerHandlers } from "../../framework/events"
 import { shallowArrayEquals } from "../../framework/util"
 
+@registerComponent
 class TitleBar extends Component<Empty> {
   render(): AnySpec {
     return (
       <flow
-        created_direction={"horizontal"}
+        _direction={"horizontal"}
         styleMod={{ horizontal_spacing: 8, height: 28 }}
         onCreated={(e) => {
           e.drag_target = e.parent
         }}
       >
-        <label caption={"Layer Navigator"} created_style={"frame_title"} ignored_by_interaction={true} />
-        <empty-widget created_style={"flib_titlebar_drag_handle"} ignored_by_interaction={true} />
+        <label caption={"Layer Navigator"} _style={"frame_title"} ignored_by_interaction={true} />
+        <empty-widget _style={"flib_titlebar_drag_handle"} ignored_by_interaction={true} />
         <CloseButton onClick={LayerNavFuncs.toggle} />
       </flow>
     )
@@ -31,7 +39,11 @@ class TitleBar extends Component<Empty> {
   }
 }
 
+@registerComponent
 class LayersList extends Component<{ layers: Layer[]; playerSurfaceIndex: number; type: string }> {
+  playerSurfaceUpdated = true
+  layersUpdated = true
+
   render(): AnySpec {
     const layers: Layer[] = this.props.layers
     return layers.length === 0 ? (
@@ -43,15 +55,21 @@ class LayersList extends Component<{ layers: Layer[]; playerSurfaceIndex: number
         tags={{ type: this.props.type }}
         onUpdate={(element) => {
           const currentSurface = this.props.playerSurfaceIndex
-          element.clear_items()
-          let selectedIndex = 0
-          for (const [i, layer] of ipairs(layers)) {
-            element.add_item(layer.name)
-            if (currentSurface === layer.surface.index) {
-              selectedIndex = i
+          if (this.layersUpdated) {
+            element.clear_items()
+            for (const [, layer] of ipairs(layers)) {
+              element.add_item(layer.name)
             }
           }
-          element.selected_index = selectedIndex
+          if (this.playerSurfaceUpdated) {
+            let selectedIndex = 0
+            for (const [i, layer] of ipairs(layers)) {
+              if (currentSurface === layer.surface.index) {
+                selectedIndex = i
+              }
+            }
+            element.selected_index = selectedIndex
+          }
         }}
       />
     )
@@ -59,15 +77,18 @@ class LayersList extends Component<{ layers: Layer[]; playerSurfaceIndex: number
 
   shouldComponentUpdate(nextProps: { layers: Layer[]; playerSurfaceIndex: number }): boolean {
     const { playerSurfaceIndex, layers } = this.props
-    return playerSurfaceIndex !== nextProps.playerSurfaceIndex || !shallowArrayEquals(layers, nextProps.layers)
+    this.playerSurfaceUpdated = playerSurfaceIndex !== nextProps.playerSurfaceIndex
+    this.layersUpdated = !shallowArrayEquals(layers, nextProps.layers)
+    return this.playerSurfaceUpdated || this.layersUpdated
   }
 }
 
-class LayerNavigator extends Component<Empty> {
+@registerComponent
+export class LayerNavigator extends Component<Empty> {
   render(): AnySpec {
     const currentIndex = game.get_player(this.parentGuiElement.player_index).surface.index
     return (
-      <frame created_direction={"vertical"} auto_center={true}>
+      <frame _direction={"vertical"} auto_center={true}>
         <TitleBar />
         <LayersList layers={DataLayer.getDataLayerUserOrder()} playerSurfaceIndex={currentIndex} type={"data"} />
         <LayersList layers={ViewLayer.getOrder()} playerSurfaceIndex={currentIndex} type={"view"} />

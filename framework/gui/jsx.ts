@@ -1,18 +1,21 @@
-import { AnySpec, ElementSpec, ElementSpecOfType, ElementSpecProps, FC, FCSpec } from "./spec"
+import { AnySpec, ElementSpec, ElementSpecOfType, ElementSpecProps, FC, FCSpec, GuiEventHandlers } from "./spec"
 import { Component } from "./component"
+import { EventHandlerTags, GuiEventName } from "./guievents"
+import { isRegisteredFunc } from "../funcRef"
 
-type PrependCreated<T> = {
-  [K in keyof T as K extends string ? `created_${K}` : never]: T[K]
+type CreationMod<T> = {
+  [K in keyof T as K extends string ? `_${K}` : never]: T[K]
 }
 
 type IntrinsicElement<Type extends GuiElementType> = ElementSpecProps<Type> &
-  PrependCreated<Omit<GuiSpecByType[Type], "type" | "index">> &
+  GuiEventHandlers<Type, keyof GuiEventsByType[Type]> &
+  CreationMod<Omit<GuiSpecByType[Type], "type" | "index">> &
   ModOf<GuiElementByType[Type]> & {
     children?: AnySpec | AnySpec[]
   }
 
 // Props which are NOT elementMod or creationMod
-const extraProps: Record<
+const specProps: Record<
   keyof ElementSpecProps<GuiElementType> | keyof JSX.IntrinsicAttributes | keyof JSX.ElementChildrenAttribute,
   true
 > = {
@@ -23,7 +26,8 @@ const extraProps: Record<
 
   onCreated: true,
   onUpdate: true,
-
+}
+export const guiHandlerProps: Record<GuiEventName, true> = {
   onCheckedStateChanged: true,
   onClick: true,
   onClosed: true,
@@ -38,26 +42,37 @@ const extraProps: Record<
   onValueChanged: true,
 }
 
-function createElementComponent(
+function getFuncName(func: Function, debugName: string): string {
+  if (!isRegisteredFunc(func)) error(`The function for ${debugName} was not a registered function ref`)
+  return func.funcName
+}
+
+const sub = string.sub
+
+function createElementSpec(
   type: GuiElementType,
-  props: IntrinsicElement<any> | undefined,
+  props: Record<string, unknown> | undefined,
   flattenedChildren: AnySpec[] | undefined
 ): ElementSpec {
   const result: Partial<ElementSpecOfType<any>> = {}
   const creationSpec: Record<string, unknown> = {}
   const elementMod: Record<string, unknown> = {}
-  if (props)
-    for (const [k, value] of pairs(props as Record<string, unknown>)) {
-      const key = k as string
-      if (key in extraProps) {
-        // includes intrinsic attributes
-        ;(result as any)[key] = value as any
-      } else if (key.startsWith("created_")) {
-        creationSpec[key.substr(8)] = value
+  if (props) {
+    const guiHandlers: PRecord<string, string> = {}
+    for (const [key, value] of pairs(props)) {
+      if (key in specProps) {
+        ;(result as any)[key] = value
+      } else if (key in guiHandlerProps) {
+        guiHandlers[key] = getFuncName(value as Function, key)
+      } else if (sub(key, 1, 1) === "_") {
+        creationSpec[sub(key, 2)] = value
       } else {
         elementMod[key] = value
       }
     }
+    props.tags = props.tags || {}
+    ;(props.tags as EventHandlerTags)["#guiEventHandlers"] = guiHandlers
+  }
   result.creationSpec = creationSpec
   result.elementMod = elementMod
   result.type = type
@@ -65,36 +80,37 @@ function createElementComponent(
   return result as ElementSpec
 }
 
-function createFunctionalComponent<T>(
+function createFCSpec<T>(
   type: FC<T>,
-  props: T & JSX.IntrinsicAttributes | undefined,
+  props: (T & JSX.IntrinsicAttributes) | undefined,
   flattenedChildren: AnySpec[] | undefined
 ): FCSpec<T> {
+  const theProps: any = props || {}
+  theProps.children = flattenedChildren
   return {
     type,
-    props: { ...props!, children: flattenedChildren },
-    key: props && props.key,
+    props: theProps,
+    key: theProps.key,
   }
 }
 
 function flattenChildren(children: Children | undefined): AnySpec[] | undefined {
   if (!children) return undefined
-  if (!Array.isArray(children)) return [children]
+  if ((children as any).type !== undefined) return [children as AnySpec]
   const result: AnySpec[] = []
-  for (const elem of children) {
-    if (elem === undefined) continue
-    if (Array.isArray(elem)) {
-      for (const spec of elem) {
+  for (const elem of children as any[]) {
+    if (elem.type !== undefined) {
+      result[result.length] = elem
+    } else {
+      for (const spec of elem as AnySpec[]) {
         result[result.length] = spec
       }
-    } else {
-      result[result.length] = elem
     }
   }
   return result.length === 0 ? undefined : result
 }
 
-type Children = AnySpec | (AnySpec | AnySpec[] | undefined)[]
+type Children = AnySpec | (AnySpec | AnySpec[])[]
 
 export function createElement<Type extends GuiElementType>(
   this: void,
@@ -116,9 +132,9 @@ export function createElement(
 ): AnySpec {
   const flattenedChildren = flattenChildren(children)
   if (typeof type === "string") {
-    return createElementComponent(type, props, flattenedChildren)
+    return createElementSpec(type, props, flattenedChildren)
   } else {
-    return createFunctionalComponent(type, props, flattenedChildren)
+    return createFCSpec(type, props, flattenedChildren)
   }
 }
 

@@ -1,6 +1,7 @@
 import { registerHandlers } from "../framework/events"
 import { DataLayer, ViewLayer } from "./Layer"
-import { onPlayerInit } from "../framework/playerData"
+import createElement, { renderIn } from "../framework/gui"
+import { LayerNavigator } from "./gui/LayerNavigator"
 
 function generateTestLayers() {
   for (let i = 0; i < 5; i++) {
@@ -19,7 +20,9 @@ registerHandlers({
   on_init() {
     generateTestLayers()
   },
-})
-onPlayerInit((player) => {
-  player.teleport([0, 0], DataLayer.getDataLayerUserOrder()[0].surface)
+  on_tick() {
+    for (const [, player] of pairs(game.players)) {
+      renderIn(game.get_player(player.index).gui.screen, "LayerNavigator", <LayerNavigator />)
+    }
+  },
 })

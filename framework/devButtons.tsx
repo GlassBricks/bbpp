@@ -44,12 +44,7 @@ if (DEV) {
 
   DevButtonsComponent = () => {
     return (
-      <frame
-        created_direction={"vertical"}
-        name={"#devButtons"}
-        caption="BBPP dev buttons"
-        location={{ x: 0, y: 1000 }}
-      >
+      <frame _direction={"vertical"} name={"#devButtons"} caption="BBPP dev buttons" location={{ x: 0, y: 1000 }}>
         {Object.keys(devActions).map((name) => (
           <button
             styleMod={{

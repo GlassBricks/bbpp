@@ -1,10 +1,6 @@
 import { AnySpec } from "./spec"
-import { registerFunc, registerFuncs } from "../funcRef"
+import { registerFuncs } from "../funcRef"
 import { dlog } from "../logging"
-
-interface ComponentClassInternal {
-  protoFunctions: Record<string, Function>
-}
 
 export abstract class Component<Props> {
   props!: Props
@@ -12,6 +8,9 @@ export abstract class Component<Props> {
 
   abstract render(): AnySpec
 
+  /**
+   * Called before UPDATES to determine if this component should actually update.
+   */
   shouldComponentUpdate(nextProps: Props): boolean {
     return true
   }
@@ -24,7 +23,7 @@ const registeredComponents: Record<string, Class<Component<unknown>>> = {}
 export function getRegisteredComponent(name: string): Class<Component<unknown>> {
   const clazz = registeredComponents[name]
   if (!clazz) {
-    error(`Component class of name ${name} not found. Did you register the class perform migrations properly?`)
+    error(`Component class of name ${name} not found. Did you register the class and perform migrations properly?`)
   }
   return clazz
 }
@@ -33,7 +32,8 @@ export function getRegisteredComponent(name: string): Class<Component<unknown>> 
  * Registers a gui component class. All components must be registered to be used.
  * The _name_ of the class should be persistent through versions/reloads.
  *
- * All _static_ functions on the class will also be registered using {@link registerFunc}.
+ * All _static_ functions of the class will also be registered.
+ *
  * @param componentClass
  */
 export function registerComponent(componentClass: Class<Component<unknown>>): void {

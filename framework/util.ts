@@ -30,8 +30,8 @@ export function deepCopy<T>(t: T): T {
 
 export function shallowArrayEquals<T>(a: T[], b: T[]): boolean {
   if (a.length !== b.length) return false
-  for (const [i, v] of ipairs(a)) {
-    if (v !== b[i]) return false
+  for (const [luaIndex, v] of ipairs(a)) {
+    if (v !== b[luaIndex - 1]) return false
   }
   return true
 }

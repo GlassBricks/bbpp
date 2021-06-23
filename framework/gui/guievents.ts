@@ -1,7 +1,6 @@
 // some events have more fields
-import { getFuncOrNil, isRegisteredFunc } from "../funcRef"
+import { getFuncOrNil } from "../funcRef"
 import { userWarning } from "../logging"
-import { ElementSpecOfType } from "./spec"
 import { EventHandlerContainer, registerHandlers } from "../events"
 
 export interface AnyGuiEventPayload {
@@ -25,32 +24,11 @@ export const guiEventNameMapping = {
 } as const
 export type GuiEventName = keyof typeof guiEventNameMapping
 
-interface EventHandlerTags {
+export interface EventHandlerTags {
   "#guiEventHandlers": PRecord<GuiEventName, string>
 }
 
 type AnyGuiEventHandler = (element: LuaGuiElement, payload: AnyGuiEventPayload) => void
-
-function getFuncName(func: Function, debugName: string): string {
-  if (!isRegisteredFunc(func)) error(`The function for ${debugName} was not a registered function ref`)
-  return func.funcName
-}
-
-// adds guiEventHandlers tags
-export function getTags(element: ElementSpecOfType<GuiElementType>): Tags {
-  const handlers: PRecord<GuiEventName, string> = {}
-
-  for (const n in guiEventNameMapping) {
-    const name = n as GuiEventName
-    const handler = element[name] as AnyGuiEventHandler
-    if (handler) {
-      handlers[name] = getFuncName(handler, name)
-    }
-  }
-  const tags: Partial<EventHandlerTags> = (element.elementMod && element.elementMod.tags) || {}
-  tags["#guiEventHandlers"] = handlers
-  return tags
-}
 
 function handleGuiEvent(eventName: GuiEventName, event: AnyGuiEventPayload) {
   // I want optional chaining!

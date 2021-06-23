@@ -1,7 +1,6 @@
 import { registerHandlers } from "../events"
 import { dlog } from "../logging"
 import { AnySpec, ComponentSpec, ElementSpec, FCSpec } from "./spec"
-import { getTags } from "./guievents"
 import { Component, getRegisteredComponent } from "./component"
 
 // <editor-fold desc="Instance">
@@ -94,8 +93,8 @@ function instantiateElement(parent: LuaGuiElement, indexInParent: number, spec: 
 
   const children = spec.children || []
   const childInstances: Instance[] = []
-  for (const [, child] of ipairs(children)) {
-    childInstances[childInstances.length] = instantiate(guiElement, indexInParent, child)
+  for (const [luaIndex, child] of ipairs(children)) {
+    childInstances[childInstances.length] = instantiate(guiElement, luaIndex, child)
   }
   return {
     spec,
@@ -125,6 +124,7 @@ function instantiateComponent(
   spec: ComponentSpec<unknown>
 ): ComponentInstance {
   const publicInstance = new spec.type()
+  getRegisteredComponent(spec.type.name)
   publicInstance.props = spec.props
   publicInstance.parentGuiElement = parent
   const rendered = publicInstance.render()
@@ -231,7 +231,6 @@ function applyMod<T>(target: T, prevMod: ModOf<T>, nextMod: ModOf<T>) {
 function updateElement(guiElement: LuaGuiElement, oldSpec: ElementSpec, newSpec: ElementSpec) {
   applyMod(guiElement, oldSpec.elementMod || {}, newSpec.elementMod || {})
   applyMod(guiElement.style, oldSpec.styleMod || {}, newSpec.styleMod || {})
-  guiElement.tags = getTags(newSpec as any)
   if (newSpec.onUpdate) newSpec.onUpdate(guiElement as any)
 }
 
@@ -415,7 +414,6 @@ function render(parent: LuaGuiElement, existing: LuaGuiElement | undefined, elem
  * @return GuiElement the first lua gui element. You can use {@link rerenderSelf} on this element for future updates.
  *  You should pass this into {@link destroySelf} to destroy properly.
  */
-// TODO: name better?
 export function renderIn(parent: LuaGuiElement, name: string, spec: AnySpec): LuaGuiElement {
   const instance = render(parent, parent.get(name), spec)
   const element = instance.guiElement

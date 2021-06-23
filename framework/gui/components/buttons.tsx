@@ -5,7 +5,7 @@ export const CloseButton: FC<{
   onClick: (element: SpriteButtonGuiElement, payload: OnGuiClickPayload) => void
 }> = ({ onClick }) => (
   <sprite-button
-    created_style={"frame_action_button"}
+    _style={"frame_action_button"}
     sprite={"utility/close_white"}
     hovered_sprite={"utility/close_black"}
     clicked_sprite={"utility.close_black"}
