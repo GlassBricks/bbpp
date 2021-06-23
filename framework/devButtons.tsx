@@ -1,11 +1,10 @@
 import { DEV } from "./DEV"
 import { onPlayerInit } from "./playerData"
-import { create, FC } from "./gui"
+import createElement, { create, FC } from "./gui"
 import { dlog } from "./logging"
 import { registerFunc } from "./funcRef"
 import { registerHandler } from "./events"
 import { destroyIfValid } from "./util"
-import createElement from "./jsx"
 
 const devActions: Record<string, (player: LuaPlayer) => void> = {}
 
@@ -34,16 +33,14 @@ function destroyDevButtons(player: LuaPlayer): void {
 }
 
 if (DEV) {
-  function onClick(element: LuaGuiElement) {
+  const onClick = registerFunc((element: LuaGuiElement) => {
     const action = element.tags.action as string
     if (!devActions[action]) {
       dlog("Action", action, "does not exist, try refreshing")
       return
     }
     devActions[action](game.get_player(element.player_index))
-  }
-
-  registerFunc("devButtons:onClick", onClick)
+  }, "devButtons:onClick")
 
   DevButtonsComponent = () => {
     return (

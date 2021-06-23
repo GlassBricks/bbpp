@@ -22,8 +22,8 @@
   "scripts": {
     "build": "tstl",
     "watch": "tstl --watch",
-    "lint": "eslint **/*.ts",
-    "lint-fix": "eslint **/*.ts --fix",
+    "lint": "eslint **/*.ts*",
+    "lint-fix": "eslint **/*.ts* --fix",
     "clean": "find . -name node_modules -prune -false -o -name '*.lua*' -print -exec rm {} \\;",
     "rebuild": "yarn run clean && yarn run build"
   }

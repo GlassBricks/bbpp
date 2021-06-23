@@ -32,4 +32,11 @@ type Writable<T> = Omit<T, ReadonlyKeys<T> | FunctionKeys<T>>
 
 type ModOf<T> = Partial<Writable<T>>
 
-type AnyFunction = (...args: any) => unknown
+type Empty = Record<any, never>
+
+interface Class<S, A extends any[] = []> {
+  prototype: any
+  name: string
+
+  new (...args: A): S
+}

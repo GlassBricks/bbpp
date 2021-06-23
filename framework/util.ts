@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/ban-types
-export function isFunction(a: any): a is AnyFunction {
+export function isFunction(a: any): a is Function {
   return type(a) === "function"
 }
 
@@ -26,6 +26,54 @@ export function deepCopy<T>(t: T): T {
     result[k] = v
   }
   return result as T
+}
+
+export function shallowArrayEquals<T>(a: T[], b: T[]): boolean {
+  if (a.length !== b.length) return false
+  for (const [i, v] of ipairs(a)) {
+    if (v !== b[i]) return false
+  }
+  return true
+}
+
+export function shallowEquals<T extends object>(a: T, b: T): boolean {
+  for (const [k, v1] of pairs(a)) {
+    const v2 = b[k]
+    if (v1 !== v2) return false
+  }
+  // b has at least everything in a
+  for (const k in b) {
+    if (!(k in a)) return false
+  }
+  return true
+}
+
+export function conservativeShallowEquals<T extends object>(a: T, b: T): boolean {
+  for (const [k, v1] of pairs(a)) {
+    if (type(v1) === "table") return false
+    const v2 = b[k]
+    if (v1 !== v2) return false
+  }
+  // b has at least everything in a
+  for (const k in b) {
+    if (!(k in a)) return false
+  }
+  return true
+}
+
+export function deepEquals(a: any, b: any): boolean {
+  const typeA = type(a)
+  if (typeA !== type(b)) return false
+  if (typeA !== "table") return a === b
+  for (const [k, v1] of pairs(a)) {
+    const v2 = b[k]
+    if (!deepEquals(v1, v2)) return false
+  }
+  // b has at least everything in a
+  for (const k in b) {
+    if (!(k in a)) return false
+  }
+  return true
 }
 
 export function arrayRemoveElement<T>(arr: T[], item: T): void {

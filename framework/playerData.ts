@@ -9,8 +9,7 @@ declare const global: PlayerDataGlobal
 
 export type PlayerData<T> = (playerIndex: number) => T
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function PlayerData<T extends Object>(uniqueName: string, initData: (player: LuaPlayer) => T): PlayerData<T> {
+export function PlayerData<T>(uniqueName: string, initData: (player: LuaPlayer) => T): PlayerData<T> {
   dlog("creating player data", uniqueName)
   let playerDatum: Record<number, T>
 

@@ -1,1 +1,1 @@
-import "./control/all"
+import "./control/index"

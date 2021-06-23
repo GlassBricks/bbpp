@@ -249,36 +249,36 @@ interface TabbedPaneGuiSpec extends BaseGuiSpec {
   type: "tabbed-pane"
 }
 
-/** @noSelf */
-type GuiSpec =
-  | ButtonGuiSpec
-  | SpriteButtonGuiSpec
-  | CheckboxGuiSpec
-  | FlowGuiSpec
-  | FrameGuiSpec
-  | LabelGuiSpec
-  | LineGuiSpec
-  | ProgressbarGuiSpec
-  | TableGuiSpec
-  | TextfieldGuiSpec
-  | RadiobuttonGuiSpec
-  | SpriteGuiSpec
-  | ScrollPaneGuiSpec
-  | DropDownGuiSpec
-  | ListBoxGuiSpec
-  | CameraGuiSpec
-  | ChooseElemButtonGuiSpec<any>
-  | TextBoxGuiSpec
-  | SliderGuiSpec
-  | MinimapGuiSpec
-  | EntityPreviewGuiSpec
-  | EmptyWidgetGuiSpec
-  | TabbedPaneGuiSpec
-  | TabGuiSpec
-  | SwitchGuiSpec
+interface GuiSpecByType {
+  "choose-elem-button": ChooseElemButtonGuiSpec
+  "drop-down": DropDownGuiSpec
+  "empty-widget": EmptyWidgetGuiSpec
+  "entity-preview": EntityPreviewGuiSpec
+  "list-box": ListBoxGuiSpec
+  "scroll-pane": ScrollPaneGuiSpec
+  "sprite-button": SpriteButtonGuiSpec
+  "tabbed-pane": TabbedPaneGuiSpec
+  "text-box": TextBoxGuiSpec
+  button: ButtonGuiSpec
+  camera: CameraGuiSpec
+  checkbox: CheckboxGuiSpec
+  flow: FlowGuiSpec
+  frame: FrameGuiSpec
+  label: LabelGuiSpec
+  line: LineGuiSpec
+  minimap: MinimapGuiSpec
+  progressbar: ProgressbarGuiSpec
+  radiobutton: RadiobuttonGuiSpec
+  slider: SliderGuiSpec
+  sprite: SpriteGuiSpec
+  switch: SwitchGuiSpec
+  tab: TabGuiSpec
+  table: TableGuiSpec
+  textfield: TextfieldGuiSpec
+}
 
 /** @noSelf */
-type GuiSpecOfType<Type extends GuiElementType> = Extract<GuiSpec, { type: Type }>
+type GuiSpec = GuiSpecByType[GuiElementType]
 
 // Element
 /** @noSelf */
@@ -304,8 +304,7 @@ interface BaseGuiElement extends LuaReadonlyIndexing<string, LuaGuiElement | und
   readonly valid: boolean
   readonly object_name: string
 
-  // add<S extends GuiSpec>(element: S): GuiElementOfType<S["type"]>
-  add<Type extends GuiElementType>(element: GuiSpecOfType<Type>): GuiElementOfType<Type>
+  add<Type extends GuiElementType>(element: GuiSpecByType[Type]): GuiElementByType[Type]
 
   clear(): void
 
@@ -596,36 +595,228 @@ interface TabbedPaneGuiElement extends BaseGuiElement {
   remove_tab(tab: LuaGuiElement): void
 }
 
-/** @noSelf */
-type LuaGuiElement =
-  | ButtonGuiElement
-  | SpriteButtonGuiElement
-  | CheckboxGuiElement
-  | FlowGuiElement
-  | FrameGuiElement
-  | LabelGuiElement
-  | LineGuiElement
-  | ProgressbarGuiElement
-  | TableGuiElement
-  | TextfieldGuiElement
-  | RadiobuttonGuiElement
-  | SpriteGuiElement
-  | ScrollPaneGuiElement
-  | DropDownGuiElement
-  | ListBoxGuiElement
-  | CameraGuiElement
-  | ChooseElemButtonGuiElement
-  | TextBoxGuiElement
-  | SliderGuiElement
-  | MinimapGuiElement
-  | EntityPreviewGuiElement
-  | EmptyWidgetGuiElement
-  | TabbedPaneGuiElement
-  | TabGuiElement
-  | SwitchGuiElement
+interface GuiElementByType {
+  "choose-elem-button": ChooseElemButtonGuiElement
+  "drop-down": DropDownGuiElement
+  "empty-widget": EmptyWidgetGuiElement
+  "entity-preview": EntityPreviewGuiElement
+  "list-box": ListBoxGuiElement
+  "scroll-pane": ScrollPaneGuiElement
+  "sprite-button": SpriteButtonGuiElement
+  "tabbed-pane": TabbedPaneGuiElement
+  "text-box": TextBoxGuiElement
+  button: ButtonGuiElement
+  camera: CameraGuiElement
+  checkbox: CheckboxGuiElement
+  flow: FlowGuiElement
+  frame: FrameGuiElement
+  label: LabelGuiElement
+  line: LineGuiElement
+  minimap: MinimapGuiElement
+  progressbar: ProgressbarGuiElement
+  radiobutton: RadiobuttonGuiElement
+  slider: SliderGuiElement
+  sprite: SpriteGuiElement
+  switch: SwitchGuiElement
+  tab: TabGuiElement
+  table: TableGuiElement
+  textfield: TextfieldGuiElement
+}
 
 /** @noSelf */
-type GuiElementOfType<Type extends GuiElementType> = Extract<LuaGuiElement, { type: Type }>
+type LuaGuiElement = GuiElementByType[GuiElementType]
+
+// gui events
+interface ButtonGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface SpriteButtonGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface CheckboxGuiEvents {
+  on_gui_click: true
+  on_gui_checked_state_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface FlowGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface FrameGuiEvents {
+  on_gui_click: true
+  on_gui_location_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface LabelGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface LineGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface ProgressbarGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface TableGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface TextfieldGuiEvents {
+  on_gui_click: true
+  on_gui_confirmed: true
+  on_gui_text_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface RadiobuttonGuiEvents {
+  on_gui_click: true
+  on_gui_checked_state_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface SpriteGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface ScrollPaneGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface DropDownGuiEvents {
+  on_gui_click: true
+  on_gui_selection_state_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface ListBoxGuiEvents {
+  on_gui_click: true
+  on_gui_selection_state_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface CameraGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface ChooseElemButtonGuiEvents {
+  on_gui_click: true
+  on_gui_elem_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface TextBoxGuiEvents {
+  on_gui_click: true
+  on_gui_confirmed: true
+  on_gui_text_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface SliderGuiEvents {
+  on_gui_click: true
+  on_gui_value_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface MinimapGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface EntityPreviewGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface EmptyWidgetGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface TabbedPaneGuiEvents {
+  on_gui_click: true
+  on_gui_selected_tab_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface TabGuiEvents {
+  on_gui_click: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface SwitchGuiEvents {
+  on_gui_click: true
+  on_gui_switch_state_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface GuiEventsByType {
+  "choose-elem-button": ChooseElemButtonGuiEvents
+  "drop-down": DropDownGuiEvents
+  "empty-widget": EmptyWidgetGuiEvents
+  "entity-preview": EntityPreviewGuiEvents
+  "list-box": ListBoxGuiEvents
+  "scroll-pane": ScrollPaneGuiEvents
+  "sprite-button": SpriteButtonGuiEvents
+  "tabbed-pane": TabbedPaneGuiEvents
+  "text-box": TextBoxGuiEvents
+  button: ButtonGuiEvents
+  camera: CameraGuiEvents
+  checkbox: CheckboxGuiEvents
+  flow: FlowGuiEvents
+  frame: FrameGuiEvents
+  label: LabelGuiEvents
+  line: LineGuiEvents
+  minimap: MinimapGuiEvents
+  progressbar: ProgressbarGuiEvents
+  radiobutton: RadiobuttonGuiEvents
+  slider: SliderGuiEvents
+  sprite: SpriteGuiEvents
+  switch: SwitchGuiEvents
+  tab: TabGuiEvents
+  table: TableGuiEvents
+  textfield: TextfieldGuiEvents
+}
 
 // Concepts
 

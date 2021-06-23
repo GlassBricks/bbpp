@@ -7452,8 +7452,6 @@ declare const localised_print: typeof log
 
 declare function table_size<T extends {}>(v: T): number
 
-// declare const pairs: <K, V, M extends Map<K, V>>(v: M) => [K, V][];
-
 // https://lua-api.factorio.com/latest/LuaLazyLoadedValue.html
 type LuaLazyLoadedValue<T> = {
   /** Is this object valid? */
