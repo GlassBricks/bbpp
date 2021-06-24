@@ -2,10 +2,10 @@
 import createElement, {
   AnySpec,
   Component,
-  create,
+  createIn,
   registerComponent,
+  renderIfPresentIn,
   renderToggleIn,
-  rerenderIfPresentIn,
 } from "../../framework/gui"
 import { CloseButton } from "../../framework/gui/components/buttons"
 import { onPlayerInit } from "../../framework/playerData"
@@ -14,21 +14,21 @@ import { DataLayer, Layer, ViewLayer } from "../Layer"
 import { PREFIX } from "../../constants"
 import { registerFuncs } from "../../framework/funcRef"
 import { registerHandlers } from "../../framework/events"
-import { shallowArrayEquals } from "../../framework/util"
+import { shallowArrayEquals, shallowCopy } from "../../framework/util"
 
 @registerComponent
-class TitleBar extends Component<Empty> {
-  render(): AnySpec {
+class TitleBar extends Component {
+  update(): AnySpec {
     return (
       <flow
-        _direction={"horizontal"}
+        direction={"horizontal"}
         styleMod={{ horizontal_spacing: 8, height: 28 }}
         onCreated={(e) => {
           e.drag_target = e.parent
         }}
       >
-        <label caption={"Layer Navigator"} _style={"frame_title"} ignored_by_interaction={true} />
-        <empty-widget _style={"flib_titlebar_drag_handle"} ignored_by_interaction={true} />
+        <label caption={"Layer Navigator"} style={"frame_title"} ignored_by_interaction={true} />
+        <empty-widget style={"flib_titlebar_drag_handle"} ignored_by_interaction={true} />
         <CloseButton onClick={LayerNavFuncs.toggle} />
       </flow>
     )
@@ -39,22 +39,28 @@ class TitleBar extends Component<Empty> {
   }
 }
 
+interface LayersListProps {
+  layers: Layer[]
+  playerSurfaceIndex: number
+  readonly key: string
+}
+
 @registerComponent
-class LayersList extends Component<{ layers: Layer[]; playerSurfaceIndex: number; type: string }> {
+class LayersList extends Component<LayersListProps> {
   playerSurfaceUpdated = true
   layersUpdated = true
 
-  render(): AnySpec {
-    const layers: Layer[] = this.props.layers
+  update(props: LayersListProps): AnySpec {
+    const layers = props.layers
     return layers.length === 0 ? (
       <label caption="No Layers" />
     ) : (
       <list-box
         styleMod={{ width: 300 }}
         onSelectionStateChanged={LayerNavFuncs.teleport}
-        tags={{ type: this.props.type }}
+        tags={{ type: props.key }}
         onUpdate={(element) => {
-          const currentSurface = this.props.playerSurfaceIndex
+          const currentSurface = props.playerSurfaceIndex
           if (this.layersUpdated) {
             element.clear_items()
             for (const [, layer] of ipairs(layers)) {
@@ -75,23 +81,35 @@ class LayersList extends Component<{ layers: Layer[]; playerSurfaceIndex: number
     )
   }
 
-  shouldComponentUpdate(nextProps: { layers: Layer[]; playerSurfaceIndex: number }): boolean {
-    const { playerSurfaceIndex, layers } = this.props
-    this.playerSurfaceUpdated = playerSurfaceIndex !== nextProps.playerSurfaceIndex
-    this.layersUpdated = !shallowArrayEquals(layers, nextProps.layers)
+  shouldComponentUpdate(prevProps: LayersListProps, nextProps: LayersListProps): boolean {
+    this.playerSurfaceUpdated = prevProps.playerSurfaceIndex !== nextProps.playerSurfaceIndex
+    this.layersUpdated = !shallowArrayEquals(prevProps.layers, nextProps.layers)
     return this.playerSurfaceUpdated || this.layersUpdated
   }
 }
-
 @registerComponent
-export class LayerNavigator extends Component<Empty> {
-  render(): AnySpec {
-    const currentIndex = game.get_player(this.parentGuiElement.player_index).surface.index
+export class LayerNavigator extends Component {
+  create(): AnySpec {
     return (
-      <frame _direction={"vertical"} auto_center={true}>
+      <frame direction={"vertical"} auto_center>
         <TitleBar />
-        <LayersList layers={DataLayer.getDataLayerUserOrder()} playerSurfaceIndex={currentIndex} type={"data"} />
-        <LayersList layers={ViewLayer.getOrder()} playerSurfaceIndex={currentIndex} type={"view"} />
+        <LayersList deferProps key="data" />
+        <LayersList deferProps key="view" />
+      </frame>
+    )
+  }
+
+  update(): AnySpec | undefined {
+    const currentIndex = game.get_player(this.parentGuiElement.player_index).surface.index
+    // todo even smarter updates
+    return (
+      <frame updateOnly>
+        <LayersList
+          key="data"
+          layers={shallowCopy(DataLayer.getDataLayerUserOrder())}
+          playerSurfaceIndex={currentIndex}
+        />
+        <LayersList key="view" layers={shallowCopy(ViewLayer.getOrder())} playerSurfaceIndex={currentIndex} />
       </frame>
     )
   }
@@ -122,17 +140,17 @@ onPlayerInit((player) => {
       onClick={LayerNavFuncs.toggle}
     />
   )
-  create(modGui.get_button_flow(player), button)
+  createIn(modGui.get_button_flow(player), button)
 })
 
 registerHandlers({
   on_player_changed_surface(event) {
-    rerenderIfPresentIn(game.get_player(event.player_index).gui.screen, "LayerNavigator", <LayerNavigator />)
+    renderIfPresentIn(game.get_player(event.player_index).gui.screen, "LayerNavigator", <LayerNavigator />)
   },
   // TODO on layers_changed event
   on_surface_deleted() {
     for (const [, player] of pairs(game.players)) {
-      rerenderIfPresentIn(player.gui.screen, "LayerNavigator", <LayerNavigator />)
+      renderIfPresentIn(player.gui.screen, "LayerNavigator", <LayerNavigator />)
     }
   },
 })

@@ -1,108 +1,143 @@
-import { AnySpec, ElementSpec, ElementSpecOfType, ElementSpecProps, FC, FCSpec, GuiEventHandlers } from "./spec"
+import {
+  AnySpec,
+  ComponentSpec,
+  ElementSpec,
+  ElementSpecOfType,
+  ElementSpecProps,
+  GuiEventHandlers,
+  NonNilSpec,
+} from "./spec"
 import { Component } from "./component"
 import { EventHandlerTags, GuiEventName } from "./guievents"
 import { isRegisteredFunc } from "../funcRef"
 
-type CreationMod<T> = {
-  [K in keyof T as K extends string ? `_${K}` : never]: T[K]
-}
-
 type IntrinsicElement<Type extends GuiElementType> = ElementSpecProps<Type> &
   GuiEventHandlers<Type, keyof GuiEventsByType[Type]> &
-  CreationMod<Omit<GuiSpecByType[Type], "type" | "index">> &
   ModOf<GuiElementByType[Type]> & {
-    children?: AnySpec | AnySpec[]
-  }
+    children?: NonNilSpec | NonNilSpec[]
+  } & ({ updateOnly: true } | ({ updateOnly?: false } & Omit<GuiSpecByType[Type], "type" | "index">))
+// Union instead of intersection of keys
+type AllModableKeys<T> = T extends infer I ? ModableKeys<I> : never
+// Typescript abuse
+const rawElementPropType: Record<
+  // Props in GuiElementSpec but not in LuaGuiElement
+  Exclude<AllModableKeys<GuiSpecByType[GuiElementType]>, AllModableKeys<GuiElementByType[GuiElementType]>>,
+  "creation"
+> &
+  // props only in ElementSpec
+  Record<keyof ElementSpecProps<any> | keyof JSX.IntrinsicAttributes | keyof JSX.ElementChildrenAttribute, "spec"> &
+  // GUI event names
+  Record<GuiEventName, "guiEvent"> = {
+  index: "creation",
+  achievement: "creation",
+  chart_player_index: "creation",
+  column_count: "creation",
+  decorative: "creation",
+  direction: "creation",
+  discrete_slider: "creation",
+  discrete_values: "creation",
+  elem_type: "creation",
+  equipment: "creation",
+  fluid: "creation",
+  item: "creation",
+  "item-group": "creation",
+  items: "creation",
+  maximum_value: "creation",
+  minimum_value: "creation",
+  recipe: "creation",
+  signal: "creation",
+  signalId: "creation",
+  technology: "creation",
+  tile: "creation",
+  value_step: "creation",
 
-// Props which are NOT elementMod or creationMod
-const specProps: Record<
-  keyof ElementSpecProps<GuiElementType> | keyof JSX.IntrinsicAttributes | keyof JSX.ElementChildrenAttribute,
-  true
-> = {
-  key: true,
+  key: "spec",
+  updateOnly: "spec",
 
-  styleMod: true,
-  children: true,
+  styleMod: "spec",
+  children: "spec",
 
-  onCreated: true,
-  onUpdate: true,
+  onCreated: "spec",
+  onUpdate: "spec",
+
+  onCheckedStateChanged: "guiEvent",
+  onClick: "guiEvent",
+  onClosed: "guiEvent",
+  onConfirmed: "guiEvent",
+  onElemChanged: "guiEvent",
+  onLocationChanged: "guiEvent",
+  onOpened: "guiEvent",
+  onSelectedTabChanged: "guiEvent",
+  onSelectionStateChanged: "guiEvent",
+  onSwitchStateChanged: "guiEvent",
+  onTextChanged: "guiEvent",
+  onValueChanged: "guiEvent",
 }
-export const guiHandlerProps: Record<GuiEventName, true> = {
-  onCheckedStateChanged: true,
-  onClick: true,
-  onClosed: true,
-  onConfirmed: true,
-  onElemChanged: true,
-  onLocationChanged: true,
-  onOpened: true,
-  onSelectedTabChanged: true,
-  onSelectionStateChanged: true,
-  onSwitchStateChanged: true,
-  onTextChanged: true,
-  onValueChanged: true,
-}
+const elementPropType: PRecord<string, "creation" | "spec" | "guiEvent"> = rawElementPropType
 
 function getFuncName(func: Function, debugName: string): string {
   if (!isRegisteredFunc(func)) error(`The function for ${debugName} was not a registered function ref`)
   return func.funcName
 }
 
-const sub = string.sub
-
 function createElementSpec(
   type: GuiElementType,
   props: Record<string, unknown> | undefined,
-  flattenedChildren: AnySpec[] | undefined
+  flattenedChildren: NonNilSpec[] | undefined
 ): ElementSpec {
-  const result: Partial<ElementSpecOfType<any>> = {}
+  const spec: Partial<ElementSpecOfType<any>> = {}
   const creationSpec: Record<string, unknown> = {}
   const elementMod: Record<string, unknown> = {}
   if (props) {
     const guiHandlers: PRecord<string, string> = {}
     for (const [key, value] of pairs(props)) {
-      if (key in specProps) {
-        ;(result as any)[key] = value
-      } else if (key in guiHandlerProps) {
-        guiHandlers[key] = getFuncName(value as Function, key)
-      } else if (sub(key, 1, 1) === "_") {
-        creationSpec[sub(key, 2)] = value
-      } else {
+      const specType = elementPropType[key]
+      if (specType === undefined) {
         elementMod[key] = value
+      } else if (specType === "spec") {
+        ;(spec as any)[key] = value
+      } else if (specType === "guiEvent") {
+        guiHandlers[key] = getFuncName(value as Function, key)
+      } else {
+        // == creation
+        creationSpec[key] = value
       }
     }
-    props.tags = props.tags || {}
-    ;(props.tags as EventHandlerTags)["#guiEventHandlers"] = guiHandlers
+    elementMod.tags = elementMod.tags || {}
+    ;(elementMod.tags as EventHandlerTags)["#guiEventHandlers"] = guiHandlers
   }
-  result.creationSpec = creationSpec
-  result.elementMod = elementMod
-  result.type = type
-  result.children = flattenedChildren
-  return result as ElementSpec
+  spec.creationSpec = creationSpec
+  spec.elementMod = elementMod
+  spec.type = type
+  spec.children = flattenedChildren
+  return spec as ElementSpec
 }
 
-function createFCSpec<T>(
-  type: FC<T>,
-  props: (T & JSX.IntrinsicAttributes) | undefined,
-  flattenedChildren: AnySpec[] | undefined
-): FCSpec<T> {
+function createComponentSpec<T>(
+  type: Class<Component<T>>,
+  props?: T & JSX.IntrinsicAttributes & { deferProps?: boolean },
+  flattenedChildren?: AnySpec[]
+): ComponentSpec<T> {
   const theProps: any = props || {}
   theProps.children = flattenedChildren
   return {
-    type,
+    type: type.name,
     props: theProps,
     key: theProps.key,
+    updateOnly: theProps.updateOnly,
+    deferProps: theProps.deferProps,
   }
 }
 
-function flattenChildren(children: Children | undefined): AnySpec[] | undefined {
+function flattenChildren(children: Children | undefined): NonNilSpec[] | undefined {
   if (!children) return undefined
-  if ((children as any).type !== undefined) return [children as AnySpec]
-  const result: AnySpec[] = []
+  if ((children as any).type !== undefined) return [children as NonNilSpec]
+  const result: NonNilSpec[] = []
   for (const elem of children as any[]) {
     if (elem.type !== undefined) {
       result[result.length] = elem
     } else {
-      for (const spec of elem as AnySpec[]) {
+      for (const spec of elem as NonNilSpec[]) {
         result[result.length] = spec
       }
     }
@@ -111,51 +146,60 @@ function flattenChildren(children: Children | undefined): AnySpec[] | undefined 
 }
 
 type Children = AnySpec | (AnySpec | AnySpec[])[]
+const typeFunc = type
 
 export function createElement<Type extends GuiElementType>(
   this: void,
   type: Type,
   props: IntrinsicElement<Type>,
-  children?: Children
+  children: Children
 ): ElementSpecOfType<Type>
-export function createElement<T>(
+export function createElement<Props>(
   this: void,
-  type: FC<T>,
-  props: T & JSX.IntrinsicAttributes,
-  children?: Children
-): FCSpec<T>
+  type: Class<Component<Props>>,
+  props: Props,
+  children: Children
+): ComponentSpec<Props>
 export function createElement(
   this: void,
-  type: GuiElementType | FC<unknown>,
+  type: GuiElementType | Class<Component<any>>,
   props?: Record<any, any>,
   children?: Children
 ): AnySpec {
   const flattenedChildren = flattenChildren(children)
-  if (typeof type === "string") {
-    return createElementSpec(type, props, flattenedChildren)
+  const typeofType = typeFunc(type)
+  if (typeofType === "string") {
+    return createElementSpec(type as GuiElementType, props, flattenedChildren)
+  } else if (typeofType === "table") {
+    return createComponentSpec(type as Class<Component<any>>, props, flattenedChildren)
   } else {
-    return createFCSpec(type, props, flattenedChildren)
+    error(`component of type ${typeofType} not supported`)
   }
 }
 
 /* eslint-disable */
 declare global {
   namespace JSX {
-    type Element = AnySpec
+    // noinspection JSUnusedGlobalSymbols
+    type Element = NonNilSpec
+    // noinspection JSUnusedGlobalSymbols
     type ElementClass = Component<any>
 
     interface ElementChildrenAttribute {
       children: {}
     }
 
+    // noinspection JSUnusedGlobalSymbols
     interface ElementAttributesProperty {
-      props: {}
+      ____props: {} // type checking only
     }
 
-    interface IntrinsicAttributes {
+    type IntrinsicAttributes = {
       key?: string
+      updateOnly?: boolean
     }
 
+    // noinspection JSUnusedGlobalSymbols
     interface IntrinsicElements {
       "choose-elem-button": IntrinsicElement<"choose-elem-button">
       "drop-down": IntrinsicElement<"drop-down">

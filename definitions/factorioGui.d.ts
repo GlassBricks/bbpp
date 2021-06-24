@@ -304,15 +304,15 @@ interface BaseGuiElement extends LuaReadonlyIndexing<string, LuaGuiElement | und
   readonly valid: boolean
   readonly object_name: string
 
-  add<Type extends GuiElementType>(element: GuiSpecByType[Type]): GuiElementByType[Type]
+  add<Spec extends GuiSpec>(element: Spec): GuiElementByType[Spec["type"]]
 
   clear(): void
 
   destroy(): void
 
-  get_mod(): void
+  get_mod(): string | undefined
 
-  get_index_in_parent(): void
+  get_index_in_parent(): number
 
   focus(): void
 

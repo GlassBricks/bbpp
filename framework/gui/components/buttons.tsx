@@ -1,15 +1,21 @@
-import createElement from ".."
-import { FC } from "../spec"
+import createElement, { AnySpec, Component, registerComponent } from ".."
 
-export const CloseButton: FC<{
+interface CloseButtonProps {
   onClick: (element: SpriteButtonGuiElement, payload: OnGuiClickPayload) => void
-}> = ({ onClick }) => (
-  <sprite-button
-    _style={"frame_action_button"}
-    sprite={"utility/close_white"}
-    hovered_sprite={"utility/close_black"}
-    clicked_sprite={"utility.close_black"}
-    mouse_button_filter={["left"]}
-    onClick={onClick}
-  />
-)
+}
+
+@registerComponent
+export class CloseButton extends Component<CloseButtonProps> {
+  update(props: CloseButtonProps): AnySpec {
+    return (
+      <sprite-button
+        style={"frame_action_button"}
+        sprite={"utility/close_white"}
+        hovered_sprite={"utility/close_black"}
+        clicked_sprite={"utility.close_black"}
+        mouse_button_filter={["left"]}
+        onClick={props.onClick}
+      />
+    )
+  }
+}

@@ -12,6 +12,8 @@ type WritableKeys<T> = {
 type ReadonlyKeys<T> = {
   [P in keyof T]-?: IfEquals<{ [Q in P]: T[P] }, { -readonly [Q in P]: T[P] }, never, P>
 }[keyof T]
+/** A type which only includes the readonly properties of T */
+type ReadonlyVals<T> = Pick<T, ReadonlyKeys<T>>
 
 type NonFunctionKeys<T> = {
   [K in keyof T]: T[K] extends Function ? never : K
@@ -28,9 +30,10 @@ type OptionalKeys<T> = {
 /**
  * Gets only the assignable properties of T (excludes readonly and function keys).
  */
-type Writable<T> = Omit<T, ReadonlyKeys<T> | FunctionKeys<T>>
+type ModableKeys<T> = WritableKeys<T> & NonFunctionKeys<T>
+type Modable<T> = Pick<T, ModableKeys<T>>
 
-type ModOf<T> = Partial<Writable<T>>
+type ModOf<T> = Partial<Modable<T>>
 
 type Empty = Record<any, never>
 

@@ -3,9 +3,14 @@ export function isFunction(a: any): a is Function {
   return type(a) === "function"
 }
 
-export function isEmpty(a: any): boolean {
+export function isEmpty(a: any): a is Record<any, never> {
   const [x] = next(a)
   return !x
+}
+
+export function nilIfEmpty<T extends object>(a: T): T | undefined {
+  if (next(a)) return a
+  return undefined
 }
 
 export function deepAssign(target: Record<string | number, unknown>, source: PRecord<string | number, unknown>): void {
@@ -19,7 +24,7 @@ export function deepAssign(target: Record<string | number, unknown>, source: PRe
   }
 }
 
-export function deepCopy<T>(t: T): T {
+export function shallowCopy<T>(t: T): T {
   if (type(t) !== "table") return t
   const result: Record<any, unknown> = {}
   for (const [k, v] of pairs(t)) {
@@ -29,6 +34,7 @@ export function deepCopy<T>(t: T): T {
 }
 
 export function shallowArrayEquals<T>(a: T[], b: T[]): boolean {
+  if (a === b) return true
   if (a.length !== b.length) return false
   for (const [luaIndex, v] of ipairs(a)) {
     if (v !== b[luaIndex - 1]) return false
@@ -37,6 +43,7 @@ export function shallowArrayEquals<T>(a: T[], b: T[]): boolean {
 }
 
 export function shallowEquals<T extends object>(a: T, b: T): boolean {
+  if (a === b) return true
   for (const [k, v1] of pairs(a)) {
     const v2 = b[k]
     if (v1 !== v2) return false
@@ -49,6 +56,7 @@ export function shallowEquals<T extends object>(a: T, b: T): boolean {
 }
 
 export function conservativeShallowEquals<T extends object>(a: T, b: T): boolean {
+  if (a === b) return true
   for (const [k, v1] of pairs(a)) {
     if (type(v1) === "table") return false
     const v2 = b[k]
@@ -62,9 +70,10 @@ export function conservativeShallowEquals<T extends object>(a: T, b: T): boolean
 }
 
 export function deepEquals(a: any, b: any): boolean {
+  if (a === b) return true
   const typeA = type(a)
   if (typeA !== type(b)) return false
-  if (typeA !== "table") return a === b
+  if (typeA !== "table") return false // a!==b
   for (const [k, v1] of pairs(a)) {
     const v2 = b[k]
     if (!deepEquals(v1, v2)) return false
@@ -77,18 +86,18 @@ export function deepEquals(a: any, b: any): boolean {
 }
 
 export function arrayRemoveElement<T>(arr: T[], item: T): void {
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i] === item) {
-      table.remove(arr, i + 1)
+  for (let luaIndex = 1; luaIndex <= arr.length; luaIndex++) {
+    if (arr[luaIndex - 1] === item) {
+      table.remove(arr, luaIndex)
       break
     }
   }
 }
 
-export function isValid(a: any): boolean {
-  return typeof a === "object" && a.valid
+export function isValid(a: { valid: boolean } | undefined): a is { valid: true } {
+  return a !== undefined && a.valid
 }
 
-export function destroyIfValid(a: any): void {
-  if (isValid(a)) (a.destroy as (this: void) => void)()
+export function destroyIfValid(a: { valid: boolean; destroy: (this: void) => void } | undefined): void {
+  if (isValid(a)) a.destroy()
 }

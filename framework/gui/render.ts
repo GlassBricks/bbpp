@@ -1,63 +1,90 @@
 import { registerHandlers } from "../events"
-import { dlog } from "../logging"
-import { AnySpec, ComponentSpec, ElementSpec, FCSpec } from "./spec"
-import { Component, getRegisteredComponent } from "./component"
+import { AnySpec, ComponentSpec, ElementSpec, NonNilSpec } from "./spec"
+import { Component, componentNew } from "./component"
+import { destroyIfValid } from "../util"
+
+const isGuiElementType: Record<GuiElementType, true> & Record<any, boolean> = {
+  "choose-elem-button": true,
+  "drop-down": true,
+  "empty-widget": true,
+  "entity-preview": true,
+  "list-box": true,
+  "scroll-pane": true,
+  "sprite-button": true,
+  "tabbed-pane": true,
+  "text-box": true,
+  button: true,
+  camera: true,
+  checkbox: true,
+  flow: true,
+  frame: true,
+  label: true,
+  line: true,
+  minimap: true,
+  progressbar: true,
+  radiobutton: true,
+  slider: true,
+  sprite: true,
+  switch: true,
+  tab: true,
+  table: true,
+  textfield: true,
+}
 
 // <editor-fold desc="Instance">
 interface BaseInstance {
-  guiElement: LuaGuiElement
   key: string | number
 }
 
 interface ElementInstance extends BaseInstance {
-  spec: ElementSpec
-  childInstances: Instance[]
-  keyToIndex?: PRecord<string | number, number>
-}
-
-interface FCInstance extends BaseInstance {
-  spec: FCSpec<unknown>
-  childInstance: Instance
+  type: GuiElementType
+  guiElement: LuaGuiElement
+  childSpecs: AnySpec[]
+  childInstances: NonNilInstance[]
+  keyToLuaIndex?: PRecord<string | number, number>
+  elementMod: ModOf<LuaGuiElement>
+  styleMod: ModOf<LuaStyle>
 }
 
 interface ComponentInstance extends BaseInstance {
+  type: string
+  guiElement: LuaGuiElement
   publicInstance: Component<unknown>
-  spec: ComponentSpec<unknown>
-  childInstance: Instance
+  childInstance: AnyInstance
+  props: unknown
+  wasDeferProps?: boolean
 }
 
-type Instance = ElementInstance | FCInstance | ComponentInstance
+// for use in components that return nil on update/create.
+type NilInstance = {
+  type?: undefined
+  guiElement: EmptyWidgetGuiElement
+}
+
+type NonNilInstance = ElementInstance | ComponentInstance
+type AnyInstance = NonNilInstance | NilInstance
+
 // </editor-fold>
 // <editor-fold desc="Global">
-declare const global: {
+interface ReactorioGlobal {
   reactorio: {
-    rootInstances: Record<number, Instance | undefined>
+    rootInstances: Record<number, AnyInstance | undefined>
     referencedGuiElements: Record<number, LuaGuiElement | undefined>
-
-    componentInstances: LuaTable<Component<unknown>, string | undefined>
   }
 }
+
+declare const global: ReactorioGlobal
 
 function cleanGlobal() {
   // clean rootInstances table
-  // if things are handled properly this wouldn't be necessary (unless player removed), but defensive programming
-  // also, size of this table is not expected to be too large
   const reactorio = global.reactorio
   for (const [index, element] of pairs(reactorio.referencedGuiElements)) {
     if (!element.valid) {
+      const instance = reactorio.rootInstances[index]
+      if (instance) destroyInstance(instance)
       reactorio.referencedGuiElements[index] = undefined
       reactorio.rootInstances[index] = undefined
     }
-  }
-}
-
-function restoreMetatables() {
-  // weak table for defensive programming
-  setmetatable(global.reactorio.componentInstances, { __mode: "k" })
-  // collectgarbage()
-  for (const [component, className] of pairs(global.reactorio.componentInstances)) {
-    const componentClass = getRegisteredComponent(className!)
-    setmetatable(component, componentClass.prototype)
   }
 }
 
@@ -66,20 +93,16 @@ registerHandlers({
     global.reactorio = {
       rootInstances: {},
       referencedGuiElements: {},
-      componentInstances: new LuaTable(),
     }
-  },
-  on_load() {
-    cleanGlobal()
-    restoreMetatables()
   },
   on_player_removed: cleanGlobal,
 })
+
 // </editor-fold>
 // <editor-fold desc="Instantiate">
 
 function getCreationSpec(element: ElementSpec, index?: number): GuiSpec {
-  const spec: Partial<GuiSpec> = element.creationSpec
+  const spec: Partial<GuiSpec> = element.creationSpec || {}
   spec.type = element.type
   spec.index = index
   return spec as GuiSpec
@@ -89,130 +112,122 @@ function instantiateElement(parent: LuaGuiElement, indexInParent: number, spec: 
   const guiElement = parent.add(getCreationSpec(spec, indexInParent))
 
   if (spec.onCreated) spec.onCreated(guiElement as any)
-  updateElement(guiElement, {} as ElementSpec, spec)
-
-  const children = spec.children || []
-  const childInstances: Instance[] = []
-  for (const [luaIndex, child] of ipairs(children)) {
-    childInstances[childInstances.length] = instantiate(guiElement, luaIndex, child)
-  }
-  return {
-    spec,
+  const childSpecs = spec.children || []
+  const childInstances: NonNilInstance[] = []
+  const newInstance: ElementInstance = {
+    type: spec.type,
+    key: spec.key || indexInParent,
+    childSpecs,
     guiElement,
     childInstances,
-    key: spec.key || indexInParent,
+    elementMod: {}, // will be set in updateElement
+    styleMod: {},
   }
-}
 
-// empty components not supported yet
-function instantiateFC(parent: LuaGuiElement, indexInParent: number, spec: FCSpec<unknown>): FCInstance {
-  const rendered = spec.type(spec.props)
-  const childInstance = instantiate(parent, indexInParent, rendered)
-  const guiElement = childInstance.guiElement
-
-  return {
-    guiElement,
-    spec,
-    childInstance,
-    key: spec.key || indexInParent,
+  updateElement(guiElement, newInstance, spec, false)
+  let childIndexInParent = 1
+  for (const child of childSpecs) {
+    const childInstance = instantiate(guiElement, childIndexInParent, child)
+    childInstances[childInstances.length] = childInstance
+    if (childInstance.guiElement) childIndexInParent++
   }
+  return newInstance
 }
 
 function instantiateComponent(
   parent: LuaGuiElement,
   indexInParent: number,
-  spec: ComponentSpec<unknown>
+  spec: ComponentSpec<any>
 ): ComponentInstance {
-  const publicInstance = new spec.type()
-  getRegisteredComponent(spec.type.name)
-  publicInstance.props = spec.props
+  if (spec.updateOnly) {
+    error(
+      "Update only is only allowed to update exising components (an element is trying to be created). Spec:" +
+        serpent.block(spec)
+    )
+  }
+  const publicInstance = componentNew(spec.type)
   publicInstance.parentGuiElement = parent
-  const rendered = publicInstance.render()
+  const rendered = publicInstance.create(spec.props)
   const childInstance = instantiate(parent, indexInParent, rendered)
-  const guiElement = childInstance.guiElement
-  return {
-    guiElement,
-    spec,
+  const newInstance: ComponentInstance = {
+    guiElement: childInstance.guiElement,
     publicInstance,
     childInstance,
     key: spec.key || indexInParent,
+    type: spec.type,
+    props: spec.props,
+    wasDeferProps: spec.deferProps,
   }
+  if (!spec.deferProps) {
+    reconcileComponent(parent, indexInParent, newInstance, spec, true)
+  }
+  return newInstance
 }
 
-function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec): Instance {
-  const elementType = spec.type
-  const typeofType = type(elementType)
-  if (typeofType === "string") {
+function instantiateEmpty(parent: LuaGuiElement, indexInParent: number): NilInstance {
+  const guiElement = parent.add({ type: "empty-widget", index: indexInParent })
+  return { guiElement }
+}
+
+// this overload just for type fun
+function instantiate(parent: LuaGuiElement, indexInParent: number, spec: NonNilSpec): NonNilInstance
+function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec): AnyInstance
+function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec): AnyInstance {
+  if (!spec) {
+    return instantiateEmpty(parent, indexInParent)
+  } else if (isGuiElementType[spec.type]) {
     return instantiateElement(parent, indexInParent, spec as ElementSpec)
-  } else if (typeofType === "function") {
-    return instantiateFC(parent, indexInParent, spec as FCSpec<unknown>)
-  } else if (typeofType === "table") {
-    return instantiateComponent(parent, indexInParent, spec as ComponentSpec<unknown>)
   } else {
-    error(`unrecognized element type ${elementType}`)
+    return instantiateComponent(parent, indexInParent, spec as ComponentSpec<any>)
   }
 }
 
 /**
  * Only _creates_ a new gui element from a ElementSpec. Does not support updating.
  *
- * You do NOT need to use {@link destroySelf} on the returned element for proper cleanup.
+ * Unlike {@link renderIn}, no special cleanup is required.
  *
- * @return LuaGuiElement the topmost created lua gui element.
+ * @return LuaGuiElement the topmost created lua gui element, or nil if is an empty component.
  */
-export function create(parent: LuaGuiElement, spec: AnySpec): LuaGuiElement {
+export function createIn(parent: LuaGuiElement, spec: AnySpec): LuaGuiElement | undefined {
+  if (!spec) return undefined
   return instantiate(parent, 0, spec).guiElement
 }
 
 // </editor-fold>
 // <editor-fold desc="Destroy and cleanup">
-function destroyInstance(instance: Instance): void {
-  instance.guiElement.destroy() // doesn't matter what type, don't want guiElement
-  cleanup(instance)
-}
-
-function cleanup(instance: Instance): void {
-  const theElement = instance.spec
-  const elementType = theElement.type
-  const typeofType = type(elementType)
-  if (typeofType === "string") {
-    for (const childInstance of (instance as ElementInstance).childInstances) {
-      cleanup(childInstance)
-    }
-  } else if (typeofType === "function") {
-    cleanup((instance as FCInstance).childInstance)
-  } else if (typeofType === "table") {
-    const componentInstance = instance as ComponentInstance
-    global.reactorio.componentInstances.set(componentInstance.publicInstance, undefined)
-    cleanup(componentInstance.childInstance)
-  } else {
-    error(`unrecognized element type ${elementType}`)
-  }
+function destroyInstance(instance: AnyInstance): void {
+  destroyIfValid(instance.guiElement)
 }
 
 /**
- * Properly disposes of a gui created using {@link renderIn}, given parent and instance name.
+ * Properly disposes of a gui rendered using {@link renderIn}.
  */
 export function destroyIn(parent: LuaGuiElement, name: string): void {
   const element = parent.get(name)
-  if (element) destroySelf(element)
-}
-
-/**
- * Properly disposes of a gui created using {@link renderIn}.
- */
-export function destroySelf(existingElement: LuaGuiElement): void {
+  if (!element) return
   const reactorio = global.reactorio
-  const index = existingElement.index
+  const index = element.index
   const rootInstance = reactorio.rootInstances[index]
   if (rootInstance) destroyInstance(rootInstance)
   reactorio.rootInstances[index] = undefined
   reactorio.referencedGuiElements[index] = undefined
-  existingElement.destroy()
 }
 
 // </editor-fold>
 // <editor-fold desc="Update and reconcile">
+
+// For updateOnly. prevMod is mutated.
+function mergeMod<T>(target: T, prevMod: ModOf<T>, nextMod: ModOf<T>) {
+  for (const [key, value] of pairs(nextMod)) {
+    if (value !== prevMod[key]) {
+      target[key] = value
+      prevMod[key] = value
+    }
+  }
+}
+
+// For full reconcile. prevMod is only read, not updated.
 function applyMod<T>(target: T, prevMod: ModOf<T>, nextMod: ModOf<T>) {
   // in nextMod, different from prevMod
   for (const [key, value] of pairs(nextMod)) {
@@ -228,24 +243,31 @@ function applyMod<T>(target: T, prevMod: ModOf<T>, nextMod: ModOf<T>) {
   }
 }
 
-function updateElement(guiElement: LuaGuiElement, oldSpec: ElementSpec, newSpec: ElementSpec) {
-  applyMod(guiElement, oldSpec.elementMod || {}, newSpec.elementMod || {})
-  applyMod(guiElement.style, oldSpec.styleMod || {}, newSpec.styleMod || {})
-  if (newSpec.onUpdate) newSpec.onUpdate(guiElement as any)
+function updateElement(guiElement: LuaGuiElement, instance: ElementInstance, spec: ElementSpec, updateOnly: boolean) {
+  if (updateOnly) {
+    if (spec.elementMod) mergeMod(guiElement, instance.elementMod, spec.elementMod)
+    if (spec.styleMod) mergeMod(guiElement.style, instance.styleMod, spec.styleMod)
+  } else {
+    const nextElementMod = spec.elementMod || {}
+    const nextStyleMod = spec.styleMod || {}
+    applyMod(guiElement, instance.elementMod, nextElementMod)
+    applyMod(guiElement.style, instance.styleMod, nextStyleMod)
+    instance.elementMod = nextElementMod
+    instance.styleMod = nextStyleMod
+  }
+  if (spec.onUpdate) spec.onUpdate(guiElement as any)
 }
 
-function getKeyToIndex(spec: ElementSpec) {
-  const childSpecs = spec.children || []
-  const keyToIndex: PRecord<string | number, number> = {}
-  for (let i = 0; i < childSpecs.length; i++) {
-    const childComponent = childSpecs[i]
-    const key = childComponent.key || i + 1 // indexInParent
-    if (keyToIndex[key]) {
-      dlog(`Children with same key ${key} found, this may cause issues`)
+function getKeyToLuaIndex(childSpecs1: AnySpec[]) {
+  const keyToLuaIndex: PRecord<string | number, number> = {}
+  for (const [luaIndex, childComponent] of ipairs(childSpecs1)) {
+    const key = childComponent.key || luaIndex // indexInParent
+    if (keyToLuaIndex[key]) {
+      error(`Multiple children with same key ${key} found.`)
     }
-    keyToIndex[key] = i
+    keyToLuaIndex[key] = luaIndex
   }
-  return keyToIndex
+  return keyToLuaIndex
 }
 
 /**
@@ -257,129 +279,194 @@ function getKeyToIndex(spec: ElementSpec) {
  *
  * This definitely has room for (constant time) optimization.
  */
-function reconcileElement(instance: ElementInstance, spec: ElementSpec): ElementInstance {
-  // update this instance
-  updateElement(instance.guiElement, instance.spec, spec)
-
+// same key, same type, updateOnly = false, mutates instance
+function reconcileChildren(instance: ElementInstance, spec: ElementSpec): ElementInstance {
   // update children
   const guiElement = instance.guiElement
   const oldChildInstances = instance.childInstances || []
-  const newChildInstances: Instance[] = []
-  const newChildElements = spec.children || []
-  const oldKeyToIndex = instance.keyToIndex || getKeyToIndex(instance.spec)
-  const nextKeyToIndex = getKeyToIndex(spec)
+  const newChildInstances: NonNilInstance[] = []
+  const newChildSpecs = spec.children || []
+  const oldKeyToLuaIndex = instance.keyToLuaIndex || getKeyToLuaIndex(instance.childSpecs)
+  const newKeyToLuaIndex = getKeyToLuaIndex(newChildSpecs)
+  const oldChildrenLength = oldChildInstances.length
 
   // iterate through both the old elements and the new instances at once. Try to match new elements
   // with old elements in order, deleting and adding as needed.
   // If elements are REARRANGED, then existing elements between the old position and new position of the earliest
   // appearing element (in new elements) are deleted, regardless of any matching keyed elements that already existed
   // there (those elements are re-instantiated). Otherwise, every keyed element is reused.
-  let oldIndex = 0
-  for (let newIndex = 0; newIndex < newChildElements.length; newIndex++) {
-    const newElement = newChildElements[newIndex]
-    const key = newElement.key || newIndex + 1
+  let oldLuaIndex = 1
+  for (const [luaNewIndex, newSpec] of ipairs(newChildSpecs)) {
+    const key = newSpec.key || luaNewIndex
 
-    const existingIndex = oldKeyToIndex[key]
+    const existingLuaIndex = oldKeyToLuaIndex[key]
     // element with matching key?
-    if (existingIndex && oldIndex <= existingIndex) {
+    if (existingLuaIndex && oldLuaIndex <= existingLuaIndex) {
       // delete everything from here to the matching element.
       // If this includes keyed elements, treat them as if they didn't exist (re-instantiate them later).
-      while (oldIndex !== existingIndex) {
-        const deletingInstance = oldChildInstances[oldIndex]
-        oldKeyToIndex[deletingInstance.key] = undefined // don't match deleted elements for future keyed children
+      while (oldLuaIndex !== existingLuaIndex) {
+        const deletingInstance = oldChildInstances[oldLuaIndex - 1]
+        oldKeyToLuaIndex[deletingInstance.key] = undefined // don't match deleted elements for future keyed children
         destroyInstance(deletingInstance)
-        oldIndex++
+        oldLuaIndex++
       }
       // update the instance.
-      newChildInstances[newIndex] = reconcile(guiElement, newIndex + 1, oldChildInstances[existingIndex], newElement)
-      oldIndex++
+      newChildInstances[luaNewIndex - 1] = reconcile(
+        guiElement,
+        luaNewIndex,
+        oldChildInstances[existingLuaIndex],
+        newSpec,
+        false
+      )
+      oldLuaIndex++
     } else {
       // delete everything from the old elements that don't match a current element key.
-      while (oldIndex < oldChildInstances.length) {
-        const oldInstance = oldChildInstances[oldIndex]
-        if (nextKeyToIndex[oldInstance.key]) break
+      for (; oldLuaIndex < oldChildrenLength; oldLuaIndex++) {
+        const oldInstance = oldChildInstances[oldLuaIndex - 1]
+        if (newKeyToLuaIndex[oldInstance.key]) break
         destroyInstance(oldInstance)
-        oldIndex++
       }
       // add the element.
-      newChildInstances[newIndex] = instantiate(guiElement, newIndex + 1, newElement)
+      newChildInstances[luaNewIndex - 1] = instantiate(guiElement, luaNewIndex, newSpec)
     }
   }
   // delete remaining elements, if any.
-  for (; oldIndex < oldChildInstances.length; oldIndex++) {
-    const oldInstance = oldChildInstances[oldIndex]
+  for (; oldLuaIndex < oldChildrenLength; oldLuaIndex++) {
+    const oldInstance = oldChildInstances[oldLuaIndex - 1]
     destroyInstance(oldInstance)
   }
 
   // reuse past instance
   instance.childInstances = newChildInstances
-  instance.keyToIndex = nextKeyToIndex
-  instance.spec = spec
+  instance.keyToLuaIndex = newKeyToLuaIndex
+  instance.childSpecs = newChildSpecs
   return instance
 }
 
-function reconcileFC(
-  parent: LuaGuiElement,
-  indexInParent: number,
-  instance: FCInstance,
-  spec: FCSpec<unknown>
-): FCInstance {
-  // TODO: better should update
-  const rendered = spec.type(spec.props)
-  const oldChildInstance = instance.childInstance
-  const childInstance = reconcile(parent, indexInParent, oldChildInstance, rendered)
-  instance.guiElement = childInstance.guiElement
-  instance.childInstance = childInstance
-  instance.spec = spec
+// same key, same type, updateOnly = true, mutates instance
+function updateOnlyOnChildren(instance: ElementInstance, spec: ElementSpec): ElementInstance {
+  const newChildElements = spec.children
+  if (!newChildElements) return instance
+
+  const guiElement = instance.guiElement
+  const oldChildInstances = instance.childInstances || []
+  const oldKeyToIndex = instance.keyToLuaIndex || getKeyToLuaIndex(instance.childSpecs)
+  for (const [luaNewIndex, newSpec] of ipairs(newChildElements)) {
+    const key = newSpec.key || luaNewIndex
+    const oldLuaIndex = oldKeyToIndex[key]
+    if (oldLuaIndex === undefined) {
+      error(`In updateOnly mode: cannot find element with key ${oldLuaIndex}`)
+    }
+    const oldInstance = oldChildInstances[oldLuaIndex - 1]
+    oldChildInstances[oldLuaIndex - 1] = reconcile(
+      guiElement,
+      guiElement.get_index_in_parent(),
+      oldInstance,
+      newSpec,
+      true
+    )
+  }
+
+  instance.keyToLuaIndex = oldKeyToIndex
   return instance
 }
 
+// same key, same type, mutates instance
+function reconcileElement(instance: ElementInstance, spec: ElementSpec, updateOnly: boolean): ElementInstance {
+  // update this element
+  updateElement(instance.guiElement, instance, spec, updateOnly)
+  if (updateOnly) {
+    return updateOnlyOnChildren(instance, spec)
+  } else {
+    return reconcileChildren(instance, spec)
+  }
+}
+
+// same key, same type
 function reconcileComponent(
   parent: LuaGuiElement,
   indexInParent: number,
   instance: ComponentInstance,
-  spec: ComponentSpec<unknown>
+  spec: ComponentSpec<unknown>,
+  forceUpdate: boolean
 ): ComponentInstance {
+  if (spec.deferProps) {
+    error("deferProps is only allowed in create(), and props should be given in update().")
+  }
   const publicInstance = instance.publicInstance
-  const shouldUpdate = publicInstance.shouldComponentUpdate(spec.props)
-  publicInstance.props = spec.props
-  publicInstance.parentGuiElement = parent
+  const newProps = spec.updateOnly ? { ...(instance.props as any), ...spec.props } : spec.props
+  const shouldUpdate =
+    forceUpdate || instance.wasDeferProps || publicInstance.shouldComponentUpdate(instance.props, newProps)
+  // publicInstance.parentGuiElement = parent
   if (!shouldUpdate) return instance
 
-  const rendered = publicInstance.render()
+  const rendered = publicInstance.update(newProps)
+  if (!rendered) return instance
+
   const oldChildInstance = instance.childInstance
-  const childInstance = reconcile(parent, indexInParent, oldChildInstance, rendered)
+  const childInstance = reconcile(parent, indexInParent, oldChildInstance, rendered, false)
   instance.guiElement = childInstance.guiElement
   instance.childInstance = childInstance
-  instance.spec = spec
+  instance.props = newProps
+  instance.wasDeferProps = false
   return instance
 }
 
-// elements should already have same key (or be root element).
+// same key, not null
+
 function reconcile(
   parent: LuaGuiElement,
   indexInParent: number,
-  oldInstance: Instance | undefined,
-  spec: AnySpec
-): Instance {
+  oldInstance: NonNilInstance | undefined,
+  spec: NonNilSpec,
+  parentIsUpdateOnly: boolean
+): NonNilInstance
+function reconcile(
+  parent: LuaGuiElement,
+  indexInParent: number,
+  oldInstance: AnyInstance | undefined,
+  spec: AnySpec,
+  parentIsUpdateOnly: boolean
+): AnyInstance
+function reconcile(
+  parent: LuaGuiElement,
+  indexInParent: number,
+  oldInstance: AnyInstance | undefined,
+  spec: AnySpec,
+  parentIsUpdateOnly: boolean
+): AnyInstance {
+  const thisIsUpdateOnly = spec !== undefined && spec.updateOnly === true
+  const specType = spec && spec.type
   if (oldInstance === undefined) {
     // new
+    if (parentIsUpdateOnly) {
+      error(`Creating new children is not allowed in update only mode. Spec: ${serpent.block(spec)} `)
+    }
     return instantiate(parent, indexInParent, spec)
-  } else if (oldInstance.spec.type !== spec.type) {
+  } else if (oldInstance.type !== specType) {
     // replace
+    if (thisIsUpdateOnly) {
+      error(
+        `Types much match in update only mode. (if parent is update only and you want to change types,
+         set this element to updateOnly=false). Old type: ${oldInstance.type}, New type: ${specType}`
+      )
+    }
     destroyInstance(oldInstance)
     return instantiate(parent, indexInParent, spec)
   }
-  const elementType = spec.type
-  const typeofType = type(elementType)
-  if (typeofType === "string") {
-    return reconcileElement(oldInstance as ElementInstance, spec as ElementSpec)
-  } else if (typeofType === "function") {
-    return reconcileFC(parent, indexInParent, oldInstance as FCInstance, spec as FCSpec<unknown>)
-  } else if (typeofType === "table") {
-    return reconcileComponent(parent, indexInParent, oldInstance as ComponentInstance, spec as ComponentSpec<unknown>)
+  // update
+  if (!specType) {
+    return oldInstance as NilInstance
+  } else if (isGuiElementType[specType]) {
+    return reconcileElement(oldInstance as ElementInstance, spec as ElementSpec, thisIsUpdateOnly)
   } else {
-    error("Unrecognized type")
+    return reconcileComponent(
+      parent,
+      indexInParent,
+      oldInstance as ComponentInstance,
+      spec as ComponentSpec<unknown>,
+      false
+    )
   }
 }
 
@@ -387,63 +474,59 @@ function reconcile(
 
 // <editor-fold desc="Render">
 
-function render(parent: LuaGuiElement, existing: LuaGuiElement | undefined, element: AnySpec): Instance {
-  const reactorio = global.reactorio
-  const prevInstance = existing && reactorio.rootInstances[existing.index]
-  const nextInstance = reconcile(parent, 0, prevInstance, element)
-  if (prevInstance) {
-    reactorio.rootInstances[existing!.index] = undefined
-    reactorio.referencedGuiElements[existing!.index] = undefined
-  }
-  const guiElement = existing || nextInstance.guiElement
-  reactorio.rootInstances[guiElement.index] = nextInstance
-  reactorio.referencedGuiElements[guiElement.index] = guiElement
-  return nextInstance
-}
-
 /**
  * Renders elements a container.
+ *
+ * If the component is completely empty (results in no gui elements), then this has the same effect as destroying
+ * the component.
  *
  * NOTE: the given `name` will override the name of the topmost lua gui element, always, in order to
  * refer to it for future updates.
  *
- * In order to destroy properly, use the {@link destroySelf} function on the returned LuaGuiElement.
+ * In order to destroy the element (with proper cleanup), use {@link destroyIn}.
  *
- * If you only want to create something but don't need to update it, you can use {@link create} instead.
+ * If the element is destroyed in some other way, cleanup may not happen properly, and you may have a memory leak.
  *
- * @return GuiElement the first lua gui element. You can use {@link rerenderSelf} on this element for future updates.
- *  You should pass this into {@link destroySelf} to destroy properly.
+ * If you only want to create something but don't need to update it, you can use {@link createIn} instead. Create does
+ * not require any special cleanup.
  */
-export function renderIn(parent: LuaGuiElement, name: string, spec: AnySpec): LuaGuiElement {
-  const instance = render(parent, parent.get(name), spec)
-  const element = instance.guiElement
-  element.name = name
-  return element
+export function renderIn(parent: LuaGuiElement, name: string, spec: AnySpec): void {
+  const reactorio = global.reactorio
+  const existing = parent.get(name)
+  const existingIndex = existing && existing.index
+
+  const prevInstance = existingIndex ? reactorio.rootInstances[existingIndex] : undefined
+  const nextInstance = reconcile(parent, 0, prevInstance, spec, false)
+  if (prevInstance) {
+    reactorio.rootInstances[existingIndex!] = undefined
+    reactorio.referencedGuiElements[existingIndex!] = undefined
+  }
+  const guiElement = nextInstance.guiElement
+  if (guiElement) {
+    reactorio.rootInstances[guiElement.index] = nextInstance
+    reactorio.referencedGuiElements[guiElement.index] = guiElement
+    guiElement.name = name
+  }
 }
 
 /**
- * Renders elements a container, but only updates it if the element is already present.
+ * Renders elements, but only updates if the gui is already present.
+ * @see renderIn
  */
-export function rerenderIfPresentIn(parent: LuaGuiElement, name: string, spec: AnySpec): void {
+export function renderIfPresentIn(parent: LuaGuiElement, name: string, spec: AnySpec): void {
   const existing = parent.get(name)
   if (!existing) return
   renderIn(parent, name, spec)
 }
 
 /**
- * If element is present, destroys it. If is not present rerenders it like {@link renderIn}.
+ * If element is present, destroys it; if element is not present, creates it.
+ * @see renderIn
  */
 export function renderToggleIn(parent: LuaGuiElement, name: string, spec: AnySpec): void {
   const existing = parent.get(name)
   if (!existing) renderIn(parent, name, spec)
   else destroyIn(parent, name)
-}
-
-/**
- * Updates rendering on an existing rendered element, obtained from {@link renderIn}
- */
-export function rerenderSelf(existingElement: LuaGuiElement, spec: AnySpec): void {
-  render(existingElement.parent, existingElement, spec)
 }
 
 // </editor-fold>

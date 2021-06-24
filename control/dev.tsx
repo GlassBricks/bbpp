@@ -1,7 +1,5 @@
 import { registerHandlers } from "../framework/events"
 import { DataLayer, ViewLayer } from "./Layer"
-import createElement, { renderIn } from "../framework/gui"
-import { LayerNavigator } from "./gui/LayerNavigator"
 
 function generateTestLayers() {
   for (let i = 0; i < 5; i++) {
@@ -19,10 +17,5 @@ function generateTestLayers() {
 registerHandlers({
   on_init() {
     generateTestLayers()
-  },
-  on_tick() {
-    for (const [, player] of pairs(game.players)) {
-      renderIn(game.get_player(player.index).gui.screen, "LayerNavigator", <LayerNavigator />)
-    }
   },
 })

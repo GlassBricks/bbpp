@@ -1,6 +1,6 @@
 import { DEV } from "./DEV"
 import { onPlayerInit } from "./playerData"
-import createElement, { create, FC } from "./gui"
+import createElement, { createIn } from "./gui"
 import { dlog } from "./logging"
 import { registerFunc } from "./funcRef"
 import { registerHandler } from "./events"
@@ -21,47 +21,41 @@ export function DevButtons(actions: Record<string, (player: LuaPlayer) => void>)
   }
 }
 
-let DevButtonsComponent: FC
+const onClick = registerFunc((element: LuaGuiElement) => {
+  const action = element.tags.action as string
+  if (!devActions[action]) {
+    dlog("Action", action, "does not exist, try refreshing")
+    return
+  }
+  devActions[action](game.get_player(element.player_index))
+}, "DevButtons.onClick")
 
 function createDevButtons(player: LuaPlayer) {
   destroyDevButtons(player)
-  create(player.gui.screen, <DevButtonsComponent />)
+  const DevButtonsComponent = (
+    <frame direction={"vertical"} name={"bbpp:devButtons"} caption="BBPP dev buttons" location={{ x: 0, y: 1000 }}>
+      {Object.keys(devActions).map((name) => (
+        <button
+          styleMod={{
+            width: 200,
+          }}
+          onClick={onClick}
+          tags={{ action: name }}
+          caption={name}
+        />
+      ))}
+    </frame>
+  )
+  createIn(player.gui.screen, DevButtonsComponent)
 }
 
 function destroyDevButtons(player: LuaPlayer): void {
-  destroyIfValid(player.gui.screen.get("#devButtons"))
+  destroyIfValid(player.gui.screen.get("bbpp:devButtons"))
 }
 
 if (DEV) {
-  const onClick = registerFunc((element: LuaGuiElement) => {
-    const action = element.tags.action as string
-    if (!devActions[action]) {
-      dlog("Action", action, "does not exist, try refreshing")
-      return
-    }
-    devActions[action](game.get_player(element.player_index))
-  }, "devButtons:onClick")
-
-  DevButtonsComponent = () => {
-    return (
-      <frame _direction={"vertical"} name={"#devButtons"} caption="BBPP dev buttons" location={{ x: 0, y: 1000 }}>
-        {Object.keys(devActions).map((name) => (
-          <button
-            styleMod={{
-              width: 200,
-            }}
-            onClick={onClick}
-            tags={{ action: name }}
-            caption={name}
-          />
-        ))}
-      </frame>
-    )
-  }
-
   onPlayerInit((player) => {
-    destroyDevButtons(player)
-    create(player.gui.screen, <DevButtonsComponent />)
+    createDevButtons(player)
   })
 }
 

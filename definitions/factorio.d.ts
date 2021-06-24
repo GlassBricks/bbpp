@@ -7423,14 +7423,14 @@ type SerpentOptions = {
     /**  the current level. */
     level: any
   }): any
-  /** componentName; triggers full serialization with self-ref section. */
+  /** name; triggers full serialization with self-ref section. */
   name: string
 }
 declare const serpent: Serpent
 
 /** @noSelf **/
 interface Serpent {
-  /** full serialization; sets componentName, compact and sparse options; */
+  /** full serialization; sets name, compact and sparse options; */
   dump(tbl: any, options?: Partial<SerpentOptions>): string
 
   /** single line pretty printing, no self-ref section; sets sortkeys and comment options; */
