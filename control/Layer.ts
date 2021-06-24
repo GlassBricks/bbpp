@@ -218,7 +218,7 @@ export class ViewLayer extends Layer {
     this.placeAllViewingLayers()
   }
 
-  placeAllViewingLayers() {
+  placeAllViewingLayers(): void {
     for (const layer of DataLayer.getDataLayerUserOrder()) {
       // TODO: configurable placement order
       const relation = this.getRelationTo(layer.id)

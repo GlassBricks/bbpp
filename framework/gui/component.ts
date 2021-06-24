@@ -3,9 +3,9 @@ import { registerFuncs } from "../funcRef"
 import { dlog } from "../logging"
 import { registerHandlers } from "../events"
 
+// noinspection JSUnusedLocalSymbols
 export abstract class Component<Props = Empty> {
   parentGuiElement!: LuaGuiElement
-  // noinspection JSUnusedLocalSymbols
   private ____props!: DeferProps<Props> | UpdateOnlyProps<Props> | Props
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

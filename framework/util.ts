@@ -8,11 +8,6 @@ export function isEmpty(a: any): a is Record<any, never> {
   return !x
 }
 
-export function nilIfEmpty<T extends object>(a: T): T | undefined {
-  if (next(a)) return a
-  return undefined
-}
-
 export function deepAssign(target: Record<string | number, unknown>, source: PRecord<string | number, unknown>): void {
   for (const [key, value] of pairs(source)) {
     if (value && typeof value === "object") {

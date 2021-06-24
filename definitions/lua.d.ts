@@ -1,3 +1,4 @@
+// noinspection JSUnusedGlobalSymbols
 interface String {
   gsub(regex: string, result: string): string
 
