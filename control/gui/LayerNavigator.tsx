@@ -6,6 +6,7 @@ import createElement, {
   registerComponent,
   renderIfPresentIn,
   renderToggleIn,
+  StaticComponent,
 } from "../../framework/gui"
 import { CloseButton } from "../../framework/gui/components/buttons"
 import { onPlayerInit } from "../../framework/playerData"
@@ -17,25 +18,19 @@ import { registerHandlers } from "../../framework/events"
 import { shallowArrayEquals, shallowCopy } from "../../framework/util"
 
 @registerComponent
-class TitleBar extends Component {
-  update(): AnySpec {
+class TitleBar extends StaticComponent {
+  create(): AnySpec {
     return (
       <flow
         direction={"horizontal"}
         styleMod={{ horizontal_spacing: 8, height: 28 }}
-        onCreated={(e) => {
-          e.drag_target = e.parent
-        }}
+        drag_target={this.parentGuiElement}
       >
-        <label caption={"Layer Navigator"} style={"frame_title"} ignored_by_interaction={true} />
-        <empty-widget style={"flib_titlebar_drag_handle"} ignored_by_interaction={true} />
+        <label caption={"Layer Navigator"} style={"frame_title"} ignored_by_interaction />
+        <empty-widget style={"flib_titlebar_drag_handle"} ignored_by_interaction />
         <CloseButton onClick={LayerNavFuncs.toggle} />
       </flow>
     )
-  }
-
-  shouldComponentUpdate(): boolean {
-    return false
   }
 }
 
@@ -56,7 +51,6 @@ class LayersList extends Component<LayersListProps> {
       <label caption="No Layers" />
     ) : (
       <list-box
-        styleMod={{ width: 300 }}
         onSelectionStateChanged={LayerNavFuncs.teleport}
         tags={{ type: props.key }}
         onUpdate={(element) => {
@@ -91,7 +85,7 @@ class LayersList extends Component<LayersListProps> {
 export class LayerNavigator extends Component {
   create(): AnySpec {
     return (
-      <frame direction={"vertical"} auto_center>
+      <frame direction={"vertical"} auto_center styleMod={{ width: 300 }}>
         <TitleBar />
         <LayersList deferProps key="data" />
         <LayersList deferProps key="view" />

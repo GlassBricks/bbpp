@@ -15,7 +15,10 @@ type IntrinsicElement<Type extends GuiElementType> = ElementSpecProps<Type> &
   GuiEventHandlers<Type, keyof GuiEventsByType[Type]> &
   ModOf<GuiElementByType[Type]> & {
     children?: NonNilSpec | NonNilSpec[]
-  } & ({ updateOnly: true } | ({ updateOnly?: false } & Omit<GuiSpecByType[Type], "type" | "index">))
+  } & (
+    | { updateOnly: true; onCreated?: undefined }
+    | ({ updateOnly?: false } & Omit<GuiSpecByType[Type], "type" | "index">)
+  )
 // Union instead of intersection of keys
 type AllModableKeys<T> = T extends infer I ? ModableKeys<I> : never
 // Typescript abuse
@@ -24,7 +27,7 @@ const rawElementPropType: Record<
   Exclude<AllModableKeys<GuiSpecByType[GuiElementType]>, AllModableKeys<GuiElementByType[GuiElementType]>>,
   "creation"
 > &
-  // props only in ElementSpec
+  // props only in CreationSpec
   Record<keyof ElementSpecProps<any> | keyof JSX.IntrinsicAttributes | keyof JSX.ElementChildrenAttribute, "spec"> &
   // GUI event names
   Record<GuiEventName, "guiEvent"> = {
@@ -103,8 +106,10 @@ function createElementSpec(
         creationSpec[key] = value
       }
     }
-    elementMod.tags = elementMod.tags || {}
-    ;(elementMod.tags as EventHandlerTags)["#guiEventHandlers"] = guiHandlers
+    if (next(guiHandlers) !== undefined) {
+      elementMod.tags = elementMod.tags || {}
+      ;(elementMod.tags as EventHandlerTags)["#guiEventHandlers"] = guiHandlers
+    }
   }
   spec.creationSpec = creationSpec
   spec.elementMod = elementMod

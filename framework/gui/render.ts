@@ -158,6 +158,7 @@ function instantiateComponent(
     props: spec.props,
     wasDeferProps: spec.deferProps,
   }
+  publicInstance.firstGuiElement = childInstance.guiElement
   if (!spec.deferProps) {
     reconcileComponent(parent, indexInParent, newInstance, spec, true)
   }
@@ -358,13 +359,7 @@ function updateOnlyOnChildren(instance: ElementInstance, spec: ElementSpec): Ele
       error(`In updateOnly mode: cannot find element with key ${oldLuaIndex}`)
     }
     const oldInstance = oldChildInstances[oldLuaIndex - 1]
-    oldChildInstances[oldLuaIndex - 1] = reconcile(
-      guiElement,
-      guiElement.get_index_in_parent(),
-      oldInstance,
-      newSpec,
-      true
-    )
+    oldChildInstances[oldLuaIndex - 1] = reconcile(guiElement, oldLuaIndex, oldInstance, newSpec, true)
   }
 
   instance.keyToLuaIndex = oldKeyToIndex
@@ -391,7 +386,7 @@ function reconcileComponent(
   forceUpdate: boolean
 ): ComponentInstance {
   if (spec.deferProps) {
-    error("deferProps is only allowed in create(), and props should be given in update().")
+    error("deferProps is only allowed in create(), and full props should be given in update().")
   }
   const publicInstance = instance.publicInstance
   const newProps = spec.updateOnly ? { ...(instance.props as any), ...spec.props } : spec.props
@@ -405,6 +400,7 @@ function reconcileComponent(
 
   const oldChildInstance = instance.childInstance
   const childInstance = reconcile(parent, indexInParent, oldChildInstance, rendered, false)
+  publicInstance.firstGuiElement = childInstance.guiElement
   instance.guiElement = childInstance.guiElement
   instance.childInstance = childInstance
   instance.props = newProps
@@ -435,7 +431,12 @@ function reconcile(
   spec: AnySpec,
   parentIsUpdateOnly: boolean
 ): AnyInstance {
-  const thisIsUpdateOnly = spec !== undefined && spec.updateOnly === true
+  let thisIsUpdateOnly: boolean // using ?: creates a local functions
+  if (spec && spec.updateOnly !== undefined) {
+    thisIsUpdateOnly = spec.updateOnly
+  } else {
+    thisIsUpdateOnly = parentIsUpdateOnly
+  }
   const specType = spec && spec.type
   if (oldInstance === undefined) {
     // new
@@ -447,8 +448,8 @@ function reconcile(
     // replace
     if (thisIsUpdateOnly) {
       error(
-        `Types much match in update only mode. (if parent is update only and you want to change types,
-         set this element to updateOnly=false). Old type: ${oldInstance.type}, New type: ${specType}`
+        `Types much match in update only mode. If parent is update only and you want to change type of child
+        element, set the child element to updateOnly=false. Old type: ${oldInstance.type}, New type: ${specType}`
       )
     }
     destroyInstance(oldInstance)

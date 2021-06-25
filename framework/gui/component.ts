@@ -5,6 +5,7 @@ import { registerHandlers } from "../events"
 
 // noinspection JSUnusedLocalSymbols
 export abstract class Component<Props = Empty> {
+  firstGuiElement?: LuaGuiElement
   parentGuiElement!: LuaGuiElement
   private ____props!: DeferProps<Props> | UpdateOnlyProps<Props> | Props
 
@@ -22,6 +23,18 @@ export abstract class Component<Props = Empty> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   shouldComponentUpdate(prevProps: Props, nextProps: Props): boolean {
     return true
+  }
+}
+
+export abstract class StaticComponent extends Component {
+  abstract create(): AnySpec | undefined
+
+  update(): AnySpec | undefined {
+    return undefined
+  }
+
+  shouldComponentUpdate(): boolean {
+    return false
   }
 }
 
