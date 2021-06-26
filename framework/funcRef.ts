@@ -1,19 +1,16 @@
 import { isFunction } from "./util"
-import { dlog } from "./logging"
+import { vlog } from "./logging"
 
 /**
- * Function name (string) with fancier type inference.
+ * Represents a reference to a function.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type FuncName<F extends Function> = string
+export interface FuncRef<F extends Function> {
+  "#registeredName": string
+  "#funcType"?: F // make typescript a little happier
+}
 
-/**
- * Represents a function that has been registered.
- *
- * The name is the given `funcName`, and the function can be retrieved from the name using {@link getFunc}
- */
-export type RegisteredFunc<F extends Function> = F & { funcName: FuncName<F> }
-const nameToFunc: PRecord<string, RegisteredFunc<Function>> = {}
+const nameToFunc: PRecord<string, Function> = {}
+const funcToName: LuaTable<Function, string | undefined> = new LuaTable()
 
 /**
  * Registers a function so that it can be retrieved by the given name later. This is useful when you need to refer to a
@@ -24,69 +21,67 @@ const nameToFunc: PRecord<string, RegisteredFunc<Function>> = {}
  *
  * @return RegisteredFunc a registered func. You could use this instead of the raw func.
  */
-export function registerFunc<F extends Function>(func: F, uniqueName: string): RegisteredFunc<F> {
-  if (nameToFunc[uniqueName]) {
-    error(`A func with name "${uniqueName}" already exists`)
+export function registerFunc<F extends Function>(func: F, name: string): FuncRef<F> {
+  if (nameToFunc[name]) {
+    error(`A func with name "${name}" already exists`)
   }
-  const funcObject = setmetatable<RegisteredFunc<F>>(
-    {
-      funcName: uniqueName,
-    } as RegisteredFunc<never>,
-    {
-      __call(...args: any[]) {
-        ;(func as unknown as (this: void, ...a: any[]) => any)(...args)
-      },
-    }
-  )
-  nameToFunc[uniqueName] = funcObject
-  dlog("registered function", uniqueName)
-  return funcObject
-}
-
-type WithRegisteredFuncs<T> = {
-  [P in keyof T]: T[P] extends Function ? RegisteredFunc<T[P]> : T[P]
+  nameToFunc[name] = func
+  funcToName.set(func, name)
+  vlog("registered function", name)
+  return {
+    "#registeredName": name,
+  }
 }
 
 /**
- * Registers all functions of a given type. The functions are modified in place
- * (all functions becomes RegisteredFunctions).
+ * Registers all functions of a given type.
  *
  * The names of the objects will be the prefix + the key name in the table.
- *
- * @return table the original table (all functions now {@link RegisteredFunc}, this is for type checking)
- *
- * @see registerFunc
  */
-export function registerFuncs<T extends object>(table: T, prefix: string = ""): WithRegisteredFuncs<T> {
+export function registerFuncs<T extends object>(table: T, prefix: string = ""): T {
+  const prefixDot = prefix + "."
   for (const [name, value] of pairs(table)) {
     if (isFunction(value)) {
-      table[name] = registerFunc(value, prefix + ":" + name)
+      registerFunc(value, prefixDot + name)
     }
   }
-  return table as WithRegisteredFuncs<T>
+  return table
 }
 
-/**
- * Gets a registered func from its name, or raises error if not registered.
- */
-export function getFunc<F extends Function>(name: FuncName<F>): RegisteredFunc<F> {
-  const func = nameToFunc[name]
+/** Gets a function reference from a function, or raises error if function is not registered. */
+export function getRef<F extends Function>(func: F): FuncRef<F> {
+  const name = funcToName.get(func)
+  if (!name) error("Attempt to get a reference to a function that was not registered, func:" + func)
+  return {
+    "#registeredName": name,
+  }
+}
+
+/** Shorthand for getRef */
+export const ref = getRef
+
+/** Gets a function reference from a function, or nil if function is not registered. */
+export function getRefOrNil<F extends Function>(func: F): FuncRef<F> | undefined {
+  const name = funcToName.get(func)
+  if (!name) return undefined
+  return {
+    "#registeredName": name,
+  }
+}
+
+/** Gets a registered func from its name, or raises error if not registered. */
+export function getFunc<F extends Function>(name: FuncRef<F>): F {
+  const func = nameToFunc[name["#registeredName"]]
   if (!func) {
     error(
       `A function reference by the name of ${name} does not exist.
       Please report this to the mod author; the probably forgot to register or migrate something properly.`
     )
   }
-  return func as RegisteredFunc<F>
+  return func as F
 }
 
-/**
- * Gets a registered func from its name, or raises error if not registered.
- */
-export function getFuncOrNil<F extends Function>(name: FuncName<F>): RegisteredFunc<F> | undefined {
-  return nameToFunc[name] as any
-}
-
-export function isRegisteredFunc<F extends Function>(func: F): func is RegisteredFunc<F> {
-  return type(func) === "table" && (func as any).funcName !== undefined
+/** Gets a registered func from its name, or raises error if not registered. */
+export function getFuncOrNil<F extends Function>(name: FuncRef<F>): F | undefined {
+  return nameToFunc[name["#registeredName"]] as F | undefined
 }

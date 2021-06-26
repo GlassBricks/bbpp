@@ -1,6 +1,6 @@
 import { DEV } from "./DEV"
 import { onPlayerInit } from "./playerData"
-import createElement, { createIn } from "./gui"
+import createElement, { renderIn } from "./gui"
 import { dlog } from "./logging"
 import { registerFunc } from "./funcRef"
 import { registerHandler } from "./events"
@@ -46,7 +46,7 @@ function createDevButtons(player: LuaPlayer) {
       ))}
     </frame>
   )
-  createIn(player.gui.screen, DevButtonsComponent)
+  renderIn(player.gui.screen, "bbpp:DevButtons", DevButtonsComponent)
 }
 
 function destroyDevButtons(player: LuaPlayer): void {

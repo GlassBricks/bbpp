@@ -1,5 +1,5 @@
 import { registerHandlers } from "../events"
-import { AnySpec, ComponentSpec, ElementSpec, NonNilSpec } from "./spec"
+import { AnySpec, ComponentSpec, ElementSpec } from "./spec"
 import { Component, componentNew } from "./component"
 import { destroyIfValid } from "../util"
 
@@ -39,7 +39,7 @@ interface BaseInstance {
 interface ElementInstance extends BaseInstance {
   type: GuiElementType
   guiElement: LuaGuiElement
-  childSpecs: AnySpec[]
+  childSpecs: (AnySpec | undefined)[]
   childInstances: NonNilInstance[]
   keyToLuaIndex?: PRecord<string | number, number>
   elementMod: ModOf<LuaGuiElement>
@@ -171,9 +171,9 @@ function instantiateEmpty(parent: LuaGuiElement, indexInParent: number): NilInst
 }
 
 // this overload just for type fun
-function instantiate(parent: LuaGuiElement, indexInParent: number, spec: NonNilSpec): NonNilInstance
-function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec): AnyInstance
-function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec): AnyInstance {
+function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec): NonNilInstance
+function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec | undefined): AnyInstance
+function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec | undefined): AnyInstance {
   if (!spec) {
     return instantiateEmpty(parent, indexInParent)
   } else if (isGuiElementType[spec.type]) {
@@ -181,18 +181,6 @@ function instantiate(parent: LuaGuiElement, indexInParent: number, spec: AnySpec
   } else {
     return instantiateComponent(parent, indexInParent, spec as ComponentSpec<any>)
   }
-}
-
-/**
- * Only _creates_ a new gui element from a ElementSpec. Does not support updating.
- *
- * Unlike {@link renderIn}, no special cleanup is required.
- *
- * @return LuaGuiElement the topmost created lua gui element, or nil if is an empty component.
- */
-export function createIn(parent: LuaGuiElement, spec: AnySpec): LuaGuiElement | undefined {
-  if (!spec) return undefined
-  return instantiate(parent, 0, spec).guiElement
 }
 
 // </editor-fold>
@@ -259,7 +247,7 @@ function updateElement(guiElement: LuaGuiElement, instance: ElementInstance, spe
   if (spec.onUpdate) spec.onUpdate(guiElement as any)
 }
 
-function getKeyToLuaIndex(childSpecs1: AnySpec[]) {
+function getKeyToLuaIndex(childSpecs1: (AnySpec | undefined)[]) {
   const keyToLuaIndex: PRecord<string | number, number> = {}
   for (const [luaIndex, childComponent] of ipairs(childSpecs1)) {
     const key = childComponent.key || luaIndex // indexInParent
@@ -389,13 +377,13 @@ function reconcileComponent(
     error("deferProps is only allowed in create(), and full props should be given in update().")
   }
   const publicInstance = instance.publicInstance
-  const newProps = spec.updateOnly ? { ...(instance.props as any), ...spec.props } : spec.props
-  const shouldUpdate =
-    forceUpdate || instance.wasDeferProps || publicInstance.shouldComponentUpdate(instance.props, newProps)
+  const nextProps = spec.updateOnly ? { ...(instance.props as any), ...spec.props } : spec.props
+  const shouldUpdate = forceUpdate || instance.wasDeferProps || publicInstance.shouldComponentUpdate(nextProps)
   // publicInstance.parentGuiElement = parent
+  publicInstance.props = nextProps
   if (!shouldUpdate) return instance
 
-  const rendered = publicInstance.update(newProps)
+  const rendered = publicInstance.update()
   if (!rendered) return instance
 
   const oldChildInstance = instance.childInstance
@@ -403,7 +391,7 @@ function reconcileComponent(
   publicInstance.firstGuiElement = childInstance.guiElement
   instance.guiElement = childInstance.guiElement
   instance.childInstance = childInstance
-  instance.props = newProps
+  instance.props = nextProps
   instance.wasDeferProps = false
   return instance
 }
@@ -414,21 +402,21 @@ function reconcile(
   parent: LuaGuiElement,
   indexInParent: number,
   oldInstance: NonNilInstance | undefined,
-  spec: NonNilSpec,
+  spec: AnySpec,
   parentIsUpdateOnly: boolean
 ): NonNilInstance
 function reconcile(
   parent: LuaGuiElement,
   indexInParent: number,
   oldInstance: AnyInstance | undefined,
-  spec: AnySpec,
+  spec: AnySpec | undefined,
   parentIsUpdateOnly: boolean
 ): AnyInstance
 function reconcile(
   parent: LuaGuiElement,
   indexInParent: number,
   oldInstance: AnyInstance | undefined,
-  spec: AnySpec,
+  spec: AnySpec | undefined,
   parentIsUpdateOnly: boolean
 ): AnyInstance {
   let thisIsUpdateOnly: boolean // using ?: creates a local functions
@@ -487,11 +475,8 @@ function reconcile(
  * In order to destroy the element (with proper cleanup), use {@link destroyIn}.
  *
  * If the element is destroyed in some other way, cleanup may not happen properly, and you may have a memory leak.
- *
- * If you only want to create something but don't need to update it, you can use {@link createIn} instead. Create does
- * not require any special cleanup.
  */
-export function renderIn(parent: LuaGuiElement, name: string, spec: AnySpec): void {
+export function renderIn(parent: LuaGuiElement, name: string, spec: AnySpec | undefined): void {
   const reactorio = global.reactorio
   const existing = parent.get(name)
   const existingIndex = existing && existing.index
@@ -514,7 +499,7 @@ export function renderIn(parent: LuaGuiElement, name: string, spec: AnySpec): vo
  * Renders elements, but only updates if the gui is already present.
  * @see renderIn
  */
-export function renderIfPresentIn(parent: LuaGuiElement, name: string, spec: AnySpec): void {
+export function renderIfPresentIn(parent: LuaGuiElement, name: string, spec: AnySpec | undefined): void {
   const existing = parent.get(name)
   if (!existing) return
   renderIn(parent, name, spec)
@@ -524,7 +509,7 @@ export function renderIfPresentIn(parent: LuaGuiElement, name: string, spec: Any
  * If element is present, destroys it; if element is not present, creates it.
  * @see renderIn
  */
-export function renderToggleIn(parent: LuaGuiElement, name: string, spec: AnySpec): void {
+export function renderToggleIn(parent: LuaGuiElement, name: string, spec: AnySpec | undefined): void {
   const existing = parent.get(name)
   if (!existing) renderIn(parent, name, spec)
   else destroyIn(parent, name)

@@ -1,20 +1,12 @@
-import {
-  AnySpec,
-  ComponentSpec,
-  ElementSpec,
-  ElementSpecOfType,
-  ElementSpecProps,
-  GuiEventHandlers,
-  NonNilSpec,
-} from "./spec"
-import { Component } from "./component"
+import { AnySpec, ComponentSpec, ElementSpec, ElementSpecOfType, ElementSpecProps, GuiEventHandlers } from "./spec"
+import { Component, ComponentBoundFunc, ComponentFunc } from "./component"
 import { EventHandlerTags, GuiEventName } from "./guievents"
-import { isRegisteredFunc } from "../funcRef"
+import { FuncRef } from "../funcRef"
 
 type IntrinsicElement<Type extends GuiElementType> = ElementSpecProps<Type> &
   GuiEventHandlers<Type, keyof GuiEventsByType[Type]> &
   ModOf<GuiElementByType[Type]> & {
-    children?: NonNilSpec | NonNilSpec[]
+    children?: AnySpec | AnySpec[]
   } & (
     | { updateOnly: true; onCreated?: undefined }
     | ({ updateOnly?: false } & Omit<GuiSpecByType[Type], "type" | "index">)
@@ -78,21 +70,16 @@ const rawElementPropType: Record<
 }
 const elementPropType: PRecord<string, "creation" | "spec" | "guiEvent"> = rawElementPropType
 
-function getFuncName(func: Function, debugName: string): string {
-  if (!isRegisteredFunc(func)) error(`The function for ${debugName} was not a registered function ref`)
-  return func.funcName
-}
-
 function createElementSpec(
   type: GuiElementType,
   props: Record<string, unknown> | undefined,
-  flattenedChildren: NonNilSpec[] | undefined
+  flattenedChildren: AnySpec[] | undefined
 ): ElementSpec {
   const spec: Partial<ElementSpecOfType<any>> = {}
   const creationSpec: Record<string, unknown> = {}
   const elementMod: Record<string, unknown> = {}
   if (props) {
-    const guiHandlers: PRecord<string, string> = {}
+    const guiHandlers: PRecord<string, string | ComponentBoundFunc<any>> = {}
     for (const [key, value] of pairs(props)) {
       const specType = elementPropType[key]
       if (specType === undefined) {
@@ -100,7 +87,9 @@ function createElementSpec(
       } else if (specType === "spec") {
         ;(spec as any)[key] = value
       } else if (specType === "guiEvent") {
-        guiHandlers[key] = getFuncName(value as Function, key)
+        const ref = value as ComponentFunc<any>
+        const registeredName = (value as FuncRef<any>)["#registeredName"]
+        guiHandlers[key] = registeredName || (ref as ComponentBoundFunc<any>)
       } else {
         // == creation
         creationSpec[key] = value
@@ -121,7 +110,7 @@ function createElementSpec(
 function createComponentSpec<T>(
   type: Class<Component<T>>,
   props?: T & JSX.IntrinsicAttributes & { deferProps?: boolean },
-  flattenedChildren?: AnySpec[]
+  flattenedChildren?: (AnySpec | undefined)[]
 ): ComponentSpec<T> {
   const theProps: any = props || {}
   theProps.children = flattenedChildren
@@ -134,15 +123,15 @@ function createComponentSpec<T>(
   }
 }
 
-function flattenChildren(children: Children | undefined): NonNilSpec[] | undefined {
+function flattenChildren(children: Children | undefined): AnySpec[] | undefined {
   if (!children) return undefined
-  if ((children as any).type !== undefined) return [children as NonNilSpec]
-  const result: NonNilSpec[] = []
+  if ((children as any).type !== undefined) return [children as AnySpec]
+  const result: AnySpec[] = []
   for (const elem of children as any[]) {
     if (elem.type !== undefined) {
       result[result.length] = elem
     } else {
-      for (const spec of elem as NonNilSpec[]) {
+      for (const spec of elem as AnySpec[]) {
         result[result.length] = spec
       }
     }
@@ -150,7 +139,7 @@ function flattenChildren(children: Children | undefined): NonNilSpec[] | undefin
   return result.length === 0 ? undefined : result
 }
 
-type Children = AnySpec | (AnySpec | AnySpec[])[]
+type Children = AnySpec | undefined | (AnySpec | undefined | (AnySpec | undefined)[])[]
 const typeFunc = type
 
 export function createElement<Type extends GuiElementType>(
@@ -170,7 +159,7 @@ export function createElement(
   type: GuiElementType | Class<Component<any>>,
   props?: Record<any, any>,
   children?: Children
-): AnySpec {
+): AnySpec | undefined {
   const flattenedChildren = flattenChildren(children)
   const typeofType = typeFunc(type)
   if (typeofType === "string") {
@@ -186,7 +175,7 @@ export function createElement(
 declare global {
   namespace JSX {
     // noinspection JSUnusedGlobalSymbols
-    type Element = NonNilSpec
+    type Element = AnySpec
     // noinspection JSUnusedGlobalSymbols
     type ElementClass = Component<any>
 

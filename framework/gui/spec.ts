@@ -1,5 +1,6 @@
 import { EventName, PayloadOf } from "../events"
 import { guiEventNameMapping } from "./guievents"
+import { ComponentFunc } from "./component"
 
 type ReverseGuiEventNameMapping = {
   [P in keyof typeof guiEventNameMapping as typeof guiEventNameMapping[P]]: P
@@ -7,10 +8,9 @@ type ReverseGuiEventNameMapping = {
 type FlexiblePayloadOf<T> = T extends EventName ? PayloadOf<T> : never
 
 export type GuiEventHandlers<Type extends GuiElementType, Events> = {
-  [N in Events as N extends keyof ReverseGuiEventNameMapping ? ReverseGuiEventNameMapping[N] : never]?: (
-    element: GuiElementByType[Type],
-    payload: FlexiblePayloadOf<N>
-  ) => void
+  [N in Events as N extends keyof ReverseGuiEventNameMapping ? ReverseGuiEventNameMapping[N] : never]?: ComponentFunc<
+    (element: GuiElementByType[Type], payload: FlexiblePayloadOf<N>) => void
+  >
 }
 
 // This type is separate from LuaElementSpecOfType as it is used by jsx defs
@@ -26,7 +26,7 @@ export type ElementSpecOfType<Type extends GuiElementType> = ElementSpecProps<Ty
     type: Type
     creationSpec?: Omit<GuiSpecByType[Type], "type" | "index">
     elementMod?: ModOf<GuiElementByType[Type]>
-    children?: NonNilSpec[]
+    children?: AnySpec[]
   }
 
 export type ElementSpec = {
@@ -55,5 +55,4 @@ export type ComponentSpec<Props> = {
     }
 )
 
-export type NonNilSpec = ElementSpec | ComponentSpec<any>
-export type AnySpec = NonNilSpec | undefined
+export type AnySpec = ElementSpec | ComponentSpec<any>

@@ -1,12 +1,12 @@
-import createElement, { AnySpec, Component, registerComponent } from ".."
+import createElement, { AnySpec, Component, ComponentFunc, registerComponent } from ".."
 
 interface CloseButtonProps {
-  onClick: (element: SpriteButtonGuiElement, payload: OnGuiClickPayload) => void
+  onClick: ComponentFunc<(element: SpriteButtonGuiElement, payload: OnGuiClickPayload) => void>
 }
 
 @registerComponent
 export class CloseButton extends Component<CloseButtonProps> {
-  update(props: CloseButtonProps): AnySpec {
+  update(): AnySpec | undefined {
     return (
       <sprite-button
         style={"frame_action_button"}
@@ -14,7 +14,7 @@ export class CloseButton extends Component<CloseButtonProps> {
         hovered_sprite={"utility/close_black"}
         clicked_sprite={"utility.close_black"}
         mouse_button_filter={["left"]}
-        onClick={props.onClick}
+        onClick={this.props.onClick}
       />
     )
   }

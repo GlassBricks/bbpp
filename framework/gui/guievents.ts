@@ -1,12 +1,7 @@
-// some events have more fields
-import { getFuncOrNil } from "../funcRef"
 import { userWarning } from "../logging"
 import { EventHandlerContainer, registerHandlers } from "../events"
-
-export interface AnyGuiEventPayload {
-  element: LuaGuiElement
-  player_index: number
-}
+import { callBoundFunc, ComponentBoundFunc } from "./component"
+import { getFuncOrNil } from "../funcRef"
 
 export const guiEventNameMapping = {
   onCheckedStateChanged: "on_gui_checked_state_changed",
@@ -24,27 +19,38 @@ export const guiEventNameMapping = {
 } as const
 export type GuiEventName = keyof typeof guiEventNameMapping
 
-export interface EventHandlerTags {
-  "#guiEventHandlers": PRecord<GuiEventName, string>
+export interface AnyGuiEventPayload {
+  element: LuaGuiElement
+  player_index: number
 }
 
-type AnyGuiEventHandler = (element: LuaGuiElement, payload: AnyGuiEventPayload) => void
+type AnyGuiEventHandler = (this: any, element: LuaGuiElement, payload: AnyGuiEventPayload) => void
+
+export interface EventHandlerTags {
+  "#guiEventHandlers": PRecord<GuiEventName, string | ComponentBoundFunc<any>>
+}
 
 function handleGuiEvent(eventName: GuiEventName, event: AnyGuiEventPayload) {
   // I want optional chaining!
   const element = event.element
   if (!element) return
-  const handlers = element.tags["#guiEventHandlers"] as PRecord<string, string>
+  const handlers = (element.tags as unknown as EventHandlerTags)["#guiEventHandlers"]
   if (!handlers) return
-  const handlerName = handlers[eventName]
-  if (!handlerName) return
-  const ref = getFuncOrNil<AnyGuiEventHandler>(handlerName)
-  if (!ref) {
-    userWarning(`There is no gui handler function named ${handlerName}.
-    The mod author probably forgot to migrate something. If error persists, please report to the mod author.
-    Event name: ${eventName}, event: ${serpent.dump(event)}`)
+  const handler = handlers[eventName]
+  if (!handler) return
+
+  if (typeof handler === "string") {
+    const func = getFuncOrNil<AnyGuiEventHandler>({ "#registeredName": handler })
+    if (!func) {
+      userWarning(`There is no registered function named ${func}.
+      Please report this to the mod author.
+      Make sure you registered the function and/or migrations are working properly.
+      Event name: ${eventName}, event: ${serpent.dump(event)}`)
+    } else {
+      func(element, event)
+    }
   } else {
-    ref(element, event)
+    callBoundFunc(handler, element, event)
   }
 }
 
