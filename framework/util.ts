@@ -3,9 +3,8 @@ export function isFunction(a: any): a is Function {
   return type(a) === "function"
 }
 
-export function isEmpty(a: any): a is Record<any, never> {
-  const [x] = next(a)
-  return !x
+export function isEmpty(a: AnyTable): a is Record<string, never> {
+  return !next(a)
 }
 
 export function deepAssign(target: Record<string | number, unknown>, source: PRecord<string | number, unknown>): void {
@@ -37,7 +36,7 @@ export function shallowArrayEquals<T>(a: T[], b: T[]): boolean {
   return true
 }
 
-export function shallowEquals<T extends object>(a: T, b: T): boolean {
+export function shallowEquals<T extends AnyNotNil>(a: T, b: T): boolean {
   if (a === b) return true
   for (const [k, v1] of pairs(a)) {
     const v2 = b[k]
@@ -50,7 +49,7 @@ export function shallowEquals<T extends object>(a: T, b: T): boolean {
   return true
 }
 
-export function conservativeShallowEquals<T extends object>(a: T, b: T): boolean {
+export function conservativeShallowEquals<T extends AnyNotNil>(a: T, b: T): boolean {
   if (a === b) return true
   for (const [k, v1] of pairs(a)) {
     if (type(v1) === "table") return false
@@ -81,8 +80,8 @@ export function deepEquals(a: any, b: any): boolean {
 }
 
 export function arrayRemoveElement<T>(arr: T[], item: T): void {
-  for (let luaIndex = 1; luaIndex <= arr.length; luaIndex++) {
-    if (arr[luaIndex - 1] === item) {
+  for (const [luaIndex, elem] of ipairs(arr)) {
+    if (elem === item) {
       table.remove(arr, luaIndex)
       break
     }

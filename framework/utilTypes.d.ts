@@ -37,9 +37,10 @@ type ModOf<T> = Partial<Modable<T>>
 
 type Empty = Record<any, never>
 
-interface Class<S, A extends any[] = []> {
-  prototype: any
-  name: string
+// Represents the class of <S>
+interface Class<T> {
+  prototype: any;
+  name: string;
 
-  new (...args: A): S
+  new(...args: any): T;
 }

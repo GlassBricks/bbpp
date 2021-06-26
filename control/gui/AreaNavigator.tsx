@@ -1,53 +1,42 @@
-/* eslint-disable prefer-const */
-import createElement, {
-  AnySpec,
-  Component,
-  createIn,
-  registerComponent,
-  renderIfPresentIn,
-  renderToggleIn,
-  StaticComponent,
-} from "../../framework/gui"
-import { CloseButton } from "../../framework/gui/components/buttons"
-import { onPlayerInit } from "../../framework/playerData"
-import * as modGui from "mod-gui"
-import { DataLayer, Layer, ViewLayer } from "../Layer"
-import { PREFIX } from "../../constants"
-import { registerFuncs } from "../../framework/funcRef"
-import { registerHandlers } from "../../framework/events"
-import { shallowArrayEquals, shallowCopy } from "../../framework/util"
+/*
+import createElement, { AnySpec, Component, registerComponent } from "../../framework/gui"
+import { shallowArrayEquals } from "../../framework/util"
+import { BpArea, BpAreaType } from "../bparea/BpArea"
 
-@registerComponent
-class TitleBar extends StaticComponent {
-  create(): AnySpec {
-    return (
-      <flow
-        direction={"horizontal"}
-        styleMod={{ horizontal_spacing: 8, height: 28 }}
-        drag_target={this.parentGuiElement}
-      >
-        <label caption={"Layer Navigator"} style={"frame_title"} ignored_by_interaction />
-        <empty-widget style={"flib_titlebar_drag_handle"} ignored_by_interaction />
-        <CloseButton onClick={LayerNavFuncs.toggle} />
-      </flow>
-    )
-  }
-}
+// @registerComponent
+// class TitleBar extends StaticComponent {
+//   create(): AnySpec {
+//     return (
+//       <flow
+//         direction={"horizontal"}
+//         styleMod={{ horizontal_spacing: 8, height: 28 }}
+//         drag_target={this.parentGuiElement}
+//       >
+//         <label caption={"Layer Navigator"} style={"frame_title"} ignored_by_interaction />
+//         <empty-widget style={"flib_titlebar_drag_handle"} ignored_by_interaction />
+//         <CloseButton onClick={LayerNavFuncs.toggle} />
+//       </flow>
+//     )
+//   }
+// }
+//
 
-interface LayersListProps {
-  layers: Layer[]
-  playerSurfaceIndex: number
-  readonly key: string
+// todo: track player entering areas?
+interface AreasListProps {
+  areas: BpArea[]
+  type: BpAreaType
 }
 
 @registerComponent
-class LayersList extends Component<LayersListProps> {
-  playerSurfaceUpdated = true
+class AreasList extends Component<AreasListProps> {
   layersUpdated = true
 
-  update(props: LayersListProps): AnySpec {
-    const layers = props.layers
-    return layers.length === 0 ? (
+  static teleportPlayer(e: ListBoxGuiElement){
+
+  }
+
+  update({ areas }: AreasListProps): AnySpec {
+    return areas.length === 0 ? (
       <label caption="No Layers" />
     ) : (
       <list-box
@@ -75,7 +64,7 @@ class LayersList extends Component<LayersListProps> {
     )
   }
 
-  shouldComponentUpdate(prevProps: LayersListProps, nextProps: LayersListProps): boolean {
+  shouldComponentUpdate(prevProps: AreasListProps, nextProps: AreasListProps): boolean {
     this.playerSurfaceUpdated = prevProps.playerSurfaceIndex !== nextProps.playerSurfaceIndex
     this.layersUpdated = !shallowArrayEquals(prevProps.layers, nextProps.layers)
     return this.playerSurfaceUpdated || this.layersUpdated
@@ -149,3 +138,4 @@ registerHandlers({
   },
 })
 // TODO: make hotbar key thing too
+*/

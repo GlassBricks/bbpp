@@ -903,7 +903,7 @@ type BoundingBox =
       right_bottom: Position
       orientation?: number
     }
-  | [PositionIn, PositionIn]
+  | [left_top: PositionIn, right_bottom: PositionIn]
 
 /** @noSelf **/
 interface ScriptArea {
@@ -931,6 +931,8 @@ interface Color {
   b?: number
   a?: number
 }
+
+type ColorIn = Color | [r: number, g: number, b: number, a?: number]
 
 /** @noSelf **/
 interface ColorModifier {}
@@ -1864,7 +1866,7 @@ interface LuaAutoplaceControlPrototype {
   help(): void
 }
 
-interface CustomEventId {}
+type CustomEventId<T> = EventId<T>
 
 /** @noSelf **/
 interface LuaBootstrap {
@@ -1879,7 +1881,7 @@ interface LuaBootstrap {
 
   on_configuration_changed(f: (d: ConfigurationChangedData) => void): void
 
-  on_event(this: void, event: EventId<any>[] | string, f: (...args: any[]) => void, filters?: Filters): void
+  on_event(this: void, event: EventId<any>[] | string, f: (event: any) => void, filters?: Filters): void
 
   on_event<Payload>(this: void, event: EventId<Payload>, f: (event: Payload) => void, filters?: Filters): void
 
@@ -1887,7 +1889,7 @@ interface LuaBootstrap {
 
   register_on_entity_destroyed(entity: LuaEntity): number
 
-  generate_event_name(): CustomEventId
+  generate_event_name<T>(): CustomEventId<T>
 
   get_event_handler(event: number): void
 
@@ -1897,7 +1899,7 @@ interface LuaBootstrap {
 
   get_event_filter(event: number): any | undefined
 
-  raise_event(event: CustomEventId, arg_1: any): void
+  raise_event<T>(event: CustomEventId<T>, arg_1: T): void
 
   raise_console_chat(table: RaiseEventParameters): void
 
@@ -3236,7 +3238,7 @@ interface LuaForce {
 
   set_item_launched(item: string, count: number): void
 
-  print(message: LocalisedString, color?: Color): void
+  print(message: LocalisedString, color?: ColorIn): void
 
   get_trains(surface?: SurfaceSpecification): LuaTrain[]
 
@@ -3448,7 +3450,7 @@ interface LuaGameScript {
 
   direction_to_string(direction: typeof defines.direction): void
 
-  print(message: LocalisedString, color?: Color): void
+  print(message: LocalisedString, color?: ColorIn): void
 
   create_random_generator(seed?: number): LuaRandomGenerator
 
@@ -3645,7 +3647,7 @@ interface LuaInventoryBase {
 
 /** @noSelf **/
 type LuaInventory = LuaInventoryBase & {
-  [index: number]: LuaItemStack | undefined
+  [index: number]: LuaItemStack
 }
 
 /** @noSelf **/
@@ -3764,8 +3766,15 @@ interface LuaItemStack {
   durability: number
   ammo: number
   blueprint_icons: any[]
-  blueprint_snap_to_grid: Position
-  blueprint_position_relative_to_grid: Position
+
+  set blueprint_snap_to_grid(p: PositionIn)
+
+  get blueprint_snap_to_grid(): Position
+
+  set blueprint_position_relative_to_grid(p: PositionIn)
+
+  get blueprint_position_relative_to_grid(): Position
+
   blueprint_absolute_snapping: boolean
   label: string
   label_color: Color
@@ -4164,7 +4173,7 @@ interface LuaPlayer extends LuaControl {
 
   set_ending_screen_data(message: LocalisedString, file?: string): void
 
-  print(message: LocalisedString, color?: Color): void
+  print(message: LocalisedString, color?: ColorIn): void
 
   clear_console(): void
 
@@ -4686,7 +4695,7 @@ interface LuaRendering {
 
   get_color(id: number): Color | undefined
 
-  set_color(id: number, color: Color): void
+  set_color(id: number, color: ColorIn): void
 
   get_width(id: number): number | undefined
 
@@ -5601,8 +5610,10 @@ interface LuaVoidEnergySourcePrototype {
 }
 
 /** events */
-
-interface EventId<Payload> {}
+// typescript hack
+type EventId<Payload> = number & {
+  ["#payloadType"]?: Payload
+}
 
 /**
  *

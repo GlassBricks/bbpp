@@ -1,6 +1,6 @@
-import "./Layer"
-import "./blueprintHandling"
+import "./forces"
+import "./BpArea"
 
-import "./gui/LayerNavigator.tsx"
+import "./gui/AreaNavigator.tsx"
 
 import "./dev"
