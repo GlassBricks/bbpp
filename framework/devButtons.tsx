@@ -1,10 +1,10 @@
 import { DEV } from "./DEV"
 import { onPlayerInit } from "./playerData"
-import createElement, { renderIn } from "./gui"
+import Reactorio, { renderIn } from "./gui"
 import { dlog } from "./logging"
 import { registerFunc } from "./funcRef"
 import { registerHandler } from "./events"
-import { destroyIfValid } from "./util"
+import { destroyIfValid, mapKeys } from "./util"
 
 const devActions: Record<string, (player: LuaPlayer) => void> = {}
 
@@ -34,7 +34,7 @@ function createDevButtons(player: LuaPlayer) {
   destroyDevButtons(player)
   const DevButtonsComponent = (
     <frame direction={"vertical"} name={"bbpp:devButtons"} caption="BBPP dev buttons" location={{ x: 0, y: 1000 }}>
-      {Object.keys(devActions).map((name) => (
+      {mapKeys(devActions, (name) => (
         <button
           styleMod={{
             width: 200,

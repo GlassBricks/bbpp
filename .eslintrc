@@ -65,6 +65,7 @@
         "extendDefaults": true,
         "types": {
           "object": false,
+          "{}": false,
           "Function": false
         }
       }

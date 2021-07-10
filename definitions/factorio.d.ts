@@ -828,8 +828,8 @@ interface PersonalLogisticParameters {
 
 /** @noSelf **/
 interface Position {
-  x: number
-  y: number
+  readonly x: number
+  readonly y: number
 }
 
 type PositionIn = Position | [number, number]
@@ -899,11 +899,11 @@ interface Vector {}
 /** @noSelf **/
 type BoundingBox =
   | {
-      left_top: Position
-      right_bottom: Position
-      orientation?: number
+      readonly left_top: Position
+      readonly right_bottom: Position
+      readonly orientation?: number
     }
-  | [left_top: PositionIn, right_bottom: PositionIn]
+  | readonly [left_top: PositionIn, right_bottom: PositionIn]
 
 /** @noSelf **/
 interface ScriptArea {
@@ -5133,7 +5133,7 @@ interface LuaSurface {
   get_tile(x: number, y: number): LuaTile
 
   set_tiles(
-    table_0: { name: string; position: PositionIn },
+    tiles: Tile[],
     correct_tiles?: boolean,
     remove_colliding_entities?: boolean | string,
     remove_colliding_decoratives?: boolean,
@@ -5612,7 +5612,7 @@ interface LuaVoidEnergySourcePrototype {
 /** events */
 // typescript hack
 type EventId<Payload> = number & {
-  ["#payloadType"]?: Payload
+  ["#payloadType"]: Payload
 }
 
 /**
@@ -6694,7 +6694,7 @@ type OnPlayerRespawnedPayload /** @noSelf **/ = {
 
 /**
  *  Called when the player rotates an entity. This event is only fired when the entity actually changes its
- orientation -- pressing the rotate key on an entity that can&#x27;t be rotated won&#x27;t fire this event.
+ orientation -- pressing the rotate name on an entity that can&#x27;t be rotated won&#x27;t fire this event.
 
  * {@link https://lua-api.factorio.com/latest/events.html#on_player_rotated_entity on_player_rotated_entity}
  */
@@ -7376,7 +7376,7 @@ declare const game: LuaGameScript
 declare const script: LuaBootstrap
 /** Allows inter-mod communication by way of providing a repository of interfaces that is shared by all mods. */
 declare const remote: LuaRemote
-/** Allows registering custom commands for the in-game console accessible via the grave key. */
+/** Allows registering custom commands for the in-game console accessible via the grave name. */
 declare const commands: LuaCommandProcessor
 /** Allows reading the current mod settings. */
 declare const settings: LuaSettings

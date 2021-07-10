@@ -1,26 +1,38 @@
-import { AnySpec, ComponentSpec, ElementSpec, ElementSpecOfType, ElementSpecProps, GuiEventHandlers } from "./spec"
+import {
+  AnySpec,
+  BlankSpec,
+  ComponentSpec,
+  ElementSpec,
+  ElementSpecOfType,
+  ElementSpecProps,
+  GuiEventHandlers,
+} from "./spec"
 import { Component, ComponentBoundFunc, ComponentFunc } from "./component"
 import { EventHandlerTags, GuiEventName } from "./guievents"
 import { FuncRef } from "../funcRef"
 
-type IntrinsicElement<Type extends GuiElementType> = ElementSpecProps<Type> &
-  GuiEventHandlers<Type, keyof GuiEventsByType[Type]> &
+type IntrinsicElement<Type extends GuiElementType> = ElementSpecProps<Type> & // props specifically on spec (onCreated, onUpdate, styleMod, children)
+  GuiEventHandlers<Type> & // event handlers for this gui element
+  // elementMod (directly as props)
   ModOf<GuiElementByType[Type]> & {
-    children?: AnySpec | AnySpec[]
+    children?: AnySpec | (AnySpec | AnySpec[])[] // children
+    // gui add spec, but only if updateOnly is false
   } & (
-    | { updateOnly: true; onCreated?: undefined }
-    | ({ updateOnly?: false } & Omit<GuiSpecByType[Type], "type" | "index">)
+    | { updateOnly: true; onCreated?: never }
+    | ({ updateOnly?: false } & Omit<GuiAddSpecByType[Type], "type" | "index">)
   )
-// Union instead of intersection of keys
+
+// Union instead of intersection of ModableKeys
 type AllModableKeys<T> = T extends infer I ? ModableKeys<I> : never
-// Typescript abuse
+
+// Typescript abuse:
 const rawElementPropType: Record<
-  // Props in GuiElementSpec but not in LuaGuiElement
-  Exclude<AllModableKeys<GuiSpecByType[GuiElementType]>, AllModableKeys<GuiElementByType[GuiElementType]>>,
+  // Properties in GuiAddSpec but not in LuaGuiElement
+  Exclude<AllModableKeys<GuiAddSpecByType[GuiElementType]>, AllModableKeys<GuiElementByType[GuiElementType]>>,
   "creation"
 > &
-  // props only in CreationSpec
-  Record<keyof ElementSpecProps<any> | keyof JSX.IntrinsicAttributes | keyof JSX.ElementChildrenAttribute, "spec"> &
+  // props for in ElementSpec
+  Record<Exclude<keyof ElementSpecProps<any>, "name">, "spec"> &
   // GUI event names
   Record<GuiEventName, "guiEvent"> = {
   index: "creation",
@@ -46,8 +58,9 @@ const rawElementPropType: Record<
   tile: "creation",
   value_step: "creation",
 
-  key: "spec",
+  // name is special
   updateOnly: "spec",
+  ref: "spec",
 
   styleMod: "spec",
   children: "spec",
@@ -99,6 +112,7 @@ function createElementSpec(
       elementMod.tags = elementMod.tags || {}
       ;(elementMod.tags as EventHandlerTags)["#guiEventHandlers"] = guiHandlers
     }
+    spec.name = props.name as string
   }
   spec.creationSpec = creationSpec
   spec.elementMod = elementMod
@@ -107,19 +121,19 @@ function createElementSpec(
   return spec as ElementSpec
 }
 
-function createComponentSpec<T>(
-  type: Class<Component<T>>,
-  props?: T & JSX.IntrinsicAttributes & { deferProps?: boolean },
+function createComponentSpec<Props>(
+  type: Class<Component<Props>>,
+  props?: Props & JSX.IntrinsicAttributes,
   flattenedChildren?: (AnySpec | undefined)[]
-): ComponentSpec<T> {
+): ComponentSpec<Props> {
   const theProps: any = props || {}
   theProps.children = flattenedChildren
   return {
     type: type.name,
     props: theProps,
-    key: theProps.key,
+    name: theProps.name,
     updateOnly: theProps.updateOnly,
-    deferProps: theProps.deferProps,
+    ref: theProps.ref,
   }
 }
 
@@ -140,36 +154,45 @@ function flattenChildren(children: Children | undefined): AnySpec[] | undefined 
 }
 
 type Children = AnySpec | undefined | (AnySpec | undefined | (AnySpec | undefined)[])[]
-const typeFunc = type
 
+// noinspection JSUnusedGlobalSymbols
 export function createElement<Type extends GuiElementType>(
   this: void,
   type: Type,
   props: IntrinsicElement<Type>,
   children: Children
 ): ElementSpecOfType<Type>
+// noinspection JSUnusedGlobalSymbols
 export function createElement<Props>(
   this: void,
   type: Class<Component<Props>>,
   props: Props,
   children: Children
 ): ComponentSpec<Props>
+// noinspection JSUnusedGlobalSymbols
 export function createElement(
   this: void,
-  type: GuiElementType | Class<Component<any>>,
+  type: GuiElementType | Class<Component<any>> | "blank",
   props?: Record<any, any>,
   children?: Children
-): AnySpec | undefined {
+): AnySpec {
   const flattenedChildren = flattenChildren(children)
-  const typeofType = typeFunc(type)
-  if (typeofType === "string") {
-    return createElementSpec(type as GuiElementType, props, flattenedChildren)
-  } else if (typeofType === "table") {
-    return createComponentSpec(type as Class<Component<any>>, props, flattenedChildren)
+  if (type === Blank) {
+    return {
+      type: Blank,
+      name: props && props.name,
+      children: flattenedChildren,
+    } as BlankSpec
+  } else if (typeof type === "string") {
+    return createElementSpec(type, props, flattenedChildren)
+  } else if (typeof type === "object") {
+    return createComponentSpec(type, props, flattenedChildren)
   } else {
-    error(`component of type ${typeofType} not supported`)
+    error(`component of type ${globalThis.type(type)} not supported`)
   }
 }
+
+export const Blank = "blank" as const
 
 /* eslint-disable */
 declare global {
@@ -177,20 +200,22 @@ declare global {
     // noinspection JSUnusedGlobalSymbols
     type Element = AnySpec
     // noinspection JSUnusedGlobalSymbols
-    type ElementClass = Component<any>
+    type ElementClass = Component<unknown>
 
+    // noinspection JSUnusedGlobalSymbols
     interface ElementChildrenAttribute {
       children: {}
     }
 
     // noinspection JSUnusedGlobalSymbols
     interface ElementAttributesProperty {
-      ____props: {} // type checking only
+      ____props: {} // for type checking only; see Component.____props
     }
 
     type IntrinsicAttributes = {
-      key?: string
+      name?: string
       updateOnly?: boolean
+      ref?: string | number
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -220,6 +245,8 @@ declare global {
       tab: IntrinsicElement<"tab">
       table: IntrinsicElement<"table">
       textfield: IntrinsicElement<"textfield">
+
+      blank: IntrinsicElement<any>
     }
   }
 }

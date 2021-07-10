@@ -7,5 +7,5 @@ interface String {
 
 interface LuaReadonlyIndexing<Key, Value> {
   readonly get: LuaTableGetMethod<Key, Value>
-  readonly has: LuaTableGetMethod<Key, Value>
+  readonly has: LuaTableHasMethod<Key>
 }

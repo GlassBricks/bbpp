@@ -1,5 +1,5 @@
 import { registerHandlers } from "./events"
-import { dlog } from "./logging"
+import { vlog } from "./logging"
 
 interface PlayerDataGlobal {
   playerData: Record<string, Record<number, any>>
@@ -7,36 +7,44 @@ interface PlayerDataGlobal {
 
 declare const global: PlayerDataGlobal
 
-export type PlayerData<T> = (playerIndex: number) => T
+registerHandlers({
+  on_init() {
+    global.playerData = {}
+  },
+})
+
+export type PlayerData<T> = {
+  readonly data: Record<number, T>
+}
 
 export function PlayerData<T>(uniqueName: string, initData: (player: LuaPlayer) => T): PlayerData<T> {
-  dlog("creating player data", uniqueName)
-  let playerDatum: Record<number, T>
+  vlog("creating player data", uniqueName)
+  const playerData: Mutable<PlayerData<T>> = {} as Mutable<PlayerData<T>>
 
   function loadData() {
+    playerData.data = global.playerData[uniqueName]
     if (!global.playerData[uniqueName]) {
-      global.playerData[uniqueName] = {}
+      playerData.data = {}
+      global.playerData[uniqueName] = playerData.data
     }
-    playerDatum = global.playerData[uniqueName]!
   }
 
   registerHandlers({
     on_init() {
       loadData()
-      for (const [index] of pairs(game.players)) {
-        playerDatum[index as number] = initData(game.get_player(index))
+      for (const [index, player] of pairs(game.players)) {
+        playerData.data[index as number] = initData(player)
       }
     },
     on_load: loadData,
-    on_player_created(e: OnPlayerCreatedPayload) {
-      playerDatum[e.player_index] = initData(game.get_player(e.player_index))
+    on_player_created(e) {
+      playerData.data[e.player_index] = initData(game.get_player(e.player_index))
     },
-    on_player_removed(e: OnPlayerRemovedPayload) {
-      if (!playerDatum) return
-      playerDatum[e.player_index] = undefined as any
+    on_player_removed(e) {
+      playerData.data[e.player_index] = undefined as any
     },
   })
-  return (index: number) => playerDatum[index]!
+  return playerData as PlayerData<T>
 }
 
 export function onPlayerInit(init: (player: LuaPlayer) => void): void {
@@ -46,14 +54,8 @@ export function onPlayerInit(init: (player: LuaPlayer) => void): void {
         init(player)
       }
     },
-    on_player_created(e: OnPlayerCreatedPayload) {
+    on_player_created(e) {
       init(game.get_player(e.player_index))
     },
   })
 }
-
-registerHandlers({
-  on_init() {
-    global.playerData = {}
-  },
-})

@@ -1,83 +1,174 @@
-import { dlog, userWarning, vlog } from "../framework/logging"
+import { userWarning, vlog } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
-import { arrayRemoveElement, isEmpty } from "../framework/util"
-import { add, Area, subtract } from "../framework/position"
-import { getParallelDataSurface } from "./surfaces"
+import { isEmpty } from "../framework/util"
+import { add, Area, elemMul, subtract } from "../framework/position"
+import { getParallelDataSurface, isDataSurface } from "./surfaces"
 import { getViewOnlyForce } from "./forces"
 
 // global
-interface BpAreasGlobal {
-  // todo: blueprint "set"s for organization
+export interface BpAreasGlobal {
+  nextBpSetId: number
+  bpSetById: PRecord<number, BpSet>
+  bpSetBySurfaceIndex: PRecord<number, BpSet>
+
   nextBpAreaId: number
-  bpAreaById: PRecord<number, BpArea>
-  // surface index -> area id -> area
-  bpAreasBySurfaceIndex: PRecord<number, PRecord<number, BpArea>>
-  userDataAreas: DataArea[]
-  viewAreas: ViewArea[]
+  userAreaById: PRecord<number, UserArea>
+  dataAreaById: PRecord<number, DataArea>
 }
 
 declare const global: BpAreasGlobal
 
 registerHandlers({
   on_init() {
-    global.nextBpAreaId = 0
-    global.bpAreaById = {}
-    global.bpAreasBySurfaceIndex = {}
-    global.userDataAreas = []
-    global.viewAreas = []
+    global.nextBpSetId = 1
+    global.bpSetById = {}
+    global.bpSetBySurfaceIndex = {}
+
+    global.nextBpAreaId = 1
+    global.userAreaById = {}
+    global.dataAreaById = {}
   },
   on_load() {
-    for (const [, area] of pairs(global.bpAreaById)) {
-      const prototype: any = area.type === "data" ? DataArea.prototype : ViewArea.prototype
-      setmetatable(area, prototype)
+    for (const [, set] of pairs(global.bpSetById)) {
+      setmetatable(set, BpSet.prototype as any)
+    }
+    for (const [, area] of pairs(global.userAreaById)) {
+      setmetatable(area, UserArea.prototype as any)
+    }
+    for (const [, area] of pairs(global.dataAreaById)) {
+      setmetatable(area, DataArea.prototype as any)
     }
   },
 })
 
-export type BpAreaType = "data" | "view"
+export class BpSet {
+  readonly surfaceIndex: number
+  readonly dataSurface: LuaSurface
+  readonly dataSurfaceIndex: number
 
-export abstract class BpArea {
-  readonly id: number
-  readonly type!: BpAreaType // to restore metatable
   valid: boolean = true
 
-  name: string
-  surface: LuaSurface
-  surfaceIndex: number
-  area: Area
+  readonly areaIds: number[] = []
+  // [x][y]=id
+  private readonly areaIdsByGrid: PRecord<number, PRecord<number, number>> = {}
 
-  protected lastUpdated: number = game.ticks_played
-  protected lastBlueprinted: number = this.lastUpdated - 1
-
-  protected readonly bpInventory: LuaInventory = game.create_inventory(1)
-  protected blueprint!: LuaItemStack
-
-  protected constructor(name: string, surface: LuaSurface, area: Area) {
-    this.id = global.nextBpAreaId++
-    this.name = name
-    this.surface = surface
+  private constructor(
+    public readonly id: number,
+    public name: string,
+    public readonly surface: LuaSurface,
+    public readonly bpSize: Position // public readonly boundarySize: number, // public gridSize: Position
+  ) {
     this.surfaceIndex = surface.index
-    this.area = area
-    this.bpInventory = game.create_inventory(1)
-
-    global.bpAreaById[this.id] = this
-    global.bpAreasBySurfaceIndex[this.surfaceIndex] = global.bpAreasBySurfaceIndex[this.surfaceIndex] || {}
-    global.bpAreasBySurfaceIndex[this.surfaceIndex]![this.id] = this
-
-    dlog("created bp area", { name, surface, type })
+    this.dataSurface = getParallelDataSurface(surface)
+    this.dataSurfaceIndex = this.dataSurface.index
   }
 
-  static getById(id: number): BpArea | undefined {
-    return global.bpAreaById[id]
+  static tryCreate(name: string, surface: LuaSurface, bpSize: Position): BpSet | string {
+    if (global.bpSetBySurfaceIndex[surface.index]) {
+      return "BpSet already exists on this surface"
+    }
+    if (isDataSurface(surface)) {
+      return "Cannot make a BpSet out of a internal data surface (how did you do this??)."
+    }
+    const id = global.nextBpSetId++
+    const set = new BpSet(id, name, surface, bpSize)
+    global.bpSetById[id] = set
+    global.bpSetBySurfaceIndex[surface.index] = set
+    return set
+  }
+
+  static create(name: string, surface: LuaSurface, bpSize: Position): BpSet {
+    const bpSet = this.tryCreate(name, surface, bpSize)
+    if (typeof bpSet === "string") error(bpSet)
+    return bpSet
+  }
+
+  static getByIdOrNil(id: number): BpSet | undefined {
+    return global.bpSetById[id]
+  }
+
+  static getById(id: number): BpSet {
+    const set = global.bpSetById[id]
+    if (!set) error(`No bpSet with id ${id}`)
+    return set
+  }
+
+  static bpSetById(): Readonly<PRecord<number, BpSet>> {
+    return global.bpSetById
+  }
+
+  static getBySurfaceIndexOrNil(surfaceIndex: number): BpSet | undefined {
+    return global.bpSetBySurfaceIndex[surfaceIndex]
   }
 
   delete(): void {
     if (!this.valid) return
     this.valid = false
+    if (this.surface.valid) {
+      game.delete_surface(this.surface)
+    }
+    if (this.dataSurface.valid) {
+      game.delete_surface(this.dataSurface)
+    }
+    global.bpSetById[this.id] = undefined
+    global.bpSetBySurfaceIndex[this.surfaceIndex] = undefined
+    for (const areaId of this.areaIds) {
+      UserArea.getById(areaId).delete()
+    }
+  }
+
+  createNewArea(name: string, blockPosition: Position): UserArea {
+    const topLeft = elemMul(blockPosition, this.bpSize)
+    const area: Area = [topLeft, add(topLeft, this.bpSize)]
+    const userArea = UserArea._create(this, area, name)
+
+    const id = userArea.id
+    this.areaIds[this.areaIds.length] = id
+    let xs = this.areaIdsByGrid[blockPosition.x]
+    if (!xs) {
+      xs = {}
+      this.areaIdsByGrid[blockPosition.x] = xs
+    }
+    xs[blockPosition.y] = id
+
+    return userArea
+  }
+
+  getAreaIdByBlock(x: number, y: number): number | undefined {
+    const xs = this.areaIdsByGrid[x]
+    return xs && xs[y]
+  }
+}
+
+registerHandlers({
+  on_surface_deleted(e) {
+    const bpSet = global.bpSetBySurfaceIndex[e.surface_index]
+    if (bpSet && bpSet.valid) {
+      userWarning("NOTE: bpSet surface deleted outside of bbpp mod.")
+      bpSet.delete()
+    }
+  },
+})
+
+// -- bpArea
+export type BpAreaType = "data" | "view"
+
+export abstract class BpArea {
+  readonly type!: BpAreaType // to restore metatable
+  valid: boolean = true
+
+  protected lastUpdated: number = game.ticks_played
+  protected lastBlueprinted: number = this.lastUpdated - 1
+
+  protected readonly bpInventory: LuaInventory = game.create_inventory(1)
+  private readonly blueprint: LuaItemStack = this.bpInventory[1]
+
+  protected constructor(public readonly set: BpSet, public readonly id: number, public readonly area: Area) {}
+
+  delete(): void {
+    if (!this.valid) return
+    this.valid = false
     this.bpInventory.destroy()
-    this.surface = undefined as any // prevent future shenanigans
-    global.bpAreaById[this.id] = undefined
-    global.bpAreasBySurfaceIndex[this.surfaceIndex]![this.id] = undefined
   }
 
   markUpdated(): void {
@@ -85,70 +176,63 @@ export abstract class BpArea {
   }
 
   createBlueprint(): LuaItemStack {
-    vlog("creating blueprint for bpArea", this.name)
+    vlog("creating blueprint for bpArea")
     const bp = this.getBpItemStack()
     const bpEntities = bp.create_blueprint({
-      surface: this.surface,
+      surface: this.set.surface,
       force: "player", // TODO: which force
       area: this.area,
-      include_entities: true, // TODO: make configurable (let user set blueprint?)
+      include_entities: true, // TODO: make configurable
       include_modules: true,
       include_trains: true,
       include_station_names: true,
       include_fuel: true,
     })
     this.lastBlueprinted = game.ticks_played
-    this.blueprint = bp
     if (isEmpty(bpEntities)) return bp
     const topLeft = this.area[0]
     const firstEntity = bpEntities[1]
     const bpEntity = bp.get_blueprint_entities()[0]
     bp.blueprint_snap_to_grid = [1, 1]
-    bp.blueprint_position_relative_to_grid = add(topLeft, subtract(firstEntity.position, bpEntity.position))
+    bp.blueprint_position_relative_to_grid = subtract(subtract(firstEntity.position, topLeft), bpEntity.position)
     return bp
   }
 
   getBlueprint(): LuaItemStack {
     if (this.lastBlueprinted < this.lastUpdated) {
-      this.blueprint = this.createBlueprint()
+      this.createBlueprint()
     }
     return this.blueprint
   }
 
   private getBpItemStack() {
-    const stack = this.bpInventory[1]
-    if (!stack.valid_for_read || !stack.is_blueprint) {
-      stack.set_stack({ name: "blueprint" })
+    const bp = this.blueprint
+    if (!bp.valid_for_read || !bp.is_blueprint) {
+      bp.set_stack({ name: "blueprint" })
     }
-    return stack
+    return bp
   }
 }
 
 export class DataArea extends BpArea {
   type: "data" = "data"
 
-  private constructor(name: string, surface: LuaSurface, area: Area, public readonly isUserArea: boolean) {
-    super(name, surface, area)
-    // if(isUserArea)
-    global.userDataAreas.push(this)
+  private constructor(userArea: UserArea) {
+    super(userArea.set, userArea.id, userArea.area)
+    global.dataAreaById[this.id] = this
   }
 
-  static createUserArea(name: string, surface: LuaSurface, area: Area): DataArea {
-    return new DataArea(name, surface, area, true)
+  static _create(userArea: UserArea): DataArea {
+    return new DataArea(userArea)
   }
 
-  static createHiddenArea(otherId: number, surface: LuaSurface, area: Area): DataArea {
-    return new DataArea("Data for view" + otherId, surface, area, false)
-  }
-
-  static getById(id: number): DataArea | undefined {
-    const area = global.bpAreaById[id]
-    return area instanceof DataArea ? area : undefined
+  static getByIdOrNil(id: number): DataArea | undefined {
+    return global.dataAreaById[id]
   }
 
   delete(): void {
     super.delete()
-    arrayRemoveElement(global.userDataAreas, this)
+    global.dataAreaById[this.id] = undefined
   }
 }
 
@@ -162,41 +246,38 @@ interface ViewRelation {
   topLeft?: Position
 }
 
-export class ViewArea extends BpArea {
+export class UserArea extends BpArea {
   type: "view" = "view"
 
-  readonly relations: ViewRelation[]
+  readonly relations: ViewRelation[] = []
   dataArea: DataArea
 
-  private constructor(name: string, surface: LuaSurface, area: Area) {
-    super(name, surface, area)
-    this.dataArea = DataArea.createHiddenArea(this.id, getParallelDataSurface(surface), area)
-    this.relations = [
-      {
-        areaId: this.dataArea.id,
-        tempViewing: true,
-        editing: false,
-      },
-    ]
-    global.viewAreas.push(this)
-    // todo: areas changed event
+  private constructor(set: BpSet, area: Area, public name: string) {
+    super(set, global.nextBpAreaId++, area)
+    this.dataArea = DataArea._create(this)
+    global.userAreaById[this.id] = this
   }
 
-  static create(name: string, surface: LuaSurface, area: Area): ViewArea {
-    return new ViewArea(name, surface, area)
+  static _create(set: BpSet, area: Area, name: string): UserArea {
+    return new UserArea(set, area, name)
   }
 
-  static getById(id: number): ViewArea | undefined {
-    const area = global.bpAreaById[id]
-    return area instanceof ViewArea ? area : undefined
+  static getByIdOrNil(id: number): UserArea | undefined {
+    return global.userAreaById[id]
+  }
+
+  static getById(id: number): UserArea {
+    const area = global.userAreaById[id]
+    if (!area) {
+      error(`No user area with id ${id}`)
+    }
+    return area
   }
 
   delete(): void {
     super.delete()
-    arrayRemoveElement(global.viewAreas, this)
-    if (this.dataArea.valid) {
-      this.dataArea.delete()
-    }
+    global.userAreaById[this.id] = undefined
+    this.dataArea.delete()
   }
 
   // removes all changes
@@ -206,7 +287,7 @@ export class ViewArea extends BpArea {
   }
 
   private deleteAllEntities() {
-    const entities = this.surface.find_entities_filtered({
+    const entities = this.set.surface.find_entities_filtered({
       area: this.area,
       type: "character",
       invert: true,
@@ -218,7 +299,7 @@ export class ViewArea extends BpArea {
 
   private replaceRelations() {
     for (const relation of this.relations) {
-      const dataArea = DataArea.getById(relation.areaId)
+      const dataArea = DataArea.getByIdOrNil(relation.areaId)
       if (!dataArea) {
         userWarning("View relation includes an invalid or deleted layer. Skipping...")
         continue
@@ -255,7 +336,7 @@ export class ViewArea extends BpArea {
 
   private tryPlaceBlueprint(bp: LuaItemStack, position: Position, forceBuild: boolean) {
     return bp.build_blueprint({
-      surface: this.surface,
+      surface: this.set.surface,
       position: position,
       force: getViewOnlyForce(),
       skip_fog_of_war: false,
@@ -263,27 +344,3 @@ export class ViewArea extends BpArea {
     })
   }
 }
-
-// events
-interface OnAreaCreatedPayload {
-  area_id: number
-}
-
-interface OnAreaDeletedPayload {
-  area_id: number
-}
-
-export const onAreaCreated = script.generate_event_name<OnAreaCreatedPayload>()
-export const onAreaDeleted = script.generate_event_name<OnAreaDeletedPayload>()
-
-registerHandlers({
-  on_surface_deleted(e) {
-    const areas = global.bpAreasBySurfaceIndex[e.surface_index]
-    if (areas) {
-      for (const [, area] of pairs(areas)) {
-        area.delete()
-      }
-      global.bpAreasBySurfaceIndex[e.surface_index] = undefined
-    }
-  },
-})

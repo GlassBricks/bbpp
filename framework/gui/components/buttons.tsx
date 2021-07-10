@@ -1,12 +1,12 @@
-import createElement, { AnySpec, Component, ComponentFunc, registerComponent } from ".."
+import Reactorio, { AnySpec, ComponentFunc, ReactiveComponent, registerComponent } from ".."
 
 interface CloseButtonProps {
   onClick: ComponentFunc<(element: SpriteButtonGuiElement, payload: OnGuiClickPayload) => void>
 }
 
 @registerComponent
-export class CloseButton extends Component<CloseButtonProps> {
-  update(): AnySpec | undefined {
+export class CloseButton extends ReactiveComponent<CloseButtonProps> {
+  create(): AnySpec {
     return (
       <sprite-button
         style={"frame_action_button"}

@@ -1,10 +1,39 @@
+/** @noSelfInFile */
+
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function isFunction(a: any): a is Function {
   return type(a) === "function"
 }
 
-export function isEmpty(a: AnyTable): a is Record<string, never> {
+export function isEmpty(a: AnyTable): boolean {
   return !next(a)
+}
+
+/**
+ * more efficient than Object.keys
+ */
+export function mapKeys<K extends keyof any, R>(obj: Record<K, any>, func: (key: K) => R): R[] {
+  const result: R[] = []
+  for (const [k] of pairs(obj)) {
+    result[result.length] = func(k)
+  }
+  return result
+}
+
+export function mapValues<V, R>(obj: Record<any, V>, func: (value: V) => R): R[] {
+  const result: R[] = []
+  for (const [, v] of pairs(obj)) {
+    result[result.length] = func(v)
+  }
+  return result
+}
+
+export function mapEntries<K extends keyof any, V, R>(obj: Record<K, V>, func: (key: K, value: V) => R): R[] {
+  const result: R[] = []
+  for (const [k, v] of pairs(obj)) {
+    result[result.length] = func(k, v)
+  }
+  return result
 }
 
 export function deepAssign(target: Record<string | number, unknown>, source: PRecord<string | number, unknown>): void {

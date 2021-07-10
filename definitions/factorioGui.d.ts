@@ -28,7 +28,7 @@ type GuiElementType =
   | "textfield"
 
 /** @noSelf */
-interface BaseGuiSpec {
+interface BaseGuiAddSpec {
   readonly type: GuiElementType
   name?: string
   caption?: LocalisedString
@@ -43,25 +43,25 @@ interface BaseGuiSpec {
 }
 
 /** @noSelf */
-interface ButtonGuiSpec extends BaseGuiSpec {
+interface ButtonGuiAddSpec extends BaseGuiAddSpec {
   type: "button"
   mouse_button_filter?: MouseButtonFlags
 }
 
 /** @noSelf */
-interface FlowGuiSpec extends BaseGuiSpec {
+interface FlowGuiAddSpec extends BaseGuiAddSpec {
   type: "flow"
   direction?: Direction
 }
 
 /** @noSelf */
-interface FrameGuiSpec extends BaseGuiSpec {
+interface FrameGuiAddSpec extends BaseGuiAddSpec {
   type: "frame"
   direction?: Direction
 }
 
 /** @noSelf */
-interface TableGuiSpec extends BaseGuiSpec {
+interface TableGuiAddSpec extends BaseGuiAddSpec {
   type: "table"
   column_count: number
   draw_vertical_lines?: boolean
@@ -71,7 +71,7 @@ interface TableGuiSpec extends BaseGuiSpec {
 }
 
 /** @noSelf */
-interface TextfieldGuiSpec extends BaseGuiSpec {
+interface TextfieldGuiAddSpec extends BaseGuiAddSpec {
   type: "textfield"
   text?: string
   numeric?: boolean
@@ -83,25 +83,25 @@ interface TextfieldGuiSpec extends BaseGuiSpec {
 }
 
 /** @noSelf */
-interface ProgressbarGuiSpec extends BaseGuiSpec {
+interface ProgressbarGuiAddSpec extends BaseGuiAddSpec {
   type: "progressbar"
   value?: number
 }
 
 /** @noSelf */
-interface CheckboxGuiSpec extends BaseGuiSpec {
+interface CheckboxGuiAddSpec extends BaseGuiAddSpec {
   type: "checkbox"
   state: boolean
 }
 
 /** @noSelf */
-interface RadiobuttonGuiSpec extends BaseGuiSpec {
+interface RadiobuttonGuiAddSpec extends BaseGuiAddSpec {
   type: "radiobutton"
   state: boolean
 }
 
 /** @noSelf */
-interface SpriteButtonGuiSpec extends BaseGuiSpec {
+interface SpriteButtonGuiAddSpec extends BaseGuiAddSpec {
   type: "sprite-button"
   sprite?: SpritePath
   hovered_sprite?: SpritePath
@@ -112,41 +112,41 @@ interface SpriteButtonGuiSpec extends BaseGuiSpec {
 }
 
 /** @noSelf */
-interface SpriteGuiSpec extends BaseGuiSpec {
+interface SpriteGuiAddSpec extends BaseGuiAddSpec {
   type: "sprite"
   sprite?: SpritePath
   resize_to_sprite?: boolean
 }
 
 /** @noSelf */
-interface ScrollPaneGuiSpec extends BaseGuiSpec {
+interface ScrollPaneGuiAddSpec extends BaseGuiAddSpec {
   type: "scroll-pane"
   horizontal_scroll_policy?: ScrollPolicy
   vertical_scroll_policy?: ScrollPolicy
 }
 
 /** @noSelf */
-interface DropDownGuiSpec extends BaseGuiSpec {
+interface DropDownGuiAddSpec extends BaseGuiAddSpec {
   type: "drop-down"
   items?: [LocalisedString]
   selected_index?: number
 }
 
 /** @noSelf */
-interface LineGuiSpec extends BaseGuiSpec {
+interface LineGuiAddSpec extends BaseGuiAddSpec {
   type: "line"
   direction: Direction
 }
 
 /** @noSelf */
-interface ListBoxGuiSpec extends BaseGuiSpec {
+interface ListBoxGuiAddSpec extends BaseGuiAddSpec {
   type: "list-box"
   items?: LocalisedString[]
   selected_index?: number
 }
 
 /** @noSelf */
-interface CameraGuiSpec extends BaseGuiSpec {
+interface CameraGuiAddSpec extends BaseGuiAddSpec {
   type: "camera"
   surface_index?: number
   zoom?: number
@@ -177,22 +177,22 @@ type ChooseElementButtonItem<Type extends keyof ChooseElemButtonTypes> = {
 }
 
 /** @noSelf */
-interface ChooseElemButtonGuiSpec<Type extends keyof ChooseElemButtonTypes = keyof ChooseElemButtonTypes>
-  extends BaseGuiSpec,
+interface ChooseElemButtonGuiAddSpec<Type extends keyof ChooseElemButtonTypes = keyof ChooseElemButtonTypes>
+  extends BaseGuiAddSpec,
     ChooseElementButtonItem<Type> {
   type: "choose-elem-button"
   elem_type: Type
 }
 
 /** @noSelf */
-interface TextBoxGuiSpec extends BaseGuiSpec {
+interface TextBoxGuiAddSpec extends BaseGuiAddSpec {
   type: "text-box"
   text?: string
   clear_and_focus_on_right_click?: boolean
 }
 
 /** @noSelf */
-interface SliderGuiSpec extends BaseGuiSpec {
+interface SliderGuiAddSpec extends BaseGuiAddSpec {
   type: "slider"
   minimum_value?: number
   maximum_value?: number
@@ -203,7 +203,7 @@ interface SliderGuiSpec extends BaseGuiSpec {
 }
 
 /** @noSelf */
-interface MinimapGuiSpec extends BaseGuiSpec {
+interface MinimapGuiAddSpec extends BaseGuiAddSpec {
   type: "minimap"
   position?: Position
   surface_index?: number
@@ -213,13 +213,13 @@ interface MinimapGuiSpec extends BaseGuiSpec {
 }
 
 /** @noSelf */
-interface TabGuiSpec extends BaseGuiSpec {
+interface TabGuiAddSpec extends BaseGuiAddSpec {
   type: "tab"
   badge_text?: LocalisedString
 }
 
 /** @noSelf */
-interface SwitchGuiSpec extends BaseGuiSpec {
+interface SwitchGuiAddSpec extends BaseGuiAddSpec {
   type: "switch"
   switch_state?: SwitchState
   allow_none_state?: boolean
@@ -230,55 +230,55 @@ interface SwitchGuiSpec extends BaseGuiSpec {
 }
 
 /** @noSelf */
-interface LabelGuiSpec extends BaseGuiSpec {
+interface LabelGuiAddSpec extends BaseGuiAddSpec {
   type: "label"
 }
 
 /** @noSelf */
-interface EntityPreviewGuiSpec extends BaseGuiSpec {
+interface EntityPreviewGuiAddSpec extends BaseGuiAddSpec {
   type: "entity-preview"
 }
 
 /** @noSelf */
-interface EmptyWidgetGuiSpec extends BaseGuiSpec {
+interface EmptyWidgetGuiAddSpec extends BaseGuiAddSpec {
   type: "empty-widget"
 }
 
 /** @noSelf */
-interface TabbedPaneGuiSpec extends BaseGuiSpec {
+interface TabbedPaneGuiAddSpec extends BaseGuiAddSpec {
   type: "tabbed-pane"
 }
 
-interface GuiSpecByType {
-  "choose-elem-button": ChooseElemButtonGuiSpec
-  "drop-down": DropDownGuiSpec
-  "empty-widget": EmptyWidgetGuiSpec
-  "entity-preview": EntityPreviewGuiSpec
-  "list-box": ListBoxGuiSpec
-  "scroll-pane": ScrollPaneGuiSpec
-  "sprite-button": SpriteButtonGuiSpec
-  "tabbed-pane": TabbedPaneGuiSpec
-  "text-box": TextBoxGuiSpec
-  button: ButtonGuiSpec
-  camera: CameraGuiSpec
-  checkbox: CheckboxGuiSpec
-  flow: FlowGuiSpec
-  frame: FrameGuiSpec
-  label: LabelGuiSpec
-  line: LineGuiSpec
-  minimap: MinimapGuiSpec
-  progressbar: ProgressbarGuiSpec
-  radiobutton: RadiobuttonGuiSpec
-  slider: SliderGuiSpec
-  sprite: SpriteGuiSpec
-  switch: SwitchGuiSpec
-  tab: TabGuiSpec
-  table: TableGuiSpec
-  textfield: TextfieldGuiSpec
+interface GuiAddSpecByType {
+  "choose-elem-button": ChooseElemButtonGuiAddSpec
+  "drop-down": DropDownGuiAddSpec
+  "empty-widget": EmptyWidgetGuiAddSpec
+  "entity-preview": EntityPreviewGuiAddSpec
+  "list-box": ListBoxGuiAddSpec
+  "scroll-pane": ScrollPaneGuiAddSpec
+  "sprite-button": SpriteButtonGuiAddSpec
+  "tabbed-pane": TabbedPaneGuiAddSpec
+  "text-box": TextBoxGuiAddSpec
+  button: ButtonGuiAddSpec
+  camera: CameraGuiAddSpec
+  checkbox: CheckboxGuiAddSpec
+  flow: FlowGuiAddSpec
+  frame: FrameGuiAddSpec
+  label: LabelGuiAddSpec
+  line: LineGuiAddSpec
+  minimap: MinimapGuiAddSpec
+  progressbar: ProgressbarGuiAddSpec
+  radiobutton: RadiobuttonGuiAddSpec
+  slider: SliderGuiAddSpec
+  sprite: SpriteGuiAddSpec
+  switch: SwitchGuiAddSpec
+  tab: TabGuiAddSpec
+  table: TableGuiAddSpec
+  textfield: TextfieldGuiAddSpec
 }
 
 /** @noSelf */
-type GuiSpec = GuiSpecByType[GuiElementType]
+type GuiAddSpec = GuiAddSpecByType[GuiElementType]
 
 // Element
 /** @noSelf */
@@ -289,7 +289,6 @@ interface BaseGuiElement extends LuaReadonlyIndexing<string, LuaGuiElement | und
   readonly parent: LuaGuiElement
   name: string
   caption: LocalisedString
-  // todo: different input/output props WITH selection?
   style: LuaStyle | string
   visible: boolean
   readonly children_names: string[]
@@ -304,7 +303,7 @@ interface BaseGuiElement extends LuaReadonlyIndexing<string, LuaGuiElement | und
   readonly valid: boolean
   readonly object_name: string
 
-  add<Spec extends GuiSpec>(element: Spec): GuiElementByType[Spec["type"]]
+  add<Spec extends GuiAddSpec>(element: Spec): GuiElementByType[Spec["type"]]
 
   clear(): void
 
@@ -449,7 +448,7 @@ interface DropDownGuiElement extends BaseGuiElement {
 
 /** @noSelf */
 interface ListBoxGuiElement extends BaseGuiElement {
-  /** @noSelf */ type: "list-box"
+  type: "list-box"
   selected_index: number
 
   clear_items(): void

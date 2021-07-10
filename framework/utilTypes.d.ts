@@ -3,6 +3,10 @@ type PRecord<K extends keyof any, V> = {
   [k in K]?: V
 }
 
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P]
+}
+
 type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? A : B
 
 type WritableKeys<T> = {
@@ -39,8 +43,8 @@ type Empty = Record<any, never>
 
 // Represents the class of <S>
 interface Class<T> {
-  prototype: any;
-  name: string;
+  prototype: any
+  name: string
 
-  new(...args: any): T;
+  new (...args: any): T
 }

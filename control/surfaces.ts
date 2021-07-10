@@ -8,27 +8,34 @@ export function createEmptySurface(name: string): LuaSurface {
 }
 
 declare const global: {
-  parallelDataSurface: PRecord<number, number>
-}
-
-export function getParallelDataSurface(surface: LuaSurface): LuaSurface {
-  const index = surface.index
-  const existing = global.parallelDataSurface[index]
-  if (existing !== undefined) return game.get_surface(existing)!
-  const newSurface = createEmptySurface("bbpp:data parallel " + index)
-  global.parallelDataSurface[index] = newSurface.index
-  return newSurface
+  dataSurfaces: PRecord<number, number>
+  isDataSurface: PRecord<number, true>
 }
 
 registerHandlers({
   on_init() {
-    global.parallelDataSurface = {}
+    global.dataSurfaces = {}
+    global.isDataSurface = {}
   },
   on_surface_deleted(e) {
-    const parallelUniverse = global.parallelDataSurface[e.surface_index]
+    const parallelUniverse = global.dataSurfaces[e.surface_index]
     if (parallelUniverse) {
-      global.parallelDataSurface[e.surface_index] = undefined
+      global.dataSurfaces[e.surface_index] = undefined
       game.delete_surface(game.get_surface(parallelUniverse)!)
     }
   },
 })
+
+export function isDataSurface(surface: LuaSurface): boolean {
+  return global.isDataSurface[surface.index] === true
+}
+
+export function getParallelDataSurface(surface: LuaSurface): LuaSurface {
+  if (global.isDataSurface[surface.index]) error("Tried to get data parallel of an already data surface")
+  const index = surface.index
+  const existing = global.dataSurfaces[index]
+  if (existing !== undefined) return game.get_surface(existing)!
+  const newSurface = createEmptySurface("bbpp:data " + index)
+  global.dataSurfaces[index] = newSurface.index
+  return newSurface
+}

@@ -10,16 +10,15 @@ interface ScriptEvents {
 }
 
 export type GameEvents = typeof defines.events & ScriptEvents
-export type GameEventName = keyof GameEvents
-export type EventName = GameEventName | EventId<any>
+export type EventName = keyof GameEvents | EventId<any>
 
-export type GetPayload<N extends EventId<any>> = NonNullable<N["#payloadType"]>
-export type PayloadOf<N extends EventName> = N extends EventId<any>
-  ? GetPayload<N>
-  : N extends GameEventName
-  ? GetPayload<GameEvents[N]>
-  : unknown
-export type EventHandler<N extends EventName> = (event: PayloadOf<N>) => void
+export type EventHandler<N extends EventName> = (
+  event: N extends EventId<any>
+    ? N["#payloadType"]
+    : N extends keyof GameEvents
+    ? GameEvents[N]["#payloadType"]
+    : unknown
+) => void
 
 // lack of event id => script event
 const isScriptEvent: Record<keyof ScriptEvents, true> & PRecord<any, boolean> = {

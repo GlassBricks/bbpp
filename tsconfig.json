@@ -12,7 +12,8 @@
       "lua-types/5.2"
     ],
     "jsx": "react",
-    "jsxFactory": "createElement",
+    "jsxFactory": "Reactorio.createElement",
+    "jsxFragmentFactory": "Reactorio.Blank",
     "plugins": [
       {
         "name": "typescript-tstl-plugin"

@@ -1,18 +1,8 @@
 import { AnySpec } from "./spec"
-import { FuncRef, registerFuncs } from "../funcRef"
+import { FuncRef, getRef, registerFuncs } from "../funcRef"
 import { dlog, userWarning } from "../logging"
 import { registerHandlers } from "../events"
 import { isValid } from "../util"
-
-type DeferProps<Props> = {
-  deferProps: true
-  key: string
-} & Pick<Props, ReadonlyKeys<Props>>
-
-type UpdateOnlyProps<Props> = {
-  updateOnly: true
-  key: string
-} & Partial<Props>
 
 export interface ComponentBoundFunc<F extends Function> {
   componentId: number
@@ -22,7 +12,11 @@ export interface ComponentBoundFunc<F extends Function> {
 
 export type ComponentFunc<F extends Function> = FuncRef<F> | ComponentBoundFunc<F>
 
-const binderMeta = {
+export type Funcs<T> = {
+  readonly [K in keyof T]: T[K] extends Function ? ComponentBoundFunc<T[K]> : never
+}
+
+const funcsMeta = {
   __index(this: { id: number }, name: string): ComponentBoundFunc<any> {
     return {
       componentId: this.id,
@@ -31,65 +25,106 @@ const binderMeta = {
   },
 } as LuaMetatable<{ id: number }>
 
-function createBinder(id: number): Binder<any> {
-  return setmetatable({ id }, binderMeta) as any
-}
+const staticFuncsMeta = {
+  __index(this: { self: any }, name: string): FuncRef<any> {
+    return getRef(this.self[name])
+  },
+} as LuaMetatable<{ self: any }>
 
-export type Binder<T> = {
-  readonly [K in keyof T]: T[K] extends Function ? ComponentBoundFunc<T[K]> : never
-}
+export type Refs = PRecord<string | number, LuaGuiElement | Component<unknown>>
 
 export abstract class Component<Props> {
-  props!: Props
+  private static readonly _staticFuncs: Funcs<any>
+  private static readonly _applySpec: (this: void, component: Component<unknown>, spec: AnySpec | undefined) => void
   firstGuiElement!: LuaGuiElement
   parentGuiElement!: LuaGuiElement
-
   readonly id: number
-  readonly refs: Binder<this>
-
+  readonly refs: Refs = {}
+  readonly funcs: Funcs<this>
+  _internalInstance: any
+  protected props!: Props
+  private isFirstUpdate: boolean = true
   // noinspection JSUnusedLocalSymbols
-  private ____props!: DeferProps<Props> | UpdateOnlyProps<Props> | Props
+  private ____props!:
+    | Props
+    | ({
+        updateOnly: true
+        name: string
+      } & Partial<Props>)
 
   constructor() {
     const g = global
-    this.id = g.nextComponentInstanceId
-    g.nextComponentInstanceId++
+    this.id = g.nextComponentInstanceId++
     g.componentInstanceTypes.set(this, this.constructor.name)
     g.componentInstanceById[this.id] = this
 
-    this.refs = createBinder(this.id)
+    this.funcs = setmetatable({ id: this.id }, funcsMeta) as any
   }
 
-  abstract update(): AnySpec | undefined
+  static funcs<T extends Class<Component<any>>>(this: T): Funcs<T> {
+    return (this as unknown as typeof Component)._staticFuncs
+  }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  create(props: ReadonlyVals<Props>): AnySpec | undefined {
+  createWith(props: Props): AnySpec | undefined {
+    this.props = props
+    return this.create()
+  }
+
+  updateWith(props: Props): void {
+    const prevProps = this.props
+    this.props = props
+    this.update(prevProps, this.isFirstUpdate)
+    this.isFirstUpdate = false
+  }
+
+  updateMerge(props?: Partial<Props>): void {
+    const newProps = { ...this.props, ...props }
+    this.updateWith(newProps)
+  }
+
+  isValid(): boolean {
+    return isValid(this.firstGuiElement)
+  }
+
+  protected abstract create(): AnySpec | undefined
+
+  protected applySpec(spec: AnySpec | undefined): void {
+    Component._applySpec(this, spec)
+  }
+
+  protected abstract update(prevProps: Props, firstUpdate: boolean): void
+}
+
+/**
+ * A component where you handle creation/updates manually in the `update` function
+ */
+export abstract class ManagedComponent<Props> extends Component<Props> {
+  create(): AnySpec | undefined {
     return undefined
-  }
-
-  /**
-   * Called before UPDATES to determine if this component should actually update.
-   * Does not call on first update (after create).
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  shouldComponentUpdate(nextProps: Props): boolean {
-    return true
   }
 }
 
+/**
+ * A component which is the same every time; i.e. only `create`, nothing on `update`
+ */
 export abstract class StaticComponent extends Component<Empty> {
-  abstract create(): AnySpec | undefined
-
-  update(): AnySpec | undefined {
-    return undefined
+  update(): void {
+    // noop
   }
+}
 
-  shouldComponentUpdate(): boolean {
-    return false
+/**
+ * A component that behaves like normal react. This comes with a performance warning.
+ */
+export abstract class ReactiveComponent<Props> extends Component<Props> {
+  update(): void {
+    this.applySpec(this.create())
   }
 }
 
 const registeredComponents: Record<string, Class<Component<unknown>>> = {}
+
+export type PropsOf<C extends Component<any>> = C extends Component<infer P> ? P : never
 
 /**
  * Registers a gui component class. All components must be registered to be used.
@@ -97,23 +132,27 @@ const registeredComponents: Record<string, Class<Component<unknown>>> = {}
  *
  * All _static_ functions of the class will also be registered.
  */
-export function registerComponent<T extends Component<any>>(component: Class<T>): void {
+export function registerComponent<C extends Component<any>>(component: Class<C>): void {
   const componentName = component.name
   if (registeredComponents[componentName]) {
     error(`A gui component with the name "${componentName}" is already registered`)
   }
   registeredComponents[componentName] = component
   registerFuncs(component, componentName)
-  // noinspection JSUnusedGlobalSymbols
+  ;(component as any)._staticFuncs = setmetatable({ self: component }, staticFuncsMeta)
   dlog("registered component", componentName)
 }
 
 function getRegisteredComponent(name: string): Class<Component<unknown>> {
-  const clazz = registeredComponents[name]
-  if (!clazz) {
-    error(`Component class of name ${name} not found. Did you register the class and perform migrations properly?`)
+  const componentClass = registeredComponents[name]
+  if (!componentClass) {
+    error(`Component class with name ${name} not found. Did you register the class and perform migrations properly?`)
   }
-  return clazz
+  return componentClass as any
+}
+
+export function isRegisteredComponent<C extends Component<any>>(component: Class<C>): boolean {
+  return component.name in registeredComponents
 }
 
 interface ComponentsGlobal {
@@ -131,13 +170,13 @@ function restoreMetatables() {
   for (const [instance, componentName] of pairs(global.componentInstanceTypes)) {
     const prototype = getRegisteredComponent(componentName).prototype
     setmetatable(instance, prototype)
-    setmetatable(instance.refs, binderMeta)
+    setmetatable(instance.funcs, funcsMeta)
   }
 }
 
 registerHandlers({
   on_init() {
-    global.nextComponentInstanceId = 0
+    global.nextComponentInstanceId = 1
     global.componentInstanceById = setmetatable({}, { __mode: "v" })
     global.componentInstanceTypes = setmetatable(new LuaTable(), { __mode: "k" })
   },
@@ -162,8 +201,7 @@ export function callBoundFunc<A extends any[]>(boundFunc: ComponentBoundFunc<(ar
   if (!instance) {
     userWarning(
       `Tried to call a bound function ("${boundFunc.funcName}") on a gui component that no longer exists.
-      Make sure migrations are working and/or 'this' is not leaked except to element children. 
-      Please report this to the mod author.`
+      Also check that migrations are working. Please report this to the mod author.`
     )
     return
   }
