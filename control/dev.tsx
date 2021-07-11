@@ -1,34 +1,49 @@
 import { registerHandlers } from "../framework/events"
 import { createEmptySurface } from "./surfaces"
-import { BpAreasGlobal, BpSet, UserArea } from "./BpArea"
+import { BpArea, BpAreasGlobal, BpSet } from "./BpArea"
 import { AreaNavigator } from "./gui/AreaNavigator"
-import { onPlayerInit } from "../framework/playerData"
 import { DevButton } from "../framework/devButtons"
+import { dlog } from "../framework/logging"
+import { PlayerArea, teleportPlayerToArea } from "./playerAreaTracking"
+import { onPlayerInit } from "../framework/onPlayerInit"
 
 registerHandlers({
   on_init() {
     for (let n = 0; n < 3; n++) {
       const surface = createEmptySurface("bbpp:test-surface" + n)
       const set = BpSet.create("test" + n, surface, { x: 100, y: 100 })
+      let lastArea: BpArea | undefined
       for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
           const pos = { x: i, y: j }
-          set.createNewArea(`test area ${i},${j}`, pos)
+          const area = set.createNewArea(`test area ${i},${j}`, pos)
+
+          if (lastArea) {
+            area.relations.push({
+              areaId: lastArea.id,
+              tempViewing: true,
+              editing: false,
+            })
+          }
+
+          lastArea = area
         }
       }
     }
   },
 })
 onPlayerInit((player) => {
+  teleportPlayerToArea(player, BpArea.getById(1))
   AreaNavigator.toggle({ player_index: player.index })
 })
+
 declare const global: BpAreasGlobal
 DevButton("Regenerate boundaries", () => {
   // todo: move to actual function
-  for (const [id, set] of pairs(global.bpSetById)) {
-    const surface = set.surface
+  for (const [, set] of pairs(global.bpSetById)) {
+    const surface = set.surfaces.user
     for (const areaId of set.areaIds) {
-      const area = UserArea.getById(areaId)
+      const area = BpArea.getById(areaId)
       for (let n = 0; n < 2; n++) {
         {
           const y = area.area[n].y
@@ -61,4 +76,40 @@ DevButton("Regenerate boundaries", () => {
       }
     }
   }
+})
+
+function getArea(player: LuaPlayer): BpArea | undefined {
+  const area = PlayerArea.get(player.index).area
+  if (!area) {
+    log("not in bp user area")
+  }
+  return area
+}
+
+DevButton("Teleport to data layer", (player) => {
+  const surface = player.surface
+  const bpArea = BpSet.getBySurfaceIndexOrNil(surface.index)
+  if (!bpArea) {
+    dlog("not in bp set surface")
+    return
+  }
+  player.teleport(player.position, bpArea.surfaces.data)
+})
+
+DevButton("Commit changes", (player) => {
+  const area = getArea(player)
+  if (!area) return
+  area.commitChanges()
+})
+
+DevButton("Reset area", (player) => {
+  const area = getArea(player)
+  if (!area) return
+  area.resetLayer()
+})
+
+DevButton("Delete view only", (player) => {
+  const area = getArea(player)
+  if (!area) return
+  area.deleteViewOnlyEntities()
 })

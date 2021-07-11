@@ -108,7 +108,7 @@ function getCreationSpec(element: ElementSpec, index?: number): GuiAddSpec {
   const spec: Partial<GuiAddSpec> = element.creationSpec || {}
   spec.type = element.type
   spec.index = index
-  return spec
+  return spec as any
 }
 
 function instantiateElement(
@@ -544,6 +544,12 @@ export function destroyIn(parent: LuaGuiElement, id: string): boolean {
     return true
   }
   return false
+}
+
+export function exists(parent: LuaGuiElement, id: string): boolean {
+  const reactorio = global.reactorio
+  const existingSet = reactorio.rootInstances[parent.index]
+  return !!(existingSet && existingSet[id])
 }
 
 // </editor-fold>

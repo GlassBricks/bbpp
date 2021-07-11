@@ -1,10 +1,10 @@
 import { DEV } from "./DEV"
-import { onPlayerInit } from "./playerData"
 import Reactorio, { renderIn } from "./gui"
 import { dlog } from "./logging"
 import { registerFunc } from "./funcRef"
 import { registerHandler } from "./events"
 import { destroyIfValid, mapKeys } from "./util"
+import { onPlayerInit } from "./onPlayerInit"
 
 const devActions: Record<string, (player: LuaPlayer) => void> = {}
 

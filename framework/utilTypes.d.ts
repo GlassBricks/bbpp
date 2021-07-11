@@ -1,6 +1,9 @@
 // equivalent to Partial<Record<K,V>>
 type PRecord<K extends keyof any, V> = {
-  [k in K]?: V
+  [P in K]?: V
+}
+type ReadonlyRecord<K extends keyof any, V> = {
+  readonly [P in K]: V
 }
 
 type Mutable<T> = {

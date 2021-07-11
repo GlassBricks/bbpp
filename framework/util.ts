@@ -5,8 +5,10 @@ export function isFunction(a: any): a is Function {
   return type(a) === "function"
 }
 
-export function isEmpty(a: AnyTable): boolean {
-  return !next(a)
+export function isEmpty(a: AnyTable | undefined): boolean {
+  if (!a) return true
+  const [x] = next(a)
+  return !x
 }
 
 /**
@@ -108,13 +110,24 @@ export function deepEquals(a: any, b: any): boolean {
   return true
 }
 
-export function arrayRemoveElement<T>(arr: T[], item: T): void {
-  for (const [luaIndex, elem] of ipairs(arr)) {
-    if (elem === item) {
-      table.remove(arr, luaIndex)
-      break
+export function arrayRemoveValue<T>(array: T[], value: T): boolean {
+  for (const [luaIndex, element] of ipairs(array)) {
+    if (element === value) {
+      table.remove(array, luaIndex)
+      return true
     }
   }
+  return false
+}
+
+export function tableRemoveValue<T>(table: T, value: T[keyof T]): boolean {
+  for (const [key, element] of pairs(table)) {
+    if (element === value) {
+      table[key] = undefined as any
+      return true
+    }
+  }
+  return false
 }
 
 export function isValid(a: { valid: boolean } | undefined): a is { valid: true } {

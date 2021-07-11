@@ -30,13 +30,10 @@ export class Window<C extends Component<{}>> {
   }
 
   toggle(player: LuaPlayer): C | undefined {
-    const screen = player.gui.screen
-    if (screen.has(this.name)) {
-      this.destroy(player)
+    if (this.destroy(player)) {
       return undefined
-    } else {
-      return this.render(player)
     }
+    return this.render(player)
   }
 
   currentOrNil(playerIndex: number): C | undefined {

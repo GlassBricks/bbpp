@@ -1,69 +1,11 @@
 import Reactorio, { AnySpec, Component, registerComponent, renderIn, Window } from "../../framework/gui"
-import { onPlayerInit, PlayerData } from "../../framework/playerData"
-import { BpSet, UserArea } from "../BpArea"
-import { registerHandlers } from "../../framework/events"
+import { BpArea, BpSet } from "../BpArea"
 import { CloseButton } from "../../framework/gui/components/buttons"
-import { PREFIX } from "../../constants"
 import * as modGui from "mod-gui"
 import { mapKeys } from "../../framework/util"
 import { dlog } from "../../framework/logging"
-import { add, getCenter, subtract } from "../../framework/position"
-
-// player tracking
-interface PlayerAreaCache {
-  bpSet?: BpSet
-  areaId?: number
-}
-
-const PlayerAreaCache = PlayerData<PlayerAreaCache>("AreaNav:PlayerPosition", (player) => {
-  const surfaceIndex = player.surface.index
-  return {
-    bpSet: BpSet.getBySurfaceIndexOrNil(surfaceIndex),
-    surfaceIndex,
-  }
-})
-
-function playerChangedPosition(player: LuaPlayer) {
-  const posCache = PlayerAreaCache.data[player.index]
-  const bpSet = posCache.bpSet
-  if (!bpSet) return
-
-  const bpSize = bpSet.bpSize
-  const position = player.position
-  const blockX = Math.floor(position.x / bpSize.x)
-  const blockY = Math.floor(position.y / bpSize.y)
-  const areaId = bpSet.getAreaIdByBlock(blockX, blockY)
-
-  if (posCache.areaId !== areaId) {
-    posCache.areaId = areaId
-    const current = AreaNavigator.window.currentOrNil(player.index)
-    if (current) current.updateBpSet(bpSet.id)
-  }
-}
-
-function playerChangedSurface(player: LuaPlayer) {
-  const posCache = PlayerAreaCache.data[player.index]
-  const surfaceIndex = player.surface.index
-  const newBpSet = BpSet.getBySurfaceIndexOrNil(surfaceIndex)
-  const oldBpSet = posCache.bpSet
-  if (oldBpSet !== newBpSet) {
-    posCache.bpSet = newBpSet
-    if (oldBpSet) {
-      const current = AreaNavigator.window.currentOrNil(player.index)
-      if (current) current.updateBpSet(oldBpSet.id)
-    }
-    playerChangedPosition(player)
-  }
-}
-
-registerHandlers({
-  on_player_changed_position(e) {
-    playerChangedPosition(game.get_player(e.player_index))
-  },
-  on_player_changed_surface(e) {
-    playerChangedSurface(game.get_player(e.player_index))
-  },
-})
+import { PlayerArea, teleportPlayerToArea } from "../playerAreaTracking"
+import { onPlayerInit } from "../../framework/onPlayerInit"
 
 interface AreasListProps {
   bpSetId: number
@@ -73,21 +15,12 @@ interface AreasListProps {
 
 @registerComponent
 class AreaNavAreaList extends Component<AreasListProps> {
-  private lastAreaId: number = -1
+  private lastAreaId: number | undefined
 
   teleportPlayer(element: ListBoxGuiElement) {
     const bpSet = BpSet.getById(this.props.bpSetId)
     const areaId = bpSet.areaIds[element.selected_index - 1]
-    const newArea = UserArea.getById(areaId)
-
-    const player = game.get_player(element.player_index)
-    const cache = PlayerAreaCache.data[element.player_index]
-    if (cache.bpSet === bpSet && cache.areaId !== undefined) {
-      const currentArea = UserArea.getById(cache.areaId)
-      player.teleport(add(newArea.area[0], subtract(player.position, currentArea.area[0])), bpSet.surface)
-    } else {
-      player.teleport(getCenter(newArea.area), bpSet.surface)
-    }
+    teleportPlayerToArea(game.get_player(element.player_index), BpArea.getById(areaId))
   }
 
   create(): AnySpec {
@@ -113,7 +46,7 @@ class AreaNavAreaList extends Component<AreasListProps> {
               element.clear_items()
               for (let i = 1; i <= areaIds.length; i++) {
                 const areaId = areaIds[i - 1]
-                element.add_item(UserArea.getById(areaId).name)
+                element.add_item(BpArea.getById(areaId).name)
               }
             }}
           />
@@ -124,6 +57,7 @@ class AreaNavAreaList extends Component<AreasListProps> {
 
   updateAreaId(areaId: number | undefined): void {
     if (areaId === this.lastAreaId) return
+    this.lastAreaId = areaId
 
     const listBox = this.refs.listBox as ListBoxGuiElement | undefined
     if (!listBox) return
@@ -156,7 +90,8 @@ export class AreaNavigator extends Component<Empty> {
   }
 
   create(): AnySpec {
-    const currentAreaId = PlayerAreaCache.data[this.parentGuiElement.player_index].areaId
+    const currentArea = PlayerArea.get(this.parentGuiElement.player_index).area
+    const currentAreaId = currentArea && currentArea.id
     return (
       <frame
         direction="vertical"
@@ -193,13 +128,12 @@ export class AreaNavigator extends Component<Empty> {
     )
   }
 
-  updateBpSet(id: number): void {
-    const navList = this.refs[id] as AreaNavAreaList
+  updateAreaList(bpSetId: number, areaId: number | undefined): void {
+    const navList = this.refs[bpSetId] as AreaNavAreaList
     if (!navList) {
-      dlog(`WARNING: bpSet with id ${id} not found!`)
+      dlog(`WARNING: bpSet with id ${bpSetId} not found!`)
     } else {
-      const currentAreaId = PlayerAreaCache.data[this.parentGuiElement.player_index].areaId
-      navList.updateAreaId(currentAreaId)
+      navList.updateAreaId(areaId)
     }
   }
 
@@ -208,10 +142,26 @@ export class AreaNavigator extends Component<Empty> {
   }
 }
 
+PlayerArea.addObserver((playerIndex, oldValue, newValue) => {
+  const currentNav = AreaNavigator.window.currentOrNil(playerIndex)
+  if (!currentNav) return
+
+  if (oldValue.bpSet !== newValue.bpSet) {
+    if (oldValue.bpSet) {
+      currentNav.updateAreaList(oldValue.bpSet.id, undefined) // clear selected
+    }
+    if (newValue.area) {
+      currentNav.updateAreaList(newValue.bpSet!.id, newValue.area.id) // set new
+    }
+  } else if (oldValue.area !== newValue.area && newValue.bpSet) {
+    currentNav.updateAreaList(newValue.bpSet.id, newValue.area && newValue.area.id)
+  }
+})
+
 onPlayerInit((player) => {
   const button = (
     <button
-      name={PREFIX + "LayerNavigatorButton"}
+      name={"bbpp:AreaNavigatorButton"}
       style={modGui.button_style}
       caption="AN"
       mouse_button_filter={["left"]}

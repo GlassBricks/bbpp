@@ -1,28 +1,31 @@
 import { registerHandlers } from "../framework/events"
 import { isValid } from "../framework/util"
 
-let viewOnlyForce: LuaForce
-
 const viewOnlyForceName = "bbpp:view only"
+const updateForceName = "bbpp:currently updating"
 
-function createOrLoadViewOnlyForce() {
-  let force = game.forces[viewOnlyForceName]
+function getOrCreateForce(forceName: string): LuaForce {
+  let force = game.forces[forceName]
   if (!isValid(force)) {
-    force = game.create_force(viewOnlyForceName)
+    force = game.create_force(forceName)
     force.set_friend("player", true)
     force.enable_all_prototypes()
     force.research_all_technologies()
   }
-  viewOnlyForce = force
+  return force
 }
 
 export function getViewOnlyForce(): LuaForce {
-  if (!viewOnlyForce) {
-    createOrLoadViewOnlyForce()
-  }
-  return viewOnlyForce
+  return getOrCreateForce(viewOnlyForceName)
+}
+
+export function getUpdateForce(): LuaForce {
+  return getOrCreateForce(updateForceName)
 }
 
 registerHandlers({
-  on_init: createOrLoadViewOnlyForce,
+  on_init() {
+    getOrCreateForce(viewOnlyForceName)
+    getOrCreateForce(updateForceName)
+  },
 })
