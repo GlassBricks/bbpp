@@ -3,7 +3,6 @@ import { createEmptySurface } from "./surfaces"
 import { BpArea, BpAreasGlobal, BpSet } from "./BpArea"
 import { AreaNavigator } from "./gui/AreaNavigator"
 import { DevButton } from "../framework/devButtons"
-import { dlog } from "../framework/logging"
 import { PlayerArea, teleportPlayerToArea } from "./playerAreaTracking"
 import { onPlayerInit } from "../framework/onPlayerInit"
 
@@ -16,7 +15,7 @@ registerHandlers({
       for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
           const pos = { x: i, y: j }
-          const area = set.createNewArea(`test area ${i},${j}`, pos)
+          const area = set.addNewArea(`test area ${i},${j}`, pos)
 
           if (lastArea) {
             area.relations.push({
@@ -41,9 +40,8 @@ declare const global: BpAreasGlobal
 DevButton("Regenerate boundaries", () => {
   // todo: move to actual function
   for (const [, set] of pairs(global.bpSetById)) {
-    const surface = set.surfaces.user
-    for (const areaId of set.areaIds) {
-      const area = BpArea.getById(areaId)
+    const surface = set.surface
+    for (const area of set.areas) {
       for (let n = 0; n < 2; n++) {
         {
           const y = area.area[n].y
@@ -86,20 +84,10 @@ function getArea(player: LuaPlayer): BpArea | undefined {
   return area
 }
 
-DevButton("Teleport to data layer", (player) => {
-  const surface = player.surface
-  const bpArea = BpSet.getBySurfaceIndexOrNil(surface.index)
-  if (!bpArea) {
-    dlog("not in bp set surface")
-    return
-  }
-  player.teleport(player.position, bpArea.surfaces.data)
-})
-
 DevButton("Commit changes", (player) => {
   const area = getArea(player)
   if (!area) return
-  area.commitChanges()
+  area.writeChanges()
 })
 
 DevButton("Reset area", (player) => {

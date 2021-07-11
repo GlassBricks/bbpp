@@ -60,5 +60,5 @@ export function teleportPlayerToArea(player: LuaPlayer, area: BpArea): void {
     currentArea !== undefined && currentArea.bpSet === area.bpSet
       ? add(area.area[0], subtract(player.position, currentArea.area[0]))
       : getCenter(area.area)
-  player.teleport(position, area.surfaces.user)
+  player.teleport(position, area.surface)
 }

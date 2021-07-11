@@ -1,5 +1,5 @@
 import Reactorio, { AnySpec, Component, registerComponent, renderIn, Window } from "../../framework/gui"
-import { BpArea, BpSet } from "../BpArea"
+import { BpSet } from "../BpArea"
 import { CloseButton } from "../../framework/gui/components/buttons"
 import * as modGui from "mod-gui"
 import { mapKeys } from "../../framework/util"
@@ -19,13 +19,13 @@ class AreaNavAreaList extends Component<AreasListProps> {
 
   teleportPlayer(element: ListBoxGuiElement) {
     const bpSet = BpSet.getById(this.props.bpSetId)
-    const areaId = bpSet.areaIds[element.selected_index - 1]
-    teleportPlayerToArea(game.get_player(element.player_index), BpArea.getById(areaId))
+    const area = bpSet.areas[element.selected_index - 1]
+    teleportPlayerToArea(game.get_player(element.player_index), area)
   }
 
   create(): AnySpec {
     const bpSet = BpSet.getById(this.props.bpSetId)
-    const areaIds = bpSet.areaIds
+    const areas = bpSet.areas
     return (
       <frame direction="vertical" style="inside_shallow_frame">
         <label
@@ -36,7 +36,7 @@ class AreaNavAreaList extends Component<AreasListProps> {
             left_margin: 5,
           }}
         />
-        {areaIds.length === 0 ? (
+        {areas.length === 0 ? (
           <label caption="No Layers" />
         ) : (
           <list-box
@@ -44,9 +44,8 @@ class AreaNavAreaList extends Component<AreasListProps> {
             ref="listBox"
             onUpdate={(element) => {
               element.clear_items()
-              for (let i = 1; i <= areaIds.length; i++) {
-                const areaId = areaIds[i - 1]
-                element.add_item(BpArea.getById(areaId).name)
+              for (const area of areas) {
+                element.add_item(area.name)
               }
             }}
           />
@@ -65,8 +64,7 @@ class AreaNavAreaList extends Component<AreasListProps> {
       listBox.selected_index = 0
     } else {
       const bpSet = BpSet.getById(this.props.bpSetId)
-      const areaIds = bpSet.areaIds
-      const selectedIndex = areaIds.indexOf(areaId) + 1
+      const selectedIndex = bpSet.areas.findIndex((v) => v.id === areaId) + 1
       listBox.selected_index = selectedIndex
       if (selectedIndex !== 0) {
         ;(this.parentGuiElement as ScrollPaneGuiElement).scroll_to_element(this.firstGuiElement)

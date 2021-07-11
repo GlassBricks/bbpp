@@ -1,8 +1,7 @@
-import { userWarning, vlog } from "../framework/logging"
+import { userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty, tableRemoveValue } from "../framework/util"
 import { add, Area, elemMul, subtract } from "../framework/position"
-import { getParallelDataSurface, isDataSurface } from "./surfaces"
 import { getViewOnlyForce } from "./forces"
 
 // global
@@ -35,19 +34,18 @@ registerHandlers({
     }
   },
 })
-type SurfaceType = "user" | "data"
 
 export class BpSet {
   readonly id: number
 
-  readonly surfaces: ReadonlyRecord<SurfaceType, LuaSurface>
-  readonly surfaceIndexes: ReadonlyRecord<SurfaceType, number>
+  readonly surface: LuaSurface
+  readonly surfaceIndex: number
 
   valid: boolean = true
 
-  readonly areaIds: number[] = []
+  readonly areas: BpArea[] = []
   // [x][y]=id
-  private readonly areaIdsByGrid: PRecord<number, PRecord<number, number>> = {}
+  private readonly areaIdsByGrid: PRecord<number, PRecord<number, BpArea>> = {}
 
   // <editor-fold desc="Creation and deletion">
   private constructor(
@@ -56,14 +54,8 @@ export class BpSet {
     public readonly bpSize: Position // public readonly boundarySize: number, // public gridSize: Position
   ) {
     this.id = global.nextBpSetId++
-    this.surfaces = {
-      user: surface,
-      data: getParallelDataSurface(surface),
-    }
-    this.surfaceIndexes = {
-      user: surface.index,
-      data: this.surfaces.data.index,
-    }
+    this.surface = surface
+    this.surfaceIndex = surface.index
     global.bpSetById[this.id] = this
     global.bpSetBySurfaceIndex[surface.index] = this
   }
@@ -72,9 +64,6 @@ export class BpSet {
   static tryCreate(name: string, surface: LuaSurface, bpSize: Position): BpSet | string {
     if (global.bpSetBySurfaceIndex[surface.index]) {
       return "BpSet already exists on this surface"
-    }
-    if (isDataSurface(surface)) {
-      return "Cannot make a BpSet out of a internal data surface (how did you do this??)."
     }
     return new BpSet(name, surface, bpSize)
   }
@@ -106,55 +95,46 @@ export class BpSet {
   delete(): void {
     if (!this.valid) return
     this.valid = false
-    for (const [, surface] of pairs(this.surfaces)) {
-      if (surface.valid) game.delete_surface(surface)
-    }
+    if (this.surface.valid) game.delete_surface(this.surface)
     global.bpSetById[this.id] = undefined
-    global.bpSetBySurfaceIndex[this.surfaceIndexes.user] = undefined
-    for (const areaId of this.areaIds) {
-      BpArea.getById(areaId).delete()
+    global.bpSetBySurfaceIndex[this.surfaceIndex] = undefined
+    for (const area of this.areas) {
+      area.delete()
     }
   }
 
   // </editor-fold>
 
-  // <editor-fold desc="ManagingAreas">
-  createNewArea(name: string, blockPosition: Position): BpArea {
-    const topLeft = elemMul(blockPosition, this.bpSize)
-    const area: Area = [topLeft, add(topLeft, this.bpSize)]
-    const userArea = BpArea._create(this, area, name)
+  // <editor-fold desc="Areas">
+  addNewArea(name: string, blockPosition: Position): BpArea {
+    const bpArea = BpArea._create(this, blockPosition, name)
 
-    const id = userArea.id
-    this.areaIds[this.areaIds.length] = id
+    this.areas[this.areas.length] = bpArea
     let xs = this.areaIdsByGrid[blockPosition.x]
     if (!xs) {
       xs = {}
       this.areaIdsByGrid[blockPosition.x] = xs
     }
-    xs[blockPosition.y] = id
+    xs[blockPosition.y] = bpArea
 
-    return userArea
+    return bpArea
   }
 
   getAreaAt(position: Position): BpArea | undefined {
     const blockX = Math.floor(position.x / this.bpSize.x)
     const blockY = Math.floor(position.y / this.bpSize.y)
     const xs = this.areaIdsByGrid[blockX]
-    const id = xs && xs[blockY]
-    if (!id) return undefined
-    return BpArea.getById(id)
+    return xs && xs[blockY]
   }
 
-  // todo: more and smarter logic
-
   _areaDeleted(area: BpArea): void {
+    // todo: go to EVERY area referenced and delete
     assert(!area.valid)
     if (!this.valid) return
-    const id = area.id
 
-    arrayRemoveValue(this.areaIds, id)
+    arrayRemoveValue(this.areas, area)
     for (const [x, xs] of pairs(this.areaIdsByGrid)) {
-      if (tableRemoveValue(xs, id) && isEmpty(xs)) {
+      if (tableRemoveValue(xs, area) && isEmpty(xs)) {
         this.areaIdsByGrid[x] = undefined
       }
     }
@@ -188,13 +168,11 @@ interface AreaRelation {
 export class BpArea {
   readonly id: number
   valid: boolean = true
-  readonly surfaces: ReadonlyRecord<SurfaceType, LuaSurface>
+  readonly surface: LuaSurface
   readonly relations: AreaRelation[] = []
-  private dataLastUpdated: number = game.ticks_played
-  private dataLastBlueprinted: number = this.dataLastUpdated - 1
   private readonly bpInventory: LuaInventory = game.create_inventory(16) // more than needed, but future-proofing
+  // TODO: maybe move to its own separate thing...
   private readonly dataBpStack = this.bpInventory[1]
-  private readonly updateBpStack = this.bpInventory[2]
 
   // <editor-fold desc="Creation and deletion">
   private constructor(public readonly bpSet: BpSet, public readonly area: Area, public name: string) {
@@ -206,13 +184,15 @@ export class BpArea {
       editing: true,
       tempViewing: true,
     }
-    this.surfaces = this.bpSet.surfaces
+    this.surface = this.bpSet.surface
 
     this.dataBpStack.set_stack({ name: "blueprint" })
-    this.updateBpStack.set_stack({ name: "blueprint" })
   }
 
-  static _create(set: BpSet, area: Area, name: string): BpArea {
+  static _create(set: BpSet, blockPosition: Position, name: string): BpArea {
+    const topLeft = elemMul(blockPosition, set.bpSize)
+    const area: Area = [topLeft, add(topLeft, set.bpSize)]
+
     return new BpArea(set, area, name)
   }
 
@@ -238,29 +218,23 @@ export class BpArea {
 
   // </editor-fold>
 
-  createDataBlueprint(): LuaItemStack {
-    vlog("creating blueprint for bpArea", this.name)
-    this.dataLastBlueprinted = game.ticks_played
-    return this.createBlueprint(this.dataBpStack, "data", "player")
-  }
-
-  getDataBlueprint(): LuaItemStack {
-    if (this.dataLastBlueprinted < this.dataLastUpdated) {
-      return this.createDataBlueprint()
-    }
+  getBlueprint(): LuaItemStack {
+    // if (this.dataLastBlueprinted < this.dataLastUpdated) {
+    //   return this.createDataBlueprint()
+    // }
     return this.dataBpStack
   }
 
   // removes all changes
   resetLayer(): void {
-    this.deleteAllEntities("user")
+    this.deleteAllEntities()
     this.placeRelations()
   }
 
   // </editor-fold>
 
   deleteViewOnlyEntities(): void {
-    const entities = this.surfaces.user.find_entities_filtered({
+    const entities = this.surface.find_entities_filtered({
       area: this.area,
       force: getViewOnlyForce(),
     })
@@ -269,16 +243,14 @@ export class BpArea {
     }
   }
 
-  commitChanges(): void {
-    const bp = this.createBlueprint(this.updateBpStack, "user", "player")
-    this.deleteAllEntities("data")
-    this.placeBlueprint(bp, "data", this.area, undefined, "player", false, false)
+  writeChanges(): void {
+    this.createBlueprint(this.dataBpStack, "player")
   }
 
   // <editor-fold desc="Blueprints">
-  private createBlueprint(bp: LuaItemStack, surfaceType: SurfaceType, force: ForceSpecification): LuaItemStack {
+  private createBlueprint(bp: LuaItemStack, force: ForceSpecification): LuaItemStack {
     const bpEntities = bp.create_blueprint({
-      surface: this.surfaces[surfaceType],
+      surface: this.surface,
       force,
       area: this.area,
       include_entities: true, // TODO: make configurable
@@ -300,8 +272,8 @@ export class BpArea {
   }
 
   // <editor-fold desc="Relations and editing">
-  private deleteAllEntities(surfaceType: SurfaceType) {
-    const entities = this.surfaces[surfaceType].find_entities_filtered({
+  private deleteAllEntities() {
+    const entities = this.surface.find_entities_filtered({
       area: this.area,
       type: "character",
       invert: true,
@@ -311,15 +283,9 @@ export class BpArea {
     }
   }
 
-  private rawPlaceBlueprint(
-    bp: LuaItemStack,
-    surfaceType: SurfaceType,
-    position: Position,
-    force: ForceSpecification,
-    forceBuild: boolean
-  ) {
+  private rawPlaceBlueprint(bp: LuaItemStack, position: Position, force: ForceSpecification, forceBuild: boolean) {
     return bp.build_blueprint({
-      surface: this.surfaces[surfaceType],
+      surface: this.surface,
       position,
       force,
       skip_fog_of_war: false,
@@ -329,7 +295,6 @@ export class BpArea {
 
   private placeBlueprint(
     bp: LuaItemStack,
-    surfaceType: SurfaceType,
     sourceArea: Area,
     topLeft: Position | undefined,
     force: ForceSpecification,
@@ -338,11 +303,11 @@ export class BpArea {
   ) {
     if (!bp.get_blueprint_entities()) return
     const position = subtract(topLeft || this.area[0], sourceArea[0])
-    let ghosts = this.rawPlaceBlueprint(bp, surfaceType, position, force, false)
+    let ghosts = this.rawPlaceBlueprint(bp, position, force, false)
     if (isEmpty(ghosts)) {
       userWarning("Overlapping entities (blueprint failed to place without force-build).")
       // todo: manual overlap detection
-      ghosts = this.rawPlaceBlueprint(bp, surfaceType, position, force, true)
+      ghosts = this.rawPlaceBlueprint(bp, position, force, true)
     }
     for (const ghost of ghosts) {
       const [, entity] = ghost.silent_revive()
@@ -365,16 +330,15 @@ export class BpArea {
         userWarning("Area relation includes an invalid area. Skipping...")
         continue
       }
-      // TODO: editing stuff
       if (relation.editing) {
-        const bp = otherArea.createDataBlueprint() // todo switch to getDataBlueprint()
-        this.placeBlueprint(bp, "user", otherArea.area, relation.topLeft, "player", true, true)
+        const bp = otherArea.getBlueprint()
+        this.placeBlueprint(bp, otherArea.area, relation.topLeft, "player", true, true)
         continue
       }
       if (relation.tempViewing) {
-        const bp = otherArea.createDataBlueprint() // todo switch to getDataBlueprint()
+        const bp = otherArea.getBlueprint()
         // todo: should be active or not?
-        this.placeBlueprint(bp, "user", otherArea.area, relation.topLeft, getViewOnlyForce(), false, false)
+        this.placeBlueprint(bp, otherArea.area, relation.topLeft, getViewOnlyForce(), false, false)
       }
     }
   }
