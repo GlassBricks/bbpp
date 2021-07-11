@@ -835,10 +835,10 @@ interface Position {
 type PositionIn = Position | [number, number]
 
 /** @noSelf **/
-interface ChunkPosition {}
+type ChunkPosition = PositionIn
 
 /** @noSelf **/
-interface TilePosition {}
+type TilePosition = PositionIn
 
 /** @noSelf **/
 interface ChunkPositionAndArea {

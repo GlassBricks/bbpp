@@ -1,4 +1,3 @@
-import "./forces"
 import "./BpArea"
 
 import "./gui/AreaNavigator.tsx"

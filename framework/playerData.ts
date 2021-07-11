@@ -18,7 +18,7 @@ interface Data<T> {
 }
 
 function setupPlayerData<T>(holder: Data<T>, uniqueName: string, initData: (player: LuaPlayer) => T) {
-  vlog("creating player holder", uniqueName)
+  vlog("creating player data", uniqueName)
   const loadData = () => {
     holder.data = global.playerData[uniqueName]
     if (!global.playerData[uniqueName]) {

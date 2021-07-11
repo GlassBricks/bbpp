@@ -1,10 +1,10 @@
 export type Area = readonly [topLeft: Position, bottomRight: Position]
 
-export function sizeToArea({ x, y }: Position): BoundingBox {
-  return [
-    { x: -x / 2 - 1, y: -y / 2 - 1 },
-    { x: x / 2 + 1, y: y / 2 + 1 },
-  ]
+export function add(a: Position, b: Position): Position {
+  return {
+    x: a.x + b.x,
+    y: a.y + b.y,
+  }
 }
 
 export function subtract(a: Position, b: Position): Position {
@@ -14,10 +14,17 @@ export function subtract(a: Position, b: Position): Position {
   }
 }
 
-export function add(a: Position, b: Position): Position {
+export function multiply(a: Position, b: number): Position {
   return {
-    x: a.x + b.x,
-    y: a.y + b.y,
+    x: a.x * b,
+    y: a.y * b,
+  }
+}
+
+export function divide(a: Position, b: number): Position {
+  return {
+    x: a.x / b,
+    y: a.y / b,
   }
 }
 

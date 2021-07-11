@@ -3,9 +3,10 @@ import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty, tableRemoveValue } from "../framework/util"
 import { add, Area, elemMul, subtract } from "../framework/position"
 import { getViewOnlyForce } from "./forces"
+import { Prototypes } from "../constants"
 
 // global
-export interface BpAreasGlobal {
+interface BpAreasGlobal {
   nextBpSetId: number
   bpSetById: PRecord<number, BpSet>
   bpSetBySurfaceIndex: PRecord<number, BpSet>
@@ -37,41 +38,33 @@ registerHandlers({
 
 export class BpSet {
   readonly id: number
+  valid: boolean = true
 
   readonly surface: LuaSurface
   readonly surfaceIndex: number
 
-  valid: boolean = true
+  readonly blockSize: Position
 
   readonly areas: BpArea[] = []
   // [x][y]=id
   private readonly areaIdsByGrid: PRecord<number, PRecord<number, BpArea>> = {}
 
   // <editor-fold desc="Creation and deletion">
-  private constructor(
+  constructor(
     public name: string,
     surface: LuaSurface,
-    public readonly bpSize: Position // public readonly boundarySize: number, // public gridSize: Position
+    bpSize: Position,
+    public readonly boundarySize: number // public gridSize: Position
   ) {
+    if (global.bpSetBySurfaceIndex[surface.index]) {
+      error("BpSet already exists on this surface")
+    }
     this.id = global.nextBpSetId++
     this.surface = surface
     this.surfaceIndex = surface.index
+    this.blockSize = add(bpSize, { x: boundarySize, y: boundarySize })
     global.bpSetById[this.id] = this
     global.bpSetBySurfaceIndex[surface.index] = this
-  }
-
-  // todo: refactor this
-  static tryCreate(name: string, surface: LuaSurface, bpSize: Position): BpSet | string {
-    if (global.bpSetBySurfaceIndex[surface.index]) {
-      return "BpSet already exists on this surface"
-    }
-    return new BpSet(name, surface, bpSize)
-  }
-
-  static create(name: string, surface: LuaSurface, bpSize: Position): BpSet {
-    const bpSet = this.tryCreate(name, surface, bpSize)
-    if (typeof bpSet === "string") error(bpSet)
-    return bpSet
   }
 
   static getByIdOrNil(id: number): BpSet | undefined {
@@ -121,8 +114,8 @@ export class BpSet {
   }
 
   getAreaAt(position: Position): BpArea | undefined {
-    const blockX = Math.floor(position.x / this.bpSize.x)
-    const blockY = Math.floor(position.y / this.bpSize.y)
+    const blockX = Math.floor(position.x / this.blockSize.x)
+    const blockY = Math.floor(position.y / this.blockSize.y)
     const xs = this.areaIdsByGrid[blockX]
     return xs && xs[blockY]
   }
@@ -168,11 +161,15 @@ interface AreaRelation {
 export class BpArea {
   readonly id: number
   valid: boolean = true
+
   readonly surface: LuaSurface
   readonly relations: AreaRelation[] = []
+
   private readonly bpInventory: LuaInventory = game.create_inventory(16) // more than needed, but future-proofing
   // TODO: maybe move to its own separate thing...
   private readonly dataBpStack = this.bpInventory[1]
+
+  public static readonly boundaryTile = Prototypes.boundaryTileWhite
 
   // <editor-fold desc="Creation and deletion">
   private constructor(public readonly bpSet: BpSet, public readonly area: Area, public name: string) {
@@ -190,10 +187,62 @@ export class BpArea {
   }
 
   static _create(set: BpSet, blockPosition: Position, name: string): BpArea {
-    const topLeft = elemMul(blockPosition, set.bpSize)
-    const area: Area = [topLeft, add(topLeft, set.bpSize)]
+    const topLeft = elemMul(blockPosition, set.blockSize)
+    const fullArea: Area = [topLeft, add(topLeft, set.blockSize)]
+    this.setupArea(set.surface, fullArea, set.boundarySize)
+    const useArea: Area = [add(topLeft, { x: set.boundarySize, y: set.boundarySize }), fullArea[1]]
+    return new BpArea(set, useArea, name)
+  }
 
-    return new BpArea(set, area, name)
+  private static setupArea(surface: LuaSurface, fullArea: Area, boundarySize: number): void {
+    // gen chunks
+    surface.build_checkerboard(fullArea)
+    for (let x = Math.floor(fullArea[0].x / 32); x <= Math.ceil(fullArea[1].x / 32); x++) {
+      for (let y = Math.floor(fullArea[0].y / 32); y <= Math.ceil(fullArea[1].y / 32); y++) {
+        if (!surface.is_chunk_generated([x, y])) {
+          surface.build_checkerboard([
+            [x * 32, y * 32],
+            [x * 32 + 32, y * 32 + 32],
+          ])
+          surface.set_chunk_generated_status([x, y], defines.chunk_generated_status.entities)
+        }
+      }
+    }
+    // setup boundaries
+    const tiles: Tile[] = []
+    for (let t = 0; t < boundarySize; t++) {
+      for (let x = fullArea[0].x + boundarySize; x <= fullArea[1].x - boundarySize; x++) {
+        tiles.push(
+          {
+            name: BpArea.boundaryTile,
+            position: { x: x + 0.5, y: fullArea[0].y + t + 0.5 },
+          },
+          {
+            name: BpArea.boundaryTile,
+            position: {
+              x: x + 0.5,
+              y: fullArea[1].y - t + 0.5,
+            },
+          }
+        )
+      }
+      for (let y = fullArea[0].y; y <= fullArea[1].y; y++) {
+        tiles.push(
+          {
+            name: BpArea.boundaryTile,
+            position: { x: fullArea[0].x + t + 0.5, y: y + 0.5 },
+          },
+          {
+            name: BpArea.boundaryTile,
+            position: {
+              x: fullArea[1].x - t + 0.5,
+              y: y + 0.5,
+            },
+          }
+        )
+      }
+    }
+    surface.set_tiles(tiles)
   }
 
   static getByIdOrNil(id: number): BpArea | undefined {
