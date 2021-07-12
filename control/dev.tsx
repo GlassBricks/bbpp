@@ -10,18 +10,18 @@ registerHandlers({
   on_init() {
     for (let n = 0; n < 3; n++) {
       const surface = createEmptySurface("bbpp:test-surface" + n)
-      const set = new BpSet("test" + n, surface, { x: 100, y: 100 }, 2)
+      const set = new BpSet("test" + n, surface, { x: 100, y: 80 }, 2)
       let lastArea: BpArea | undefined
-      for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
           const pos = { x: i, y: j }
-          const area = set.addNewArea(`test area ${i},${j}`, pos)
+          const area = set.createNewArea(`test area ${i},${j}`, pos)
 
           if (lastArea) {
             area.relations.push({
               areaId: lastArea.id,
               tempViewing: true,
-              editing: false,
+              relativePosition: undefined,
             })
           }
 
@@ -53,11 +53,17 @@ DevButton("Commit changes", (player) => {
 DevButton("Reset area", (player) => {
   const area = getArea(player)
   if (!area) return
-  area.resetLayer()
+  area.resetArea()
 })
 
 DevButton("Delete view only", (player) => {
   const area = getArea(player)
   if (!area) return
   area.deleteViewOnlyEntities()
+})
+
+DevButton("Set opened?", (player) => {
+  const area = getArea(player)
+  if (!area) return
+  player.opened = area.dataBp
 })

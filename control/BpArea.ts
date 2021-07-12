@@ -1,7 +1,7 @@
 import { userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty, tableRemoveValue } from "../framework/util"
-import { add, Area, elemMul, subtract } from "../framework/position"
+import { add, Area, elemMul, getCenter, subtract } from "../framework/position"
 import { getViewOnlyForce } from "./forces"
 import { Prototypes } from "../constants"
 
@@ -99,7 +99,7 @@ export class BpSet {
   // </editor-fold>
 
   // <editor-fold desc="Areas">
-  addNewArea(name: string, blockPosition: Position): BpArea {
+  createNewArea(name: string, blockPosition: Position): BpArea {
     const bpArea = BpArea._create(this, blockPosition, name)
 
     this.areas[this.areas.length] = bpArea
@@ -150,10 +150,8 @@ interface AreaRelation {
   areaId: number
   tempViewing: boolean
   // viewFilter: ??
-  // autoIncluding: ??
   // autoIncludeFilter: ??
-  editing: boolean
-  topLeft?: Position
+  relativePosition: Position | undefined
 }
 
 // TODO: BpAreas changed event/listeners
@@ -163,27 +161,36 @@ export class BpArea {
   valid: boolean = true
 
   readonly surface: LuaSurface
-  readonly relations: AreaRelation[] = []
 
-  private readonly bpInventory: LuaInventory = game.create_inventory(16) // more than needed, but future-proofing
-  // TODO: maybe move to its own separate thing...
-  private readonly dataBpStack = this.bpInventory[1]
+  readonly area: Area
+  readonly center: Position
+  readonly relations: AreaRelation[]
+  editingAreaId: number
+  private readonly bpInventory: LuaInventory = game.create_inventory(1)
+  readonly dataBp = this.bpInventory[1]
 
   public static readonly boundaryTile = Prototypes.boundaryTileWhite
 
   // <editor-fold desc="Creation and deletion">
-  private constructor(public readonly bpSet: BpSet, public readonly area: Area, public name: string) {
-    this.id = global.nextBpAreaId++
-    global.bpAreaById[this.id] = this
 
-    this.relations[this.relations.length] = {
-      areaId: this.id,
-      editing: true,
-      tempViewing: true,
-    }
+  private constructor(public readonly bpSet: BpSet, area: Area, public name: string) {
+    this.id = global.nextBpAreaId++
     this.surface = this.bpSet.surface
 
-    this.dataBpStack.set_stack({ name: "blueprint" })
+    this.area = area
+    this.center = getCenter(area)
+
+    this.dataBp.set_stack({ name: "blueprint" })
+    this.relations = [
+      {
+        areaId: this.id,
+        tempViewing: true,
+        relativePosition: undefined,
+      },
+    ]
+    this.editingAreaId = this.id
+
+    global.bpAreaById[this.id] = this
   }
 
   static _create(set: BpSet, blockPosition: Position, name: string): BpArea {
@@ -195,10 +202,10 @@ export class BpArea {
   }
 
   private static setupArea(surface: LuaSurface, fullArea: Area, boundarySize: number): void {
-    // gen chunks
+    // generate chunks
     surface.build_checkerboard(fullArea)
-    for (let x = Math.floor(fullArea[0].x / 32); x <= Math.ceil(fullArea[1].x / 32); x++) {
-      for (let y = Math.floor(fullArea[0].y / 32); y <= Math.ceil(fullArea[1].y / 32); y++) {
+    for (const x of $range(Math.floor(fullArea[0].x / 32), Math.ceil((fullArea[1].x + boundarySize) / 32))) {
+      for (const y of $range(Math.floor(fullArea[0].y / 32), Math.ceil((fullArea[1].y + boundarySize) / 32))) {
         if (!surface.is_chunk_generated([x, y])) {
           surface.build_checkerboard([
             [x * 32, y * 32],
@@ -211,7 +218,7 @@ export class BpArea {
     // setup boundaries
     const tiles: Tile[] = []
     for (let t = 0; t < boundarySize; t++) {
-      for (let x = fullArea[0].x + boundarySize; x <= fullArea[1].x - boundarySize; x++) {
+      for (let x = fullArea[0].x + boundarySize; x < fullArea[1].x; x++) {
         tiles.push(
           {
             name: BpArea.boundaryTile,
@@ -219,14 +226,11 @@ export class BpArea {
           },
           {
             name: BpArea.boundaryTile,
-            position: {
-              x: x + 0.5,
-              y: fullArea[1].y - t + 0.5,
-            },
+            position: { x: x + 0.5, y: fullArea[1].y + t + 0.5 },
           }
         )
       }
-      for (let y = fullArea[0].y; y <= fullArea[1].y; y++) {
+      for (let y = fullArea[0].y; y < fullArea[1].y + boundarySize; y++) {
         tiles.push(
           {
             name: BpArea.boundaryTile,
@@ -234,10 +238,7 @@ export class BpArea {
           },
           {
             name: BpArea.boundaryTile,
-            position: {
-              x: fullArea[1].x - t + 0.5,
-              y: y + 0.5,
-            },
+            position: { x: fullArea[1].x + t + 0.5, y: y + 0.5 },
           }
         )
       }
@@ -266,16 +267,8 @@ export class BpArea {
   }
 
   // </editor-fold>
-
-  getBlueprint(): LuaItemStack {
-    // if (this.dataLastBlueprinted < this.dataLastUpdated) {
-    //   return this.createDataBlueprint()
-    // }
-    return this.dataBpStack
-  }
-
   // removes all changes
-  resetLayer(): void {
+  resetArea(): void {
     this.deleteAllEntities()
     this.placeRelations()
   }
@@ -293,12 +286,12 @@ export class BpArea {
   }
 
   writeChanges(): void {
-    this.createBlueprint(this.dataBpStack, "player")
+    this.createBlueprint(this.dataBp, "player")
   }
 
   // <editor-fold desc="Blueprints">
   private createBlueprint(bp: LuaItemStack, force: ForceSpecification): LuaItemStack {
-    const bpEntities = bp.create_blueprint({
+    const entityMapping = bp.create_blueprint({
       surface: this.surface,
       force,
       area: this.area,
@@ -308,15 +301,14 @@ export class BpArea {
       include_station_names: true,
       include_fuel: true,
     })
-    if (isEmpty(bpEntities)) return bp
+    if (isEmpty(entityMapping)) return bp
+    const bpEntities = bp.get_blueprint_entities()!
+    for (const bpEntity of bpEntities) {
+      bpEntity.position = subtract(bpEntity.position, this.center)
+    }
+    bp.set_blueprint_entities(bpEntities)
     bp.blueprint_snap_to_grid = [1, 1]
     bp.blueprint_absolute_snapping = true
-    // const firstEntity = bpEntities[1]
-    // const bpEntity = bp.get_blueprint_entities()![0]
-    // bp.blueprint_position_relative_to_grid = subtract(firstEntity.position, bpEntity.position)
-    // for (const [, player] of pairs(game.players)) {
-    //   player.get_main_inventory().insert(bp)
-    // }
     return bp
   }
 
@@ -344,14 +336,13 @@ export class BpArea {
 
   private placeBlueprint(
     bp: LuaItemStack,
-    sourceArea: Area,
-    topLeft: Position | undefined,
+    relativePosition: Position | undefined,
     force: ForceSpecification,
     editable: boolean,
     active: boolean
   ) {
     if (!bp.get_blueprint_entities()) return
-    const position = subtract(topLeft || this.area[0], sourceArea[0])
+    const position = relativePosition ? add(this.center, relativePosition) : this.center
     let ghosts = this.rawPlaceBlueprint(bp, position, force, false)
     if (isEmpty(ghosts)) {
       userWarning("Overlapping entities (blueprint failed to place without force-build).")
@@ -379,15 +370,13 @@ export class BpArea {
         userWarning("Area relation includes an invalid area. Skipping...")
         continue
       }
-      if (relation.editing) {
-        const bp = otherArea.getBlueprint()
-        this.placeBlueprint(bp, otherArea.area, relation.topLeft, "player", true, true)
+      if (relation.areaId === this.editingAreaId) {
+        this.placeBlueprint(otherArea.dataBp, relation.relativePosition, "player", true, true)
         continue
       }
       if (relation.tempViewing) {
-        const bp = otherArea.getBlueprint()
         // todo: should be active or not?
-        this.placeBlueprint(bp, otherArea.area, relation.topLeft, getViewOnlyForce(), false, false)
+        this.placeBlueprint(otherArea.dataBp, relation.relativePosition, getViewOnlyForce(), false, false)
       }
     }
   }
