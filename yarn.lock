@@ -1107,9 +1107,9 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
-"lua-types@https://github.com/GlassBricks/lua-types/tarball/master":
+"lua-types@https://github.com/TypeScriptToLua/lua-types/tarball/master":
   version "2.10.1"
-  resolved "https://github.com/GlassBricks/lua-types/tarball/master#eb1d01ace475756a95d9acc81a5112ebb8f5d261"
+  resolved "https://github.com/TypeScriptToLua/lua-types/tarball/master#f3bf07160dc422cf48f09a31ad4599f12f04943f"
   dependencies:
     typescript-to-lua "^0.39.0"
 
