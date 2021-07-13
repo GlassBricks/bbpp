@@ -17,6 +17,7 @@ interface Data<T> {
   data: Record<number, T>
 }
 
+/** @noSelf */
 function setupPlayerData<T>(holder: Data<T>, uniqueName: string, initData: (player: LuaPlayer) => T) {
   vlog("creating player data", uniqueName)
   const loadData = () => {
@@ -48,6 +49,7 @@ export interface PlayerData<T> {
   readonly data: Record<number, T>
 }
 
+/** @noSelf */
 export function PlayerData<T>(uniqueName: string, initData: (player: LuaPlayer) => T): PlayerData<T> {
   const result = { data: {} }
   setupPlayerData(result, uniqueName, initData)

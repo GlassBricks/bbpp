@@ -14,6 +14,7 @@
     "eslint-plugin-promise": "^5.1.0",
     "prettier": "^2.3.0",
     "ts-node": "^10.0.0",
+    "lua-types": "https://github.com/TypescriptToLua/lua-types/tarball/master",
     "typescript": "^4.3",
     "typescript-to-lua": "^0.41.0",
     "typescript-tstl-plugin": "^0.2.0"
@@ -22,8 +23,8 @@
     "build": "tstl",
     "watch": "tstl --watch",
     "lint": "eslint **/*.ts*",
-    "lint-fix": "eslint **/*.ts* --fix",
-    "clean": "find . -name node_modules -prune -false -o -name '*.lua*' -print -exec rm {} \\;",
+    "lint:fix": "eslint **/*.ts* --fix",
+    "clean": "find . -type d \\( -name node_modules -o -path lualib \\) -prune -false -o -name '*.lua*' -print -exec rm {} \\;",
     "rebuild": "yarn run clean && yarn run build"
   }
 }

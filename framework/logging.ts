@@ -1,3 +1,4 @@
+/** @noSelfInFile */
 import { DEV } from "./DEV"
 
 export function userWarning(...args: any[]): void {

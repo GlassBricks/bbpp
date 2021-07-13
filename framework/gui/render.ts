@@ -1,3 +1,4 @@
+/** @noSelfInFile */
 import { registerHandlers } from "../events"
 import { AnySpec, ComponentSpec, ElementSpec } from "./spec"
 import { Component, componentNew, Refs } from "./component"

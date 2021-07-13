@@ -1,3 +1,4 @@
+/** @noSelfInFile */
 import { AnySpec } from "./spec"
 import { FuncRef, getRef, registerFuncs } from "../funcRef"
 import { dlog, userWarning } from "../logging"
@@ -132,7 +133,7 @@ export type PropsOf<C extends Component<any>> = C extends Component<infer P> ? P
  *
  * All _static_ functions of the class will also be registered.
  */
-export function registerComponent<C extends Component<any>>(component: Class<C>): void {
+export function registerComponent<C extends Component<any>>(this: unknown, component: Class<C>): void {
   const componentName = component.name
   if (registeredComponents[componentName]) {
     error(`A gui component with the name "${componentName}" is already registered`)
@@ -212,5 +213,5 @@ export function callBoundFunc<A extends any[]>(boundFunc: ComponentBoundFunc<(ar
       Please report this to the mod author.`)
     return
   }
-  ;(func as (...arg: A) => void).call(instance, ...args)
+  ;(func as (this: Component<unknown>, ...arg: A) => void).call(instance, ...args)
 }

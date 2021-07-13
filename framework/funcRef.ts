@@ -1,3 +1,4 @@
+/** @noSelfInFile */
 import { isFunction } from "./util"
 import { vlog } from "./logging"
 

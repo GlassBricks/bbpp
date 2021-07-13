@@ -1,3 +1,4 @@
+/** @noSelfInFile */
 import {
   AnySpec,
   BlankSpec,
@@ -157,21 +158,18 @@ type Children = AnySpec | undefined | (AnySpec | undefined | (AnySpec | undefine
 
 // noinspection JSUnusedGlobalSymbols
 export function createElement<Type extends GuiElementType>(
-  this: void,
   type: Type,
   props: IntrinsicElement<Type>,
   children: Children
 ): ElementSpecOfType<Type>
 // noinspection JSUnusedGlobalSymbols
 export function createElement<Props>(
-  this: void,
   type: Class<Component<Props>>,
   props: Props,
   children: Children
 ): ComponentSpec<Props>
 // noinspection JSUnusedGlobalSymbols
 export function createElement(
-  this: void,
   type: GuiElementType | Class<Component<any>> | "blank",
   props?: Record<any, any>,
   children?: Children

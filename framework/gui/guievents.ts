@@ -30,6 +30,7 @@ export interface EventHandlerTags {
   "#guiEventHandlers": PRecord<GuiEventName, string | ComponentBoundFunc<any>>
 }
 
+/** @noSelf */
 function handleGuiEvent(eventName: GuiEventName, event: AnyGuiEventPayload) {
   // I want optional chaining!
   const element = event.element

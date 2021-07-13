@@ -1,3 +1,4 @@
+/** @noSelfInFile */
 import { registerHandlers } from "./events"
 
 export function onPlayerInit(init: (player: LuaPlayer) => void): void {

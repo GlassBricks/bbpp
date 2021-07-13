@@ -832,7 +832,7 @@ interface Position {
   readonly y: number
 }
 
-type PositionIn = Position | [number, number]
+type PositionIn = Position | Vector
 
 /** @noSelf **/
 type ChunkPosition = PositionIn
@@ -894,7 +894,7 @@ interface SmokeSource {
 }
 
 /** @noSelf **/
-interface Vector {}
+type Vector = [x: number, y: number]
 
 /** @noSelf **/
 type BoundingBox =

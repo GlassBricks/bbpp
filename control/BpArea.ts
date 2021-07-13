@@ -1,9 +1,10 @@
 import { userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
-import { arrayRemoveValue, isEmpty, tableRemoveValue } from "../framework/util"
+import { arrayRemoveValue, isEmpty } from "../framework/util"
 import { add, Area, elemMul, getCenter, subtract } from "../framework/position"
 import { getViewOnlyForce } from "./forces"
 import { Prototypes } from "../constants"
+import { put, VectorTable, vectorTableRemoveValue } from "../framework/VectorTable"
 
 // global
 interface BpAreasGlobal {
@@ -47,7 +48,7 @@ export class BpSet {
 
   readonly areas: BpArea[] = []
   // [x][y]=id
-  private readonly areaIdsByGrid: PRecord<number, PRecord<number, BpArea>> = {}
+  private readonly bpAreasByGrid: VectorTable<BpArea> = {}
 
   // <editor-fold desc="Creation and deletion">
   constructor(
@@ -72,9 +73,7 @@ export class BpSet {
   }
 
   static getById(id: number): BpSet {
-    const set = global.bpSetById[id]
-    if (!set) error(`No bpSet with id ${id}`)
-    return set
+    return global.bpSetById[id] ?? error(`No bpSet with id ${id}`)
   }
 
   static bpSetById(): Readonly<PRecord<number, BpSet>> {
@@ -103,12 +102,7 @@ export class BpSet {
     const bpArea = BpArea._create(this, blockPosition, name)
 
     this.areas[this.areas.length] = bpArea
-    let xs = this.areaIdsByGrid[blockPosition.x]
-    if (!xs) {
-      xs = {}
-      this.areaIdsByGrid[blockPosition.x] = xs
-    }
-    xs[blockPosition.y] = bpArea
+    put(this.bpAreasByGrid, blockPosition.x, blockPosition.y, bpArea)
 
     return bpArea
   }
@@ -116,7 +110,7 @@ export class BpSet {
   getAreaAt(position: Position): BpArea | undefined {
     const blockX = Math.floor(position.x / this.blockSize.x)
     const blockY = Math.floor(position.y / this.blockSize.y)
-    const xs = this.areaIdsByGrid[blockX]
+    const xs = this.bpAreasByGrid[blockX]
     return xs && xs[blockY]
   }
 
@@ -126,11 +120,7 @@ export class BpSet {
     if (!this.valid) return
 
     arrayRemoveValue(this.areas, area)
-    for (const [x, xs] of pairs(this.areaIdsByGrid)) {
-      if (tableRemoveValue(xs, area) && isEmpty(xs)) {
-        this.areaIdsByGrid[x] = undefined
-      }
-    }
+    vectorTableRemoveValue(this.bpAreasByGrid, area)
   }
 
   // </editor-fold>

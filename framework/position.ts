@@ -1,3 +1,4 @@
+/** @noSelfInFile */
 export type Area = readonly [topLeft: Position, bottomRight: Position]
 
 export function add(a: Position, b: Position): Position {

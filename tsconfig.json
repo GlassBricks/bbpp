@@ -31,7 +31,6 @@
   },
   "include": [
     "./**/*"
-    //    "./node_modules/factorio-type-kit/factorio.d.ts"
   ],
   "exclude": [
     "./luaPlugins/*"
