@@ -2389,7 +2389,7 @@ interface LuaEntity extends LuaControl {
 
   has_command(): void
 
-  die(force: ForceSpecification, cause?: LuaEntity): boolean
+  die(force?: ForceSpecification, cause?: LuaEntity): boolean
 
   has_flag(flag: string): boolean
 
@@ -3594,7 +3594,6 @@ interface LuaInventoryBase {
   readonly player_owner: LuaPlayer
   readonly equipment_owner: LuaEquipment
   readonly mod_owner: string
-  readonly "operator []": LuaItemStack
   readonly valid: boolean
   readonly object_name: string
 
@@ -3630,7 +3629,7 @@ interface LuaInventoryBase {
 
   find_item_stack(item: string): LuaItemStack | undefined
 
-  find_empty_stack(item?: string): LuaItemStack | undefined
+  size: LuaLengthMethod<number>
 
   count_empty_stacks(include_filtered?: boolean): number
 
@@ -3640,6 +3639,8 @@ interface LuaInventoryBase {
 
   resize(size: number): void
 
+  find_empty_stack(item?: string): LuaMultiReturn<[LuaItemStack, number] | [undefined, undefined]>
+
   destroy(): void
 
   help(): void
@@ -3647,7 +3648,7 @@ interface LuaInventoryBase {
 
 /** @noSelf **/
 type LuaInventory = LuaInventoryBase & {
-  [index: number]: LuaItemStack
+  readonly [index: number]: LuaItemStack
 }
 
 /** @noSelf **/

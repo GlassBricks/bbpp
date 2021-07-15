@@ -2,9 +2,10 @@ import { userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty } from "../framework/util"
 import { add, Area, elemMul, getCenter, subtract } from "../framework/position"
-import { getViewOnlyForce } from "./forces"
 import { Prototypes } from "../constants"
-import { put, VectorTable, vectorTableRemoveValue } from "../framework/VectorTable"
+import { get, put, VectorTable, vectorTableRemoveValue } from "../framework/VectorTable"
+import { getEntityData, setEntityData } from "../framework/entityData"
+import { getBpForce } from "./forces"
 
 // global
 interface BpAreasGlobal {
@@ -110,8 +111,7 @@ export class BpSet {
   getAreaAt(position: Position): BpArea | undefined {
     const blockX = Math.floor(position.x / this.blockSize.x)
     const blockY = Math.floor(position.y / this.blockSize.y)
-    const xs = this.bpAreasByGrid[blockX]
-    return xs && xs[blockY]
+    return get(this.bpAreasByGrid, blockX, blockY)
   }
 
   _areaDeleted(area: BpArea): void {
@@ -136,12 +136,29 @@ registerHandlers({
   },
 })
 
-interface AreaRelation {
+export enum IncludeMode {
+  Never,
+  Keep,
+  // New, // todo
+  All,
+}
+
+export interface AreaRelation {
   areaId: number
-  tempViewing: boolean
+  relativePosition: Position
+  viewing: boolean
+  includeMode: IncludeMode
   // viewFilter: ??
   // autoIncludeFilter: ??
-  relativePosition: Position | undefined
+}
+
+interface AreaRelationInternal extends AreaRelation {
+  includeBpLuaIndex: number
+}
+
+export interface BpAreaEntityData {
+  areaId: number
+  relationLuaIndex: number
 }
 
 // TODO: BpAreas changed event/listeners
@@ -154,10 +171,11 @@ export class BpArea {
 
   readonly area: Area
   readonly center: Position
-  readonly relations: AreaRelation[]
+  readonly relations: AreaRelationInternal[] = []
   editingAreaId: number
-  private readonly bpInventory: LuaInventory = game.create_inventory(1)
+  readonly bpInventory: LuaInventory = game.create_inventory(8)
   readonly dataBp = this.bpInventory[1]
+  private readonly includeBps: LuaInventory
 
   public static readonly boundaryTile = Prototypes.boundaryTileWhite
 
@@ -171,14 +189,16 @@ export class BpArea {
     this.center = getCenter(area)
 
     this.dataBp.set_stack({ name: "blueprint" })
-    this.relations = [
-      {
-        areaId: this.id,
-        tempViewing: true,
-        relativePosition: undefined,
-      },
-    ]
+    this.bpInventory[2].set_stack({ name: "blueprint-book" })
+    this.includeBps = this.bpInventory[2].get_inventory(defines.inventory.item_main)!
     this.editingAreaId = this.id
+
+    this.addRelation({
+      areaId: this.id,
+      includeMode: IncludeMode.All,
+      relativePosition: { x: 0, y: 0 },
+      viewing: false,
+    })
 
     global.bpAreaById[this.id] = this
   }
@@ -193,7 +213,6 @@ export class BpArea {
 
   private static setupArea(surface: LuaSurface, fullArea: Area, boundarySize: number): void {
     // generate chunks
-    surface.build_checkerboard(fullArea)
     for (const x of $range(Math.floor(fullArea[0].x / 32), Math.ceil((fullArea[1].x + boundarySize) / 32))) {
       for (const y of $range(Math.floor(fullArea[0].y / 32), Math.ceil((fullArea[1].y + boundarySize) / 32))) {
         if (!surface.is_chunk_generated([x, y])) {
@@ -256,62 +275,28 @@ export class BpArea {
     this.bpSet._areaDeleted(this)
   }
 
-  // </editor-fold>
-  // removes all changes
-  resetArea(): void {
-    this.deleteAllEntities()
-    this.placeRelations()
-  }
-
-  // </editor-fold>
-
-  deleteViewOnlyEntities(): void {
-    const entities = this.surface.find_entities_filtered({
-      area: this.area,
-      force: getViewOnlyForce(),
-    })
-    for (const entity of entities) {
-      entity.destroy()
+  // <editor-fold desc="Relations">
+  addRelation(relation: AreaRelation): void {
+    this.relations[this.relations.length] = {
+      includeBpLuaIndex: this.findIncludeBpSlot(),
+      ...relation,
     }
   }
 
   writeChanges(): void {
-    this.createBlueprint(this.dataBp, "player")
+    this.writeBlueprint(BpArea.getById(this.editingAreaId)!.dataBp, "player", undefined)
+    for (const i of $range(1, this.relations.length)) {
+      const relation = this.relations[i - 1]
+      if (relation.includeMode !== IncludeMode.Keep) continue // TODO; also && !== New
+      this.writeBlueprint(this.includeBps[relation.includeBpLuaIndex], getBpForce("include", true), i)
+    }
   }
 
-  // <editor-fold desc="Blueprints">
-  private createBlueprint(bp: LuaItemStack, force: ForceSpecification): LuaItemStack {
-    const entityMapping = bp.create_blueprint({
-      surface: this.surface,
-      force,
-      area: this.area,
-      include_entities: true, // TODO: make configurable
-      include_modules: true,
-      include_trains: true,
-      include_station_names: true,
-      include_fuel: true,
-    })
-    if (isEmpty(entityMapping)) return bp
-    const bpEntities = bp.get_blueprint_entities()!
-    for (const bpEntity of bpEntities) {
-      bpEntity.position = subtract(bpEntity.position, this.center)
-    }
-    bp.set_blueprint_entities(bpEntities)
-    bp.blueprint_snap_to_grid = [1, 1]
-    bp.blueprint_absolute_snapping = true
-    return bp
-  }
+  // </editor-fold>
 
-  // <editor-fold desc="Relations and editing">
-  private deleteAllEntities() {
-    const entities = this.surface.find_entities_filtered({
-      area: this.area,
-      type: "character",
-      invert: true,
-    })
-    for (const entity of entities) {
-      entity.destroy()
-    }
+  resetArea(): void {
+    this.deleteAllEntities()
+    this.placeRelations()
   }
 
   private rawPlaceBlueprint(bp: LuaItemStack, position: Position, force: ForceSpecification, forceBuild: boolean) {
@@ -324,18 +309,60 @@ export class BpArea {
     })
   }
 
+  deleteViewOnlyEntities(): void {
+    this.surface
+      .find_entities_filtered({
+        area: this.area,
+        force: getBpForce("view", false),
+      })
+      .forEach((x) => x.destroy())
+
+    this.surface
+      .find_entities_filtered({
+        area: this.area,
+        force: getBpForce("view", true),
+      })
+      .forEach((x) => x.destroy())
+  }
+
+  private findIncludeBpSlot(): number {
+    const [, index] = this.includeBps.find_empty_stack()
+    if (index) {
+      this.includeBps[index].set_stack({ name: "blueprint" })
+      return index
+    }
+    const newIndex = this.includeBps.size() + 1
+    this.includeBps.insert({ name: "blueprint" })
+    return newIndex
+  }
+
+  // <editor-fold desc="Area editing">
+  private deleteAllEntities() {
+    const entities = this.surface.find_entities_filtered({
+      area: this.area,
+      type: "character",
+      invert: true,
+    })
+    for (const entity of entities) {
+      entity.destroy()
+    }
+  }
+
   private placeBlueprint(
     bp: LuaItemStack,
-    relativePosition: Position | undefined,
+    relativePosition: Position,
     force: ForceSpecification,
+    relationLuaIndex: number | undefined,
     editable: boolean,
     active: boolean
   ) {
     if (!bp.get_blueprint_entities()) return
-    const position = relativePosition ? add(this.center, relativePosition) : this.center
+    const position = add(this.center, relativePosition)
     let ghosts = this.rawPlaceBlueprint(bp, position, force, false)
     if (isEmpty(ghosts)) {
-      userWarning("Overlapping entities (blueprint failed to place without force-build).")
+      userWarning(
+        "Overlapping entities (blueprint failed to place without force-build). Manual checking will be introduced in a future release."
+      )
       // todo: manual overlap detection
       ghosts = this.rawPlaceBlueprint(bp, position, force, true)
     }
@@ -345,30 +372,96 @@ export class BpArea {
         userWarning("could not revive ghost (something in the way?)")
         continue
       }
-      entity.destructible = editable
+      // entity.destructible = editable
       entity.minable = editable
       entity.rotatable = editable
-      entity.operable = editable
+      entity.operable = active
       entity.active = active
+      if (relationLuaIndex !== undefined) {
+        setEntityData<BpAreaEntityData>(entity, {
+          areaId: this.id,
+          relationLuaIndex, // todo: make less volatile
+        })
+      }
     }
   }
 
   private placeRelations() {
-    for (const relation of this.relations) {
+    for (const i of $range(1, this.relations.length)) {
+      const relation = this.relations[i - 1]
       const otherArea = BpArea.getByIdOrNil(relation.areaId)
       if (!otherArea) {
         userWarning("Area relation includes an invalid area. Skipping...")
         continue
       }
       if (relation.areaId === this.editingAreaId) {
-        this.placeBlueprint(otherArea.dataBp, relation.relativePosition, "player", true, true)
+        this.placeBlueprint(otherArea.dataBp, relation.relativePosition, "player", undefined, true, true)
+        // todo: make editing overwrite others
         continue
       }
-      if (relation.tempViewing) {
+
+      switch (relation.includeMode) {
+        case IncludeMode.Never:
+          break
+        case IncludeMode.Keep:
+          this.placeBlueprint(
+            this.includeBps[relation.includeBpLuaIndex],
+            relation.relativePosition,
+            getBpForce("include", true),
+            i,
+            false,
+            true
+          )
+          break
+        case IncludeMode.All:
+          this.placeBlueprint(otherArea.dataBp, relation.relativePosition, getBpForce("include", false), i, false, true)
+          break
+      }
+      if (relation.viewing && relation.includeMode !== IncludeMode.All) {
         // todo: should be active or not?
-        this.placeBlueprint(otherArea.dataBp, relation.relativePosition, getViewOnlyForce(), false, false)
+        // todo: make ghosts
+        this.placeBlueprint(
+          otherArea.dataBp,
+          relation.relativePosition,
+          getBpForce("view", relation.includeMode === IncludeMode.Keep),
+          i,
+          false,
+          false
+        )
       }
     }
+  }
+
+  private writeBlueprint(bp: LuaItemStack, force: ForceSpecification, relationLuaIndex: number | undefined) {
+    const entityMapping = bp.create_blueprint({
+      surface: this.surface,
+      force,
+      area: this.area,
+      include_entities: true, // TODO: make configurable
+      include_modules: true,
+      include_trains: true,
+      include_station_names: true,
+      include_fuel: true,
+    })
+    if (isEmpty(entityMapping)) return
+
+    const bpEntities = bp.get_blueprint_entities()!
+    const l = bpEntities.length
+    for (let i = 1; i <= l; i++) {
+      const bpEntity = bpEntities[i - 1]!
+      const entity = entityMapping[i]
+      if (relationLuaIndex) {
+        const entityData = getEntityData<BpAreaEntityData>(entity)
+        if (!entityData || entityData.relationLuaIndex !== relationLuaIndex) {
+          bpEntities[i - 1] = undefined as any
+          continue
+        }
+      }
+      bpEntity.position = subtract(entity.position, this.center) // todo: replace center with actual location
+    }
+    bp.set_blueprint_entities(bpEntities)
+    bp.blueprint_snap_to_grid = [1, 1]
+    bp.blueprint_absolute_snapping = true
   }
 
   // </editor-fold>

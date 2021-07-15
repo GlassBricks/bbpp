@@ -2,7 +2,7 @@ import { registerHandlers } from "./events"
 import { vlog } from "./logging"
 
 interface PlayerDataGlobal {
-  playerData: Record<string, Record<number, any>>
+  playerData: Record<string, Record<number, unknown>>
 }
 
 declare const global: PlayerDataGlobal
@@ -21,7 +21,7 @@ interface Data<T> {
 function setupPlayerData<T>(holder: Data<T>, uniqueName: string, initData: (player: LuaPlayer) => T) {
   vlog("creating player data", uniqueName)
   const loadData = () => {
-    holder.data = global.playerData[uniqueName]
+    holder.data = global.playerData[uniqueName] as Record<number, T>
     if (!global.playerData[uniqueName]) {
       holder.data = {}
       global.playerData[uniqueName] = holder.data
@@ -29,7 +29,7 @@ function setupPlayerData<T>(holder: Data<T>, uniqueName: string, initData: (play
   }
 
   registerHandlers({
-    on_init: () => {
+    on_init() {
       loadData()
       for (const [index, player] of pairs(game.players)) {
         holder.data[index as number] = initData(player)
