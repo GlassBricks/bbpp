@@ -8,7 +8,7 @@ import {
   ElementSpecProps,
   GuiEventHandlers,
 } from "./spec"
-import { Component, ComponentBoundFunc, ComponentFunc } from "./component"
+import { Component } from "./component"
 import { EventHandlerTags, GuiEventName } from "./guievents"
 import { FuncRef } from "../funcRef"
 
@@ -93,7 +93,7 @@ function createElementSpec(
   const creationSpec: Record<string, unknown> = {}
   const elementMod: Record<string, unknown> = {}
   if (props) {
-    const guiHandlers: PRecord<string, string | ComponentBoundFunc<any>> = {}
+    const guiHandlers: PRecord<string, FuncRef<any>> = {}
     for (const [key, value] of pairs(props)) {
       const specType = elementPropType[key]
       if (specType === undefined) {
@@ -101,9 +101,7 @@ function createElementSpec(
       } else if (specType === "spec") {
         ;(spec as any)[key] = value
       } else if (specType === "guiEvent") {
-        const ref = value as ComponentFunc<any>
-        const registeredName = (value as FuncRef<any>)["#registeredName"]
-        guiHandlers[key] = registeredName || (ref as ComponentBoundFunc<any>)
+        guiHandlers[key] = value as FuncRef<any>
       } else {
         // == creation
         creationSpec[key] = value

@@ -1,48 +1,37 @@
 /** @noSelfInFile */
 import { AnySpec } from "./spec"
-import { FuncRef, getRef, registerFuncs } from "../funcRef"
-import { dlog, userWarning } from "../logging"
+import { BoundFuncRef, createBoundFunc, FuncRef, getRef, registerFuncs, SimpleFuncRef } from "../funcRef"
+import { dlog } from "../logging"
 import { registerHandlers } from "../events"
 import { isValid } from "../util"
 
-export interface ComponentBoundFunc<F extends Function> {
-  componentId: number
-  funcName: string
-  "#funcType"?: F
-}
-
-export type ComponentFunc<F extends Function> = FuncRef<F> | ComponentBoundFunc<F>
-
 export type Funcs<T> = {
-  readonly [K in keyof T]: T[K] extends Function ? ComponentBoundFunc<T[K]> : never
+  readonly [K in keyof T]: T[K] extends Function ? FuncRef<T[K]> : never
 }
 
 const funcsMeta = {
-  __index(this: { id: number }, name: string): ComponentBoundFunc<any> {
-    return {
-      componentId: this.id,
-      funcName: name,
-    }
+  __index(this: { __self: any }, name: string): BoundFuncRef<any> {
+    return createBoundFunc(this.__self, name)
   },
-} as LuaMetatable<{ id: number }>
+} as LuaMetatable<{ __self: any }>
 
 const staticFuncsMeta = {
-  __index(this: { self: any }, name: string): FuncRef<any> {
-    return getRef(this.self[name])
+  __index(this: { __self: any }, name: string): SimpleFuncRef<any> {
+    return getRef(this.__self[name])
   },
-} as LuaMetatable<{ self: any }>
+} as LuaMetatable<{ __self: any }>
 
 export type Refs = PRecord<string | number, LuaGuiElement | Component<unknown>>
 
 export abstract class Component<Props> {
-  private static readonly _staticFuncs: Funcs<any>
-  private static readonly _applySpec: (this: void, component: Component<unknown>, spec: AnySpec | undefined) => void
   firstGuiElement!: LuaGuiElement
   parentGuiElement!: LuaGuiElement
-  readonly id: number
+  private static readonly _staticFuncs: Funcs<any>
   readonly refs: Refs = {}
+  private static readonly _applySpec: (this: void, component: Component<unknown>, spec: AnySpec | undefined) => void
+
   readonly funcs: Funcs<this>
-  _internalInstance: any
+  _internalInstance: unknown
   protected props!: Props
   private isFirstUpdate: boolean = true
   // noinspection JSUnusedLocalSymbols
@@ -54,15 +43,12 @@ export abstract class Component<Props> {
       } & Partial<Props>)
 
   constructor() {
-    const g = global
-    this.id = g.nextComponentInstanceId++
-    g.componentInstanceTypes.set(this, this.constructor.name)
-    g.componentInstanceById[this.id] = this
+    global.componentInstanceTypes.set(this, this.constructor.name)
 
-    this.funcs = setmetatable({ id: this.id }, funcsMeta) as any
+    this.funcs = setmetatable({ __self: this }, funcsMeta) as any
   }
 
-  static funcs<T extends Class<Component<any>>>(this: T): Funcs<T> {
+  static funcs<T extends Function>(this: T): Funcs<T> {
     return (this as unknown as typeof Component)._staticFuncs
   }
 
@@ -140,7 +126,7 @@ export function registerComponent<C extends Component<any>>(this: unknown, compo
   }
   registeredComponents[componentName] = component
   registerFuncs(component, componentName)
-  ;(component as any)._staticFuncs = setmetatable({ self: component }, staticFuncsMeta)
+  ;(component as any)._staticFuncs = setmetatable({ __self: component }, staticFuncsMeta)
   dlog("registered component", componentName)
 }
 
@@ -157,8 +143,6 @@ export function isRegisteredComponent<C extends Component<any>>(component: Class
 }
 
 interface ComponentsGlobal {
-  nextComponentInstanceId: number
-  componentInstanceById: Record<number, Component<any>>
   componentInstanceTypes: LuaTable<Component<any>, string>
 }
 
@@ -167,18 +151,15 @@ declare const global: ComponentsGlobal
 function restoreMetatables() {
   // weak table for defensive programming
   setmetatable(global.componentInstanceTypes, { __mode: "k" })
-  setmetatable(global.componentInstanceById, { __mode: "v" })
   for (const [instance, componentName] of pairs(global.componentInstanceTypes)) {
     const prototype = getRegisteredComponent(componentName).prototype
     setmetatable(instance, prototype)
-    setmetatable(instance.funcs, funcsMeta)
+    setmetatable(instance.funcs, funcsMeta as any)
   }
 }
 
 registerHandlers({
   on_init() {
-    global.nextComponentInstanceId = 1
-    global.componentInstanceById = setmetatable({}, { __mode: "v" })
     global.componentInstanceTypes = setmetatable(new LuaTable(), { __mode: "k" })
   },
   on_load: restoreMetatables,
@@ -187,31 +168,4 @@ registerHandlers({
 export function componentNew(componentName: string): Component<unknown> {
   const componentClass = getRegisteredComponent(componentName)
   return new componentClass()
-}
-
-function getComponentById(id: number): Component<unknown> | undefined {
-  const component = global.componentInstanceById[id]
-  if (!component || !isValid(component.firstGuiElement)) {
-    return undefined
-  }
-  return component
-}
-
-export function callBoundFunc<A extends any[]>(boundFunc: ComponentBoundFunc<(args: A) => void>, ...args: A): void {
-  const instance = getComponentById(boundFunc.componentId)
-  if (!instance) {
-    userWarning(
-      `Tried to call a bound function ("${boundFunc.funcName}") on a gui component that no longer exists.
-      Also check that migrations are working. Please report this to the mod author.`
-    )
-    return
-  }
-  const func = (instance as any)[boundFunc.funcName]
-  if (!func) {
-    userWarning(`There is no bound function named "${func}" on component of type ${instance.constructor.name}.
-      Check that the correct name is used and/or migrations are working properly.
-      Please report this to the mod author.`)
-    return
-  }
-  ;(func as (this: Component<unknown>, ...arg: A) => void).call(instance, ...args)
 }

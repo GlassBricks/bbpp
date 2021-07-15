@@ -10,6 +10,8 @@ type Mutable<T> = {
   -readonly [P in keyof T]: T[P]
 }
 
+type AssertIs<T, V> = T extends V ? T : never
+
 type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? A : B
 
 type WritableKeys<T> = {
@@ -30,6 +32,10 @@ type FunctionKeys<T> = {
   [K in keyof T]: T[K] extends Function ? K : never
 }[keyof T]
 
+type ThisFunctionKeys<T> = {
+  [K in keyof T]: T[K] extends (this: T, ...args: any) => any ? K : never
+}[keyof T]
+
 type OptionalKeys<T> = {
   [K in keyof T]: T extends Record<K, T[K]> ? K : never
 }[keyof T]
@@ -44,10 +50,6 @@ type ModOf<T> = Partial<Modable<T>>
 
 type Empty = Record<any, never>
 
-// Represents the class of <S>
-interface Class<T> {
-  prototype: any
-  name: string
-
+interface Class<T> extends Function {
   new (...args: any): T
 }

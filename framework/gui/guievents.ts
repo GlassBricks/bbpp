@@ -1,7 +1,5 @@
-import { userWarning } from "../logging"
 import { EventHandlerContainer, registerHandlers } from "../events"
-import { callBoundFunc, ComponentBoundFunc } from "./component"
-import { getFuncOrNil } from "../funcRef"
+import { callFuncRef, FuncRef } from "../funcRef"
 
 export const guiEventNameMapping = {
   onCheckedStateChanged: "on_gui_checked_state_changed",
@@ -24,10 +22,10 @@ export interface AnyGuiEventPayload {
   player_index: number
 }
 
-type AnyGuiEventHandler = (this: any, element: LuaGuiElement, payload: AnyGuiEventPayload) => void
+type AnyGuiEventHandler = (this: unknown, element: LuaGuiElement, payload: AnyGuiEventPayload) => void
 
 export interface EventHandlerTags {
-  "#guiEventHandlers": PRecord<GuiEventName, string | ComponentBoundFunc<any>>
+  "#guiEventHandlers": PRecord<GuiEventName, FuncRef<AnyGuiEventHandler>>
 }
 
 /** @noSelf */
@@ -39,20 +37,7 @@ function handleGuiEvent(eventName: GuiEventName, event: AnyGuiEventPayload) {
   if (!handlers) return
   const handler = handlers[eventName]
   if (!handler) return
-
-  if (typeof handler === "string") {
-    const func = getFuncOrNil<AnyGuiEventHandler>({ "#registeredName": handler })
-    if (!func) {
-      userWarning(`There is no registered function named ${func}.
-      Please report this to the mod author.
-      Make sure you registered the function and/or migrations are working properly.
-      Event name: ${eventName}, event: ${serpent.dump(event)}`)
-    } else {
-      func(element, event)
-    }
-  } else {
-    callBoundFunc(handler, element, event)
-  }
+  callFuncRef(handler, element, event)
 }
 
 const handlers: EventHandlerContainer = {}
