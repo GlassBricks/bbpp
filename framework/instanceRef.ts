@@ -1,7 +1,7 @@
 import { registerHandlers } from "./events"
 
 interface ObjectRefGlobal {
-  instanceRefs: Record<number, unknown>
+  instanceRefs: Record<number, WithIsValid>
   instanceRefIds: LuaTable<AnyNotNil, number>
   nextInstanceId: number
 }
@@ -20,23 +20,27 @@ registerHandlers({
   },
 })
 
-export type ObjectRef<T> = number & {
+export type InstanceRef<T extends WithIsValid> = number & {
   "#objectType": T
 }
 
-export function getObjectRef<T>(instance: T): ObjectRef<T> {
+export function getInstanceRef<T extends WithIsValid>(instance: T): InstanceRef<T> {
   const existingId = global.instanceRefIds.get(instance)
-  if (existingId) return existingId as ObjectRef<T>
+  if (existingId) return existingId as InstanceRef<T>
   const id = global.nextInstanceId++
   global.instanceRefIds.set(instance, id)
   global.instanceRefs[id] = instance
-  return id as ObjectRef<T>
+  return id as InstanceRef<T>
 }
 
-export function getObject<T>(ref: ObjectRef<T>): T {
+export interface WithIsValid {
+  isValid?(): boolean
+}
+
+export function getInstance<T>(ref: InstanceRef<T>): T {
   const instance = global.instanceRefs[ref]
-  if (!instance) {
-    error(`An instance with id ${ref} does not exist. Is it referenced elsewhere (not gc'ed)?`)
+  if (!instance || (instance.isValid && !instance.isValid())) {
+    error(`An instance with id ${ref} does not exist or is invalid. It maybe could have been gc'ed?`)
   }
   return instance as T
 }

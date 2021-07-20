@@ -10,50 +10,39 @@ interface ScriptEvents {
 }
 
 export type GameEvents = typeof defines.events & ScriptEvents
-export type EventName = keyof GameEvents | EventId<any>
-
-export type EventHandler<N extends EventName> = (
-  event: N extends EventId<any>
-    ? N["#payloadType"]
-    : N extends keyof GameEvents
-    ? GameEvents[N]["#payloadType"]
-    : unknown
-) => void
+export type EventHandler<Payload> = (event: Payload) => void
 
 // lack of event id => script event
-const isScriptEvent: Record<keyof ScriptEvents, true> & PRecord<any, boolean> = {
-  on_configuration_changed: true,
-  on_init: true,
-  on_load: true,
+function isScriptEvent(name: unknown): name is keyof ScriptEvents {
+  return name === "on_init" || name === "on_load" || name === "on_configuration_changed"
 }
+
 const eventHandlers: PRecord<any, EventHandler<any>[]> = {}
 
-function registerRootHandler(eventKey: EventId<any> | keyof ScriptEvents) {
-  const handlers: EventHandler<any>[] = (eventHandlers[eventKey] = []) // typescript refuses to behave
+function registerRootHandler(eventKey: keyof ScriptEvents | EventId<any> | string) {
+  const handlers: EventHandler<any>[] = (eventHandlers[eventKey] = [])
   /** @noSelf */
-  const handleEvent = (event?: any) => {
+  const handleEvent = (event?: unknown) => {
     for (const handler of handlers) {
       handler(event)
     }
   }
-  if (typeof eventKey === "string") {
+  if (isScriptEvent(eventKey)) {
     script[eventKey](handleEvent)
   } else {
-    script.on_event(eventKey, handleEvent)
+    script.on_event(eventKey as any, handleEvent)
   }
 }
 
-export function registerHandler<N extends EventName>(eventName: N, handler: EventHandler<N>): void {
-  let eventKey: any
-  if (isScriptEvent[eventName]) {
-    eventKey = eventName
-  } else if (eventName in defines.events) {
-    eventKey = defines.events[eventName as keyof typeof defines.events]
-  } else if (type(eventName) === "number") {
-    eventKey = eventName
-  } else {
-    error("No event with name" + eventName)
-  }
+export function registerHandler<N extends keyof GameEvents>(
+  eventName: N,
+  handler: EventHandler<GetPayload<GameEvents[N]>>
+): void
+export function registerHandler<N extends EventId<any>>(eventName: N, handler: EventHandler<GetPayload<N>>): void
+export function registerHandler<N extends CustomInputName>(eventName: N, handler: EventHandler<CustomInputEvent>): void
+export function registerHandler(eventName: any, handler: EventHandler<any>): void {
+  const eventKey = defines.events[eventName as keyof typeof defines.events] || eventName
+
   if (!eventHandlers[eventKey]) {
     registerRootHandler(eventKey)
   }
@@ -61,12 +50,13 @@ export function registerHandler<N extends EventName>(eventName: N, handler: Even
 }
 
 export type EventHandlerContainer = {
-  [N in EventName]?: EventHandler<N>
+  [N in keyof GameEvents]?: EventHandler<GameEvents[N]["#payloadType"]>
 }
 
 export function registerHandlers(handlers: EventHandlerContainer): void {
   for (const [eventName, handler] of pairs(handlers)) {
-    registerHandler(eventName, handler as EventHandler<any>)
+    // eslint-disable-next-line
+    registerHandler(eventName as any, handler as EventHandler<any>)
   }
 }
 

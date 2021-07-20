@@ -24,6 +24,7 @@ export function createEmptySurface(name: string): LuaSurface {
     starting_area: "none",
   })
   surface.freeze_daytime = true
+  surface.generate_with_lab_tiles = true
   global.isEmptySurface[surface.index] = true
   return surface
 }

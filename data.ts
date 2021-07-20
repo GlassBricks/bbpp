@@ -50,3 +50,11 @@ const inclusionToolShortcut = {
 }
 
 data.extend([inclusionTool, inclusionToolShortcut])
+
+const confirmInput = {
+  type: "custom-input",
+  name: Prototypes.guiConfirmInput,
+  key_sequence: "",
+  linked_game_control: "confirm-gui",
+}
+data.extend([confirmInput])

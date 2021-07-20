@@ -1,227 +1,285 @@
 /// The following is a manually edited version of factorio.d.ts from the project factorio-type-kit.
-// noinspection JSUnusedGlobalSymbols
+// noinspection JSUnusedGlobalSymbols,SpellCheckingInspection
 
 /** @noSelfInFile */
 
-/** defines */
-declare const defines: Defines
-
 /** @noSelf **/
-interface Defines {
-  alert_type: /** @noSelf **/
-  {
-    custom: any
-    entity_destroyed: any
-    entity_under_attack: any
-    no_material_for_construction: any
-    no_storage: any
-    not_enough_construction_robots: any
-    not_enough_repair_packs: any
-    train_out_of_fuel: any
-    turret_fire: any
+declare namespace defines {
+  enum alert_type {
+    custom,
+    entity_destroyed,
+    entity_under_attack,
+    no_material_for_construction,
+    no_storage,
+    not_enough_construction_robots,
+    not_enough_repair_packs,
+    train_out_of_fuel,
+    turret_fire,
   }
-  behavior_result: /** @noSelf **/ { deleted: any; fail: any; in_progress: any; success: any }
-  build_check_type: /** @noSelf **/
-  {
-    blueprint_ghost: any
-    ghost_revive: any
-    manual: any
-    manual_ghost: any
-    script: any
-    script_ghost: any
+
+  enum behavior_result {
+    deleted,
+    fail,
+    in_progress,
+    success,
   }
-  chain_signal_state: /** @noSelf **/ { all_open: any; none: any; none_open: any; partially_open: any }
-  chunk_generated_status: /** @noSelf **/
-  {
-    basic_tiles: any
-    corrected_tiles: any
-    custom_tiles: any
-    entities: any
-    nothing: any
-    tiles: any
+
+  enum build_check_type {
+    blueprint_ghost,
+    ghost_revive,
+    manual,
+    manual_ghost,
+    script,
+    script_ghost,
   }
-  circuit_condition_index: /** @noSelf **/
-  {
-    arithmetic_combinator: any
-    constant_combinator: any
-    decider_combinator: any
-    inserter_circuit: any
-    inserter_logistic: any
-    lamp: any
-    offshore_pump: any
-    pump: any
+
+  enum chain_signal_state {
+    all_open,
+    none,
+    none_open,
+    partially_open,
   }
-  circuit_connector_id: /** @noSelf **/
-  {
-    accumulator: any
-    combinator_input: any
-    combinator_output: any
-    constant_combinator: any
-    container: any
-    electric_pole: any
-    inserter: any
-    lamp: any
-    offshore_pump: any
-    programmable_speaker: any
-    pump: any
-    rail_chain_signal: any
-    rail_signal: any
-    roboport: any
-    storage_tank: any
-    wall: any
+
+  enum chunk_generated_status {
+    basic_tiles,
+    corrected_tiles,
+    custom_tiles,
+    entities,
+    nothing,
+    tiles,
   }
-  command: /** @noSelf **/
-  {
-    attack: any
-    attack_area: any
-    build_base: any
-    compound: any
-    flee: any
-    go_to_location: any
-    group: any
-    stop: any
-    wander: any
+
+  enum circuit_condition_index {
+    arithmetic_combinator,
+    constant_combinator,
+    decider_combinator,
+    inserter_circuit,
+    inserter_logistic,
+    lamp,
+    offshore_pump,
+    pump,
   }
-  compound_command: /** @noSelf **/ { logical_and: any; logical_or: any; return_last: any }
-  control_behavior: /** @noSelf **/
-  {
-    inserter: /** @noSelf **/
-    {
-      circuit_mode_of_operation: /** @noSelf **/
-      {
-        enable_disable: any
-        none: any
-        read_hand_contents: any
-        set_filters: any
-        set_stack_size: any
+
+  enum circuit_connector_id {
+    accumulator,
+    combinator_input,
+    combinator_output,
+    constant_combinator,
+    container,
+    electric_pole,
+    inserter,
+    lamp,
+    offshore_pump,
+    programmable_speaker,
+    pump,
+    rail_chain_signal,
+    rail_signal,
+    roboport,
+    storage_tank,
+    wall,
+  }
+
+  enum command {
+    attack,
+    attack_area,
+    build_base,
+    compound,
+    flee,
+    go_to_location,
+    group,
+    stop,
+    wander,
+  }
+
+  enum compound_command {
+    logical_and,
+    logical_or,
+    return_last,
+  }
+
+  namespace control_behavior {
+    namespace inserter {
+      enum circuit_mode_of_operation {
+        enable_disable,
+        none,
+        read_hand_contents,
+        set_filters,
+        set_stack_size,
       }
-      hand_read_mode: /** @noSelf **/ { hold: any; pulse: any }
+
+      enum hand_read_mode {
+        hold,
+        pulse,
+      }
     }
-    lamp: /** @noSelf **/ { circuit_mode_of_operation: /** @noSelf **/ { use_colors: any } }
-    logistic_container: /** @noSelf **/
-    {
-      circuit_mode_of_operation: /** @noSelf **/ { send_contents: any; set_requests: any }
+    namespace lamp {
+      enum circuit_mode_of_operation {
+        use_colors,
+      }
     }
-    mining_drill: /** @noSelf **/
-    {
-      resource_read_mode: /** @noSelf **/ { entire_patch: any; this_miner: any }
+    namespace logistic_container {
+      enum circuit_mode_of_operation {
+        send_contents,
+        set_requests,
+      }
     }
-    transport_belt: /** @noSelf **/ { content_read_mode: /** @noSelf **/ { hold: any; pulse: any } }
-    type: /** @noSelf **/
-    {
-      accumulator: any
-      arithmetic_combinator: any
-      constant_combinator: any
-      container: any
-      decider_combinator: any
-      generic_on_off: any
-      inserter: any
-      lamp: any
-      logistic_container: any
-      mining_drill: any
-      programmable_speaker: any
-      rail_chain_signal: any
-      rail_signal: any
-      roboport: any
-      storage_tank: any
-      train_stop: any
-      transport_belt: any
-      wall: any
+    namespace mining_drill {
+      enum resource_read_mode {
+        entire_patch,
+        this_miner,
+      }
+    }
+    namespace transport_belt {
+      enum content_read_mode {
+        hold,
+        pulse,
+      }
+    }
+
+    enum type {
+      accumulator,
+      arithmetic_combinator,
+      constant_combinator,
+      container,
+      decider_combinator,
+      generic_on_off,
+      inserter,
+      lamp,
+      logistic_container,
+      mining_drill,
+      programmable_speaker,
+      rail_chain_signal,
+      rail_signal,
+      roboport,
+      storage_tank,
+      train_stop,
+      transport_belt,
+      wall,
     }
   }
-  controllers: /** @noSelf **/
-  {
-    character: any
-    cutscene: any
-    editor: any
-    ghost: any
-    god: any
-    spectator: any
+
+  enum controllers {
+    character,
+    cutscene,
+    editor,
+    ghost,
+    god,
+    spectator,
   }
-  deconstruction_item: /** @noSelf **/
-  {
-    entity_filter_mode: /** @noSelf **/ { blacklist: any; whitelist: any }
-    tile_filter_mode: /** @noSelf **/ { blacklist: any; whitelist: any }
-    tile_selection_mode: /** @noSelf **/ { always: any; never: any; normal: any; only: any }
+
+  namespace deconstruction_item {
+    enum entity_filter_mode {
+      blacklist,
+      whitelist,
+    }
+
+    enum tile_filter_mode {
+      blacklist,
+      whitelist,
+    }
+
+    enum tile_selection_mode {
+      always,
+      never,
+      normal,
+      only,
+    }
   }
-  difficulty_settings: /** @noSelf **/
-  {
-    recipe_difficulty: /** @noSelf **/ { expensive: any; normal: any }
-    technology_difficulty: /** @noSelf **/ { expensive: any; normal: any }
+  namespace difficulty_settings {
+    enum recipe_difficulty {
+      expensive,
+      normal,
+    }
+
+    enum technology_difficulty {
+      expensive,
+      normal,
+    }
   }
-  difficulty: /** @noSelf **/ { easy: any; hard: any; normal: any }
-  direction: /** @noSelf **/
-  {
-    east: any
-    north: any
-    northeast: any
-    northwest: any
-    south: any
-    southeast: any
-    southwest: any
-    west: any
+
+  enum difficulty {
+    easy,
+    hard,
+    normal,
   }
-  disconnect_reason: /** @noSelf **/
-  {
-    afk: any
-    banned: any
-    cannot_keep_up: any
-    desync_limit_reached: any
-    dropped: any
-    kicked: any
-    kicked_and_deleted: any
-    quit: any
-    reconnect: any
-    switching_servers: any
-    wrong_input: any
+
+  enum direction {
+    east,
+    north,
+    northeast,
+    northwest,
+    south,
+    southeast,
+    southwest,
+    west,
   }
-  distraction: /** @noSelf **/ { by_anything: any; by_damage: any; by_enemy: any; none: any }
-  entity_status: /** @noSelf **/
-  {
-    cant_divide_segments: any
-    charging: any
-    disabled: any
-    disabled_by_control_behavior: any
-    disabled_by_script: any
-    discharging: any
-    fluid_ingredient_shortage: any
-    full_output: any
-    fully_charged: any
-    item_ingredient_shortage: any
-    launching_rocket: any
-    low_input_fluid: any
-    low_power: any
-    low_temperature: any
-    marked_for_deconstruction: any
-    missing_required_fluid: any
-    missing_science_packs: any
-    networks_connected: any
-    networks_disconnected: any
-    no_ammo: any
-    no_fuel: any
-    no_ingredients: any
-    no_input_fluid: any
-    no_minable_resources: any
-    no_modules_to_transmit: any
-    no_power: any
-    no_recipe: any
-    no_research_in_progress: any
-    normal: any
-    not_connected_to_rail: any
-    not_plugged_in_electric_network: any
-    out_of_logistic_network: any
-    preparing_rocket_for_launch: any
-    recharging_after_power_outage: any
-    turned_off_during_daytime: any
-    waiting_for_source_items: any
-    waiting_for_space_in_destination: any
-    waiting_for_target_to_be_built: any
-    waiting_for_train: any
-    waiting_to_launch_rocket: any
-    working: any
+
+  enum disconnect_reason {
+    afk,
+    banned,
+    cannot_keep_up,
+    desync_limit_reached,
+    dropped,
+    kicked,
+    kicked_and_deleted,
+    quit,
+    reconnect,
+    switching_servers,
+    wrong_input,
   }
-  events: /** @noSelf **/
-  {
+
+  enum distraction {
+    by_anything,
+    by_damage,
+    by_enemy,
+    none,
+  }
+
+  enum entity_status {
+    cant_divide_segments,
+    charging,
+    disabled,
+    disabled_by_control_behavior,
+    disabled_by_script,
+    discharging,
+    fluid_ingredient_shortage,
+    full_output,
+    fully_charged,
+    item_ingredient_shortage,
+    launching_rocket,
+    low_input_fluid,
+    low_power,
+    low_temperature,
+    marked_for_deconstruction,
+    missing_required_fluid,
+    missing_science_packs,
+    networks_connected,
+    networks_disconnected,
+    no_ammo,
+    no_fuel,
+    no_ingredients,
+    no_input_fluid,
+    no_minable_resources,
+    no_modules_to_transmit,
+    no_power,
+    no_recipe,
+    no_research_in_progress,
+    normal,
+    not_connected_to_rail,
+    not_plugged_in_electric_network,
+    out_of_logistic_network,
+    preparing_rocket_for_launch,
+    recharging_after_power_outage,
+    turned_off_during_daytime,
+    waiting_for_source_items,
+    waiting_for_space_in_destination,
+    waiting_for_target_to_be_built,
+    waiting_for_train,
+    waiting_to_launch_rocket,
+    working,
+  }
+
+  const events: {
     on_ai_command_completed: EventId<OnAiCommandCompletedPayload>
     on_area_cloned: EventId<OnAreaClonedPayload>
     on_biter_base_built: EventId<OnBiterBaseBuiltPayload>
@@ -391,426 +449,498 @@ interface Defines {
     script_raised_revive: EventId<ScriptRaisedRevivePayload>
     script_raised_set_tiles: EventId<ScriptRaisedSetTilesPayload>
   }
-  flow_precision_index: /** @noSelf **/
-  {
-    fifty_hours: any
-    one_hour: any
-    one_minute: any
-    one_second: any
-    one_thousand_hours: any
-    ten_hours: any
-    ten_minutes: any
-    two_hundred_fifty_hours: any
+
+  enum flow_precision_index {
+    fifty_hours,
+    one_hour,
+    one_minute,
+    one_second,
+    one_thousand_hours,
+    ten_hours,
+    ten_minutes,
+    two_hundred_fifty_hours,
   }
-  group_state: /** @noSelf **/
-  {
-    attacking_distraction: any
-    attacking_target: any
-    finished: any
-    gathering: any
-    moving: any
-    pathfinding: any
-    wander_in_group: any
+
+  enum group_state {
+    attacking_distraction,
+    attacking_target,
+    finished,
+    gathering,
+    moving,
+    pathfinding,
+    wander_in_group,
   }
-  gui_type: /** @noSelf **/
-  {
-    achievement: any
-    blueprint_library: any
-    bonus: any
-    controller: any
-    custom: any
-    entity: any
-    equipment: any
-    item: any
-    logistic: any
-    none: any
-    other_player: any
-    permissions: any
-    player_management: any
-    production: any
-    research: any
-    server_management: any
-    tile: any
-    trains: any
-    tutorials: any
+
+  enum gui_type {
+    achievement,
+    blueprint_library,
+    bonus,
+    controller,
+    custom,
+    entity,
+    equipment,
+    item,
+    logistic,
+    none,
+    other_player,
+    permissions,
+    player_management,
+    production,
+    research,
+    server_management,
+    tile,
+    trains,
+    tutorials,
   }
-  input_action: /** @noSelf **/
-  {
-    activate_copy: any
-    activate_cut: any
-    activate_paste: any
-    add_permission_group: any
-    add_train_station: any
-    admin_action: any
-    alt_select_area: any
-    alt_select_blueprint_entities: any
-    alternative_copy: any
-    begin_mining: any
-    begin_mining_terrain: any
-    build: any
-    build_rail: any
-    build_terrain: any
-    cancel_craft: any
-    cancel_deconstruct: any
-    cancel_new_blueprint: any
-    cancel_research: any
-    cancel_upgrade: any
-    change_active_character_tab: any
-    change_active_item_group_for_crafting: any
-    change_active_item_group_for_filters: any
-    change_active_quick_bar: any
-    change_arithmetic_combinator_parameters: any
-    change_decider_combinator_parameters: any
-    change_entity_label: any
-    change_item_description: any
-    change_item_label: any
-    change_multiplayer_config: any
-    change_picking_state: any
-    change_programmable_speaker_alert_parameters: any
-    change_programmable_speaker_circuit_parameters: any
-    change_programmable_speaker_parameters: any
-    change_riding_state: any
-    change_shooting_state: any
-    change_train_stop_station: any
-    change_train_wait_condition: any
-    change_train_wait_condition_data: any
-    clear_cursor: any
-    connect_rolling_stock: any
-    copy: any
-    copy_entity_settings: any
-    copy_opened_blueprint: any
-    copy_opened_item: any
-    craft: any
-    cursor_split: any
-    cursor_transfer: any
-    custom_input: any
-    cycle_blueprint_book_backwards: any
-    cycle_blueprint_book_forwards: any
-    deconstruct: any
-    delete_blueprint_library: any
-    delete_blueprint_record: any
-    delete_custom_tag: any
-    delete_permission_group: any
-    destroy_item: any
-    destroy_opened_item: any
-    disconnect_rolling_stock: any
-    drag_train_schedule: any
-    drag_train_wait_condition: any
-    drop_blueprint_record: any
-    drop_item: any
-    edit_blueprint_tool_preview: any
-    edit_custom_tag: any
-    edit_permission_group: any
-    export_blueprint: any
-    fast_entity_split: any
-    fast_entity_transfer: any
-    flush_opened_entity_fluid: any
-    flush_opened_entity_specific_fluid: any
-    go_to_train_station: any
-    grab_blueprint_record: any
-    gui_checked_state_changed: any
-    gui_click: any
-    gui_confirmed: any
-    gui_elem_changed: any
-    gui_location_changed: any
-    gui_selected_tab_changed: any
-    gui_selection_state_changed: any
-    gui_switch_state_changed: any
-    gui_text_changed: any
-    gui_value_changed: any
-    import_blueprint: any
-    import_blueprint_string: any
-    import_blueprints_filtered: any
-    import_permissions_string: any
-    inventory_split: any
-    inventory_transfer: any
-    launch_rocket: any
-    lua_shortcut: any
-    map_editor_action: any
-    market_offer: any
-    mod_settings_changed: any
-    open_achievements_gui: any
-    open_blueprint_library_gui: any
-    open_blueprint_record: any
-    open_bonus_gui: any
-    open_character_gui: any
-    open_current_vehicle_gui: any
-    open_equipment: any
-    open_gui: any
-    open_item: any
-    open_logistic_gui: any
-    open_mod_item: any
-    open_parent_of_opened_item: any
-    open_production_gui: any
-    open_technology_gui: any
-    open_tips_and_tricks_gui: any
-    open_train_gui: any
-    open_train_station_gui: any
-    open_trains_gui: any
-    paste_entity_settings: any
-    place_equipment: any
-    quick_bar_pick_slot: any
-    quick_bar_set_selected_page: any
-    quick_bar_set_slot: any
-    reassign_blueprint: any
-    remove_cables: any
-    remove_train_station: any
-    reset_assembling_machine: any
-    reset_item: any
-    rotate_entity: any
-    select_area: any
-    select_blueprint_entities: any
-    select_entity_slot: any
-    select_item: any
-    select_mapper_slot: any
-    select_next_valid_gun: any
-    select_tile_slot: any
-    send_spidertron: any
-    set_auto_launch_rocket: any
-    set_autosort_inventory: any
-    set_behavior_mode: any
-    set_car_weapons_control: any
-    set_circuit_condition: any
-    set_circuit_mode_of_operation: any
-    set_controller_logistic_trash_filter_item: any
-    set_deconstruction_item_tile_selection_mode: any
-    set_deconstruction_item_trees_and_rocks_only: any
-    set_entity_color: any
-    set_entity_energy_property: any
-    set_entity_logistic_trash_filter_item: any
-    set_filter: any
-    set_flat_controller_gui: any
-    set_heat_interface_mode: any
-    set_heat_interface_temperature: any
-    set_infinity_container_filter_item: any
-    set_infinity_container_remove_unfiltered_items: any
-    set_infinity_pipe_filter: any
-    set_inserter_max_stack_size: any
-    set_inventory_bar: any
-    set_linked_container_link_i_d: any
-    set_logistic_filter_item: any
-    set_logistic_filter_signal: any
-    set_player_color: any
-    set_recipe_notifications: any
-    set_request_from_buffers: any
-    set_research_finished_stops_game: any
-    set_signal: any
-    set_splitter_priority: any
-    set_train_stopped: any
-    set_trains_limit: any
-    set_vehicle_automatic_targeting_parameters: any
-    setup_assembling_machine: any
-    setup_blueprint: any
-    setup_single_blueprint_record: any
-    smart_pipette: any
-    spawn_item: any
-    stack_split: any
-    stack_transfer: any
-    start_repair: any
-    start_research: any
-    start_walking: any
-    stop_building_by_moving: any
-    switch_connect_to_logistic_network: any
-    switch_constant_combinator_state: any
-    switch_inserter_filter_mode_state: any
-    switch_power_switch_state: any
-    switch_to_rename_stop_gui: any
-    take_equipment: any
-    toggle_deconstruction_item_entity_filter_mode: any
-    toggle_deconstruction_item_tile_filter_mode: any
-    toggle_driving: any
-    toggle_enable_vehicle_logistics_while_moving: any
-    toggle_entity_logistic_requests: any
-    toggle_equipment_movement_bonus: any
-    toggle_map_editor: any
-    toggle_personal_logistic_requests: any
-    toggle_personal_roboport: any
-    toggle_show_entity_info: any
-    translate_string: any
-    undo: any
-    upgrade: any
-    upgrade_opened_blueprint_by_item: any
-    upgrade_opened_blueprint_by_record: any
-    use_artillery_remote: any
-    use_item: any
-    wire_dragging: any
-    write_to_console: any
+
+  enum input_action {
+    activate_copy,
+    activate_cut,
+    activate_paste,
+    add_permission_group,
+    add_train_station,
+    admin_action,
+    alt_select_area,
+    alt_select_blueprint_entities,
+    alternative_copy,
+    begin_mining,
+    begin_mining_terrain,
+    build,
+    build_rail,
+    build_terrain,
+    cancel_craft,
+    cancel_deconstruct,
+    cancel_new_blueprint,
+    cancel_research,
+    cancel_upgrade,
+    change_active_character_tab,
+    change_active_item_group_for_crafting,
+    change_active_item_group_for_filters,
+    change_active_quick_bar,
+    change_arithmetic_combinator_parameters,
+    change_decider_combinator_parameters,
+    change_entity_label,
+    change_item_description,
+    change_item_label,
+    change_multiplayer_config,
+    change_picking_state,
+    change_programmable_speaker_alert_parameters,
+    change_programmable_speaker_circuit_parameters,
+    change_programmable_speaker_parameters,
+    change_riding_state,
+    change_shooting_state,
+    change_train_stop_station,
+    change_train_wait_condition,
+    change_train_wait_condition_data,
+    clear_cursor,
+    connect_rolling_stock,
+    copy,
+    copy_entity_settings,
+    copy_opened_blueprint,
+    copy_opened_item,
+    craft,
+    cursor_split,
+    cursor_transfer,
+    custom_input,
+    cycle_blueprint_book_backwards,
+    cycle_blueprint_book_forwards,
+    deconstruct,
+    delete_blueprint_library,
+    delete_blueprint_record,
+    delete_custom_tag,
+    delete_permission_group,
+    destroy_item,
+    destroy_opened_item,
+    disconnect_rolling_stock,
+    drag_train_schedule,
+    drag_train_wait_condition,
+    drop_blueprint_record,
+    drop_item,
+    edit_blueprint_tool_preview,
+    edit_custom_tag,
+    edit_permission_group,
+    export_blueprint,
+    fast_entity_split,
+    fast_entity_transfer,
+    flush_opened_entity_fluid,
+    flush_opened_entity_specific_fluid,
+    go_to_train_station,
+    grab_blueprint_record,
+    gui_checked_state_changed,
+    gui_click,
+    gui_confirmed,
+    gui_elem_changed,
+    gui_location_changed,
+    gui_selected_tab_changed,
+    gui_selection_state_changed,
+    gui_switch_state_changed,
+    gui_text_changed,
+    gui_value_changed,
+    import_blueprint,
+    import_blueprint_string,
+    import_blueprints_filtered,
+    import_permissions_string,
+    inventory_split,
+    inventory_transfer,
+    launch_rocket,
+    lua_shortcut,
+    map_editor_action,
+    market_offer,
+    mod_settings_changed,
+    open_achievements_gui,
+    open_blueprint_library_gui,
+    open_blueprint_record,
+    open_bonus_gui,
+    open_character_gui,
+    open_current_vehicle_gui,
+    open_equipment,
+    open_gui,
+    open_item,
+    open_logistic_gui,
+    open_mod_item,
+    open_parent_of_opened_item,
+    open_production_gui,
+    open_technology_gui,
+    open_tips_and_tricks_gui,
+    open_train_gui,
+    open_train_station_gui,
+    open_trains_gui,
+    paste_entity_settings,
+    place_equipment,
+    quick_bar_pick_slot,
+    quick_bar_set_selected_page,
+    quick_bar_set_slot,
+    reassign_blueprint,
+    remove_cables,
+    remove_train_station,
+    reset_assembling_machine,
+    reset_item,
+    rotate_entity,
+    select_area,
+    select_blueprint_entities,
+    select_entity_slot,
+    select_item,
+    select_mapper_slot,
+    select_next_valid_gun,
+    select_tile_slot,
+    send_spidertron,
+    set_auto_launch_rocket,
+    set_autosort_inventory,
+    set_behavior_mode,
+    set_car_weapons_control,
+    set_circuit_condition,
+    set_circuit_mode_of_operation,
+    set_controller_logistic_trash_filter_item,
+    set_deconstruction_item_tile_selection_mode,
+    set_deconstruction_item_trees_and_rocks_only,
+    set_entity_color,
+    set_entity_energy_property,
+    set_entity_logistic_trash_filter_item,
+    set_filter,
+    set_flat_controller_gui,
+    set_heat_interface_mode,
+    set_heat_interface_temperature,
+    set_infinity_container_filter_item,
+    set_infinity_container_remove_unfiltered_items,
+    set_infinity_pipe_filter,
+    set_inserter_max_stack_size,
+    set_inventory_bar,
+    set_linked_container_link_i_d,
+    set_logistic_filter_item,
+    set_logistic_filter_signal,
+    set_player_color,
+    set_recipe_notifications,
+    set_request_from_buffers,
+    set_research_finished_stops_game,
+    set_signal,
+    set_splitter_priority,
+    set_train_stopped,
+    set_trains_limit,
+    set_vehicle_automatic_targeting_parameters,
+    setup_assembling_machine,
+    setup_blueprint,
+    setup_single_blueprint_record,
+    smart_pipette,
+    spawn_item,
+    stack_split,
+    stack_transfer,
+    start_repair,
+    start_research,
+    start_walking,
+    stop_building_by_moving,
+    switch_connect_to_logistic_network,
+    switch_constant_combinator_state,
+    switch_inserter_filter_mode_state,
+    switch_power_switch_state,
+    switch_to_rename_stop_gui,
+    take_equipment,
+    toggle_deconstruction_item_entity_filter_mode,
+    toggle_deconstruction_item_tile_filter_mode,
+    toggle_driving,
+    toggle_enable_vehicle_logistics_while_moving,
+    toggle_entity_logistic_requests,
+    toggle_equipment_movement_bonus,
+    toggle_map_editor,
+    toggle_personal_logistic_requests,
+    toggle_personal_roboport,
+    toggle_show_entity_info,
+    translate_string,
+    undo,
+    upgrade,
+    upgrade_opened_blueprint_by_item,
+    upgrade_opened_blueprint_by_record,
+    use_artillery_remote,
+    use_item,
+    wire_dragging,
+    write_to_console,
   }
-  inventory: /** @noSelf **/
-  {
-    artillery_turret_ammo: any
-    artillery_wagon_ammo: any
-    assembling_machine_input: any
-    assembling_machine_modules: any
-    assembling_machine_output: any
-    beacon_modules: any
-    burnt_result: any
-    car_ammo: any
-    car_trunk: any
-    cargo_wagon: any
-    character_ammo: any
-    character_armor: any
-    character_corpse: any
-    character_guns: any
-    character_main: any
-    character_trash: any
-    character_vehicle: any
-    chest: any
-    editor_ammo: any
-    editor_armor: any
-    editor_guns: any
-    editor_main: any
-    fuel: any
-    furnace_modules: any
-    furnace_result: any
-    furnace_source: any
-    god_main: any
-    item_main: any
-    lab_input: any
-    lab_modules: any
-    mining_drill_modules: any
-    roboport_material: any
-    roboport_robot: any
-    robot_cargo: any
-    robot_repair: any
-    rocket: any
-    rocket_silo_result: any
-    rocket_silo_rocket: any
-    spider_ammo: any
-    spider_trash: any
-    spider_trunk: any
-    turret_ammo: any
+
+  enum inventory {
+    artillery_turret_ammo,
+    artillery_wagon_ammo,
+    assembling_machine_input,
+    assembling_machine_modules,
+    assembling_machine_output,
+    beacon_modules,
+    burnt_result,
+    car_ammo,
+    car_trunk,
+    cargo_wagon,
+    character_ammo,
+    character_armor,
+    character_corpse,
+    character_guns,
+    character_main,
+    character_trash,
+    character_vehicle,
+    chest,
+    editor_ammo,
+    editor_armor,
+    editor_guns,
+    editor_main,
+    fuel,
+    furnace_modules,
+    furnace_result,
+    furnace_source,
+    god_main,
+    item_main,
+    lab_input,
+    lab_modules,
+    mining_drill_modules,
+    roboport_material,
+    roboport_robot,
+    robot_cargo,
+    robot_repair,
+    rocket,
+    rocket_silo_result,
+    rocket_silo_rocket,
+    spider_ammo,
+    spider_trash,
+    spider_trunk,
+    turret_ammo,
   }
-  logistic_member_index: /** @noSelf **/
-  {
-    character_provider: any
-    character_requester: any
-    character_storage: any
-    generic_on_off_behavior: any
-    logistic_container: any
-    vehicle_storage: any
+
+  enum logistic_member_index {
+    character_provider,
+    character_requester,
+    character_storage,
+    generic_on_off_behavior,
+    logistic_container,
+    vehicle_storage,
   }
-  logistic_mode: /** @noSelf **/
-  {
-    active_provider: any
-    buffer: any
-    none: any
-    passive_provider: any
-    requester: any
-    storage: any
+
+  enum logistic_mode {
+    active_provider,
+    buffer,
+    none,
+    passive_provider,
+    requester,
+    storage,
   }
-  mouse_button_type: /** @noSelf **/ { left: any; middle: any; none: any; right: any }
-  rail_connection_direction: /** @noSelf **/ { left: any; none: any; right: any; straight: any }
-  rail_direction: /** @noSelf **/ { back: any; front: any }
-  relative_gui_position: /** @noSelf **/ { bottom: any; left: any; right: any; top: any }
-  relative_gui_type: /** @noSelf **/
-  {
-    accumulator_gui: any
-    achievement_gui: any
-    additional_entity_info_gui: any
-    admin_gui: any
-    arithmetic_combinator_gui: any
-    armor_gui: any
-    assembling_machine_gui: any
-    assembling_machine_select_recipe_gui: any
-    beacon_gui: any
-    blueprint_book_gui: any
-    blueprint_library_gui: any
-    blueprint_setup_gui: any
-    bonus_gui: any
-    burner_equipment_gui: any
-    car_gui: any
-    constant_combinator_gui: any
-    container_gui: any
-    controller_gui: any
-    decider_combinator_gui: any
-    deconstruction_item_gui: any
-    electric_energy_interface_gui: any
-    electric_network_gui: any
-    entity_variations_gui: any
-    entity_with_energy_source_gui: any
-    equipment_grid_gui: any
-    furnace_gui: any
-    generic_on_off_entity_gui: any
-    heat_interface_gui: any
-    infinity_pipe_gui: any
-    inserter_gui: any
-    item_with_inventory_gui: any
-    lab_gui: any
-    lamp_gui: any
-    linked_container_gui: any
-    loader_gui: any
-    logistic_gui: any
-    market_gui: any
-    mining_drill_gui: any
-    other_player_gui: any
-    permissions_gui: any
-    pipe_gui: any
-    power_switch_gui: any
-    production_gui: any
-    programmable_speaker_gui: any
-    rail_chain_signal_gui: any
-    rail_signal_gui: any
-    reactor_gui: any
-    rename_stop_gui: any
-    resource_entity_gui: any
-    roboport_gui: any
-    rocket_silo_gui: any
-    server_config_gui: any
-    spider_vehicle_gui: any
-    splitter_gui: any
-    standalone_character_gui: any
-    storage_tank_gui: any
-    tile_variations_gui: any
-    train_gui: any
-    train_stop_gui: any
-    trains_gui: any
-    transport_belt_gui: any
-    upgrade_item_gui: any
-    wall_gui: any
+
+  enum mouse_button_type {
+    left,
+    middle,
+    none,
+    right,
   }
-  render_mode: /** @noSelf **/ { chart: any; chart_zoomed_in: any; game: any }
-  rich_text_setting: /** @noSelf **/ { disabled: any; enabled: any; highlight: any }
-  riding: /** @noSelf **/
-  {
-    acceleration: /** @noSelf **/ { accelerating: any; braking: any; nothing: any; reversing: any }
-    direction: /** @noSelf **/ { left: any; right: any; straight: any }
+
+  enum rail_connection_direction {
+    left,
+    none,
+    right,
+    straight,
   }
-  shooting: /** @noSelf **/ { not_shooting: any; shooting_enemies: any; shooting_selected: any }
-  signal_state: /** @noSelf **/ { closed: any; open: any; reserved: any; reserved_by_circuit_network: any }
-  train_state: /** @noSelf **/
-  {
-    arrive_signal: any
-    arrive_station: any
-    destination_full: any
-    manual_control: any
-    manual_control_stop: any
-    no_path: any
-    no_schedule: any
-    on_the_path: any
-    path_lost: any
-    wait_signal: any
-    wait_station: any
+
+  enum rail_direction {
+    back,
+    front,
   }
-  transport_line: /** @noSelf **/
-  {
-    left_line: any
-    left_split_line: any
-    left_underground_line: any
-    right_line: any
-    right_split_line: any
-    right_underground_line: any
-    secondary_left_line: any
-    secondary_left_split_line: any
-    secondary_right_line: any
-    secondary_right_split_line: any
+
+  enum relative_gui_position {
+    bottom,
+    left,
+    right,
+    top,
   }
-  wire_connection_id: /** @noSelf **/ { electric_pole: any; power_switch_left: any; power_switch_right: any }
-  wire_type: /** @noSelf **/ { copper: any; green: any; red: any }
+
+  enum relative_gui_type {
+    accumulator_gui,
+    achievement_gui,
+    additional_entity_info_gui,
+    admin_gui,
+    arithmetic_combinator_gui,
+    armor_gui,
+    assembling_machine_gui,
+    assembling_machine_select_recipe_gui,
+    beacon_gui,
+    blueprint_book_gui,
+    blueprint_library_gui,
+    blueprint_setup_gui,
+    bonus_gui,
+    burner_equipment_gui,
+    car_gui,
+    constant_combinator_gui,
+    container_gui,
+    controller_gui,
+    decider_combinator_gui,
+    deconstruction_item_gui,
+    electric_energy_interface_gui,
+    electric_network_gui,
+    entity_variations_gui,
+    entity_with_energy_source_gui,
+    equipment_grid_gui,
+    furnace_gui,
+    generic_on_off_entity_gui,
+    heat_interface_gui,
+    infinity_pipe_gui,
+    inserter_gui,
+    item_with_inventory_gui,
+    lab_gui,
+    lamp_gui,
+    linked_container_gui,
+    loader_gui,
+    logistic_gui,
+    market_gui,
+    mining_drill_gui,
+    other_player_gui,
+    permissions_gui,
+    pipe_gui,
+    power_switch_gui,
+    production_gui,
+    programmable_speaker_gui,
+    rail_chain_signal_gui,
+    rail_signal_gui,
+    reactor_gui,
+    rename_stop_gui,
+    resource_entity_gui,
+    roboport_gui,
+    rocket_silo_gui,
+    server_config_gui,
+    spider_vehicle_gui,
+    splitter_gui,
+    standalone_character_gui,
+    storage_tank_gui,
+    tile_variations_gui,
+    train_gui,
+    train_stop_gui,
+    trains_gui,
+    transport_belt_gui,
+    upgrade_item_gui,
+    wall_gui,
+  }
+
+  enum render_mode {
+    chart,
+    chart_zoomed_in,
+    game,
+  }
+
+  enum rich_text_setting {
+    disabled,
+    enabled,
+    highlight,
+  }
+
+  namespace riding {
+    enum acceleration {
+      accelerating,
+      braking,
+      nothing,
+      reversing,
+    }
+
+    enum direction {
+      left,
+      right,
+      straight,
+    }
+  }
+
+  enum shooting {
+    not_shooting,
+    shooting_enemies,
+    shooting_selected,
+  }
+
+  enum signal_state {
+    closed,
+    open,
+    reserved,
+    reserved_by_circuit_network,
+  }
+
+  enum train_state {
+    arrive_signal,
+    arrive_station,
+    destination_full,
+    manual_control,
+    manual_control_stop,
+    no_path,
+    no_schedule,
+    on_the_path,
+    path_lost,
+    wait_signal,
+    wait_station,
+  }
+
+  enum transport_line {
+    left_line,
+    left_split_line,
+    left_underground_line,
+    right_line,
+    right_split_line,
+    right_underground_line,
+    secondary_left_line,
+    secondary_left_split_line,
+    secondary_right_line,
+    secondary_right_split_line,
+  }
+
+  enum wire_connection_id {
+    electric_pole,
+    power_switch_left,
+    power_switch_right,
+  }
+
+  enum wire_type {
+    copper,
+    green,
+    red,
+  }
 }
 
 /** concepts */
-/** @noSelf **/
+
+interface Alert {
+  tick: number
+  target?: LuaEntity
+  prototype?: LuaEntityPrototype
+  position?: Position
+  icon?: SignalID
+  message?: LocalisedString
+}
+
 type LocalisedString = [string, ...LocalisedString[]] | string | number
 
 /** @noSelf **/
@@ -848,12 +978,12 @@ interface ChunkPositionAndArea {
 }
 
 /** @noSelf **/
-type GuiLocation = Position | [x: number, y: number]
+type GuiLocation = PositionIn
 
 /** @noSelf **/
 interface GuiAnchor {
-  gui: typeof defines.relative_gui_type
-  position: typeof defines.relative_gui_position
+  gui: defines.relative_gui_type
+  position: defines.relative_gui_position
   type?: string
   name?: string
   names?: string[]
@@ -865,9 +995,8 @@ interface OldTileAndPosition {
   position: TilePosition
 }
 
-/** @noSelf **/
-interface Tags {
-  [key: string]: string | boolean | number | Record<string, any> | undefined
+interface Tags  {
+  [key: string]: string | boolean | number | Partial<Record<string, unknown>> | undefined | unknown
 }
 
 /** @noSelf **/
@@ -970,8 +1099,8 @@ interface MapSettings {}
 
 /** @noSelf **/
 interface DifficultySettings {
-  recipe_difficulty: typeof defines.difficulty_settings.recipe_difficulty
-  technology_difficulty: typeof defines.difficulty_settings.technology_difficulty
+  recipe_difficulty: defines.difficulty_settings.recipe_difficulty
+  technology_difficulty: defines.difficulty_settings.technology_difficulty
   technology_price_multiplier: number
   research_queue_setting: string
 }
@@ -1228,7 +1357,7 @@ interface SimpleItemStack {
 
 /** @noSelf **/
 interface Command {
-  type: typeof defines.command
+  type: defines.command
   _: any
 }
 
@@ -1296,15 +1425,15 @@ interface BeamTarget {
 
 /** @noSelf **/
 interface RidingState {
-  acceleration: typeof defines.riding.acceleration
-  direction: typeof defines.riding.direction
+  acceleration: defines.riding.acceleration
+  direction: defines.riding.direction
 }
 
 /** @noSelf **/
 interface SpritePath {}
 
 /** @noSelf **/
-interface SoundPath {}
+type SoundPath = string
 
 /** @noSelf **/
 interface ModConfigurationChangedData {
@@ -1499,7 +1628,7 @@ interface CliffOrientation {}
 
 /** @noSelf **/
 interface ItemStackLocation {
-  inventory: typeof defines.inventory
+  inventory: defines.inventory
   slot: number
 }
 
@@ -1509,8 +1638,7 @@ interface VehicleAutomaticTargetingParameters {
   auto_target_with_gunner: boolean
 }
 
-/** @noSelf **/
-interface SoundType {}
+type SoundType = "game-effect" | "gui-effect" | "ambient" | "environment" | "walking" | "alert" | "wind"
 
 /** @noSelf **/
 interface AnyPrototypeFilters {
@@ -1604,12 +1732,12 @@ interface LuaAISettings {
 
 /** @noSelf **/
 interface LuaControlBehavior {
-  readonly type: typeof defines.control_behavior.type
+  readonly type: defines.control_behavior.type
   readonly entity: LuaEntity
 
   get_circuit_network(
-    wire: typeof defines.wire_type,
-    circuit_connector?: typeof defines.circuit_connector_id
+    wire: defines.wire_type,
+    circuit_connector?: defines.circuit_connector_id
   ): LuaCircuitNetwork | undefined
 }
 
@@ -1666,7 +1794,7 @@ interface LuaGenericOnOffControlBehavior extends LuaControlBehavior {
 
 /** @noSelf **/
 interface LuaLogisticContainerControlBehavior extends LuaControlBehavior {
-  circuit_mode_of_operation: typeof defines.control_behavior.logistic_container.circuit_mode_of_operation
+  circuit_mode_of_operation: defines.control_behavior.logistic_container.circuit_mode_of_operation
   readonly valid: boolean
   readonly object_name: string
 
@@ -1764,8 +1892,8 @@ interface LuaDeciderCombinatorControlBehavior extends LuaCombinatorControlBehavi
 /** @noSelf **/
 interface LuaInserterControlBehavior extends LuaGenericOnOffControlBehavior {
   circuit_read_hand_contents: boolean
-  circuit_mode_of_operation: typeof defines.control_behavior.inserter.circuit_mode_of_operation
-  circuit_hand_read_mode: typeof defines.control_behavior.inserter.hand_read_mode
+  circuit_mode_of_operation: defines.control_behavior.inserter.circuit_mode_of_operation
+  circuit_hand_read_mode: defines.control_behavior.inserter.hand_read_mode
   circuit_set_stack_size: boolean
   circuit_stack_control_signal: SignalID
   readonly valid: boolean
@@ -1788,7 +1916,7 @@ interface LuaLampControlBehavior extends LuaGenericOnOffControlBehavior {
 interface LuaMiningDrillControlBehavior extends LuaGenericOnOffControlBehavior {
   circuit_enable_disable: boolean
   circuit_read_resources: boolean
-  resource_read_mode: typeof defines.control_behavior.mining_drill.resource_read_mode
+  resource_read_mode: defines.control_behavior.mining_drill.resource_read_mode
   readonly resource_read_targets: LuaEntity[]
   readonly valid: boolean
   readonly object_name: string
@@ -1817,7 +1945,7 @@ interface LuaTrainStopControlBehavior extends LuaGenericOnOffControlBehavior {
 interface LuaTransportBeltControlBehavior extends LuaGenericOnOffControlBehavior {
   enable_disable: boolean
   read_contents: boolean
-  read_contents_mode: typeof defines.control_behavior.transport_belt.content_read_mode
+  read_contents_mode: defines.control_behavior.transport_belt.content_read_mode
   readonly valid: boolean
   readonly object_name: string
 
@@ -1866,8 +1994,6 @@ interface LuaAutoplaceControlPrototype {
   help(): void
 }
 
-type CustomEventId<T> = EventId<T>
-
 /** @noSelf **/
 interface LuaBootstrap {
   readonly mod_name: string
@@ -1881,15 +2007,19 @@ interface LuaBootstrap {
 
   on_configuration_changed(f: (d: ConfigurationChangedData) => void): void
 
-  on_event(this: void, event: EventId<any>[] | string, f: (event: any) => void, filters?: Filters): void
-
-  on_event<Payload>(this: void, event: EventId<Payload>, f: (event: Payload) => void, filters?: Filters): void
+  on_event<Payload>(this: void, eventId: EventId<Payload>, f: (event: Payload) => void, filters?: Filters): void
+  on_event(this: void, eventName: string, f: (event: CustomInputEvent) => void): void
+  on_event<Events extends (EventId<any> | string)[]>(
+    this: void,
+    events: Events,
+    f: (event: GetPayload<Events[number]>) => void
+  ): void
 
   on_nth_tick(tick: number | number[], f: (...args: any[]) => any): void
 
   register_on_entity_destroyed(entity: LuaEntity): number
 
-  generate_event_name<T>(): CustomEventId<T>
+  generate_event_name<T>(): EventId<T>
 
   get_event_handler(event: number): void
 
@@ -1899,7 +2029,7 @@ interface LuaBootstrap {
 
   get_event_filter(event: number): any | undefined
 
-  raise_event<T>(event: CustomEventId<T>, arg_1: T): void
+  raise_event<T>(event: EventId<T>, arg_1: T): void
 
   raise_console_chat(table: RaiseEventParameters): void
 
@@ -1965,8 +2095,8 @@ interface LuaChunkIterator {
 /** @noSelf **/
 interface LuaCircuitNetwork {
   readonly entity: LuaEntity
-  readonly wire_type: typeof defines.wire_type
-  readonly circuit_connector_id: typeof defines.circuit_connector_id
+  readonly wire_type: defines.wire_type
+  readonly circuit_connector_id: defines.circuit_connector_id
   readonly signals: Signal[]
   readonly network_id: number
   readonly connected_circuit_count: number
@@ -1996,14 +2126,7 @@ interface LuaControl {
   readonly vehicle: LuaEntity
   force: ForceSpecification
   selected: LuaEntity
-  opened:
-    | LuaEntity
-    | LuaItemStack
-    | LuaEquipment
-    | LuaEquipmentGrid
-    | LuaPlayer
-    | LuaGuiElement
-    | typeof defines.gui_type
+  opened?: LuaEntity | LuaItemStack | LuaEquipment | LuaEquipmentGrid | LuaPlayer | LuaGuiElement | defines.gui_type
   readonly crafting_queue_size: number
   readonly crafting_queue_progress: number
   walking_state: any
@@ -2034,7 +2157,7 @@ interface LuaControl {
   character_health_bonus: number
   character_personal_logistic_requests_enabled: boolean
   vehicle_logistic_requests_enabled: boolean
-  readonly opened_gui_type: typeof defines.gui_type
+  readonly opened_gui_type: defines.gui_type
   readonly build_distance: number
   readonly drop_item_distance: number
   readonly reach_distance: number
@@ -2045,7 +2168,7 @@ interface LuaControl {
   readonly character_running_speed: number
   readonly character_mining_progress: number
 
-  get_inventory(inventory: typeof defines.inventory): LuaInventory | undefined
+  get_inventory(inventory: defines.inventory): LuaInventory | undefined
 
   get_main_inventory(): LuaInventory
 
@@ -2215,7 +2338,7 @@ interface LuaEntity extends LuaControl {
   rotatable: boolean
   operable: boolean
   health: number
-  direction: typeof defines.direction
+  direction: defines.direction
   readonly supports_direction: boolean
   orientation: number
   readonly cliff_orientation: string
@@ -2252,8 +2375,8 @@ interface LuaEntity extends LuaControl {
   time_to_live: number
   color: Color
   text: LocalisedString
-  readonly signal_state: typeof defines.signal_state
-  readonly chain_signal_state: typeof defines.chain_signal_state
+  readonly signal_state: defines.signal_state
+  readonly chain_signal_state: defines.chain_signal_state
   to_be_looted: boolean
   readonly crafting_speed: number
   crafting_progress: number
@@ -2337,7 +2460,7 @@ interface LuaEntity extends LuaControl {
   readonly ai_settings: LuaAISettings
   highlight_box_type: string
   highlight_box_blink_interval: number
-  readonly status: typeof defines.entity_status
+  readonly status: defines.entity_status
   enable_logistics_while_moving: boolean
   render_player: LuaPlayer
   render_to_forces: ForceSpecification[]
@@ -2405,7 +2528,7 @@ interface LuaEntity extends LuaControl {
 
   connect_neighbour(target: LuaEntity | any): boolean
 
-  disconnect_neighbour(target?: typeof defines.wire_type | LuaEntity | any): void
+  disconnect_neighbour(target?: defines.wire_type | LuaEntity | any): void
 
   order_deconstruction(force: ForceSpecification, player?: PlayerSpecification): boolean
 
@@ -2417,7 +2540,7 @@ interface LuaEntity extends LuaControl {
     force: ForceSpecification
     target: EntityPrototypeSpecification
     player?: PlayerSpecification
-    direction?: typeof defines.direction
+    direction?: defines.direction
   }): boolean
 
   cancel_upgrade(force: ForceSpecification, player?: PlayerSpecification): boolean
@@ -2461,15 +2584,15 @@ interface LuaEntity extends LuaControl {
   }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined]>
 
   get_connected_rail(table_0: {
-    rail_direction: typeof defines.rail_direction
-    rail_connection_direction: typeof defines.rail_connection_direction
+    rail_direction: defines.rail_direction
+    rail_connection_direction: defines.rail_connection_direction
   }): LuaEntity
 
   get_connected_rails(): void
 
-  get_rail_segment_entity(direction: typeof defines.rail_direction, in_else_out: boolean): LuaEntity
+  get_rail_segment_entity(direction: defines.rail_direction, in_else_out: boolean): LuaEntity
 
-  get_rail_segment_end(direction: typeof defines.rail_direction): LuaEntity
+  get_rail_segment_end(direction: defines.rail_direction): LuaEntity
 
   get_rail_segment_length(): void
 
@@ -2496,25 +2619,25 @@ interface LuaEntity extends LuaControl {
   get_or_create_control_behavior(): void
 
   get_circuit_network(
-    wire: typeof defines.wire_type,
-    circuit_connector?: typeof defines.circuit_connector_id
+    wire: defines.wire_type,
+    circuit_connector?: defines.circuit_connector_id
   ): LuaCircuitNetwork | undefined
 
-  get_merged_signal(signal: SignalID, circuit_connector?: typeof defines.circuit_connector_id): number
+  get_merged_signal(signal: SignalID, circuit_connector?: defines.circuit_connector_id): number
 
-  get_merged_signals(circuit_connector?: typeof defines.circuit_connector_id): Signal[] | undefined
+  get_merged_signals(circuit_connector?: defines.circuit_connector_id): Signal[] | undefined
 
   supports_backer_name(): void
 
   copy_settings(entity: LuaEntity, by_player?: PlayerSpecification): Record<string, number>
 
-  get_logistic_point(arg_0?: typeof defines.logistic_member_index): LuaLogisticPoint | LuaLogisticPoint[]
+  get_logistic_point(arg_0?: defines.logistic_member_index): LuaLogisticPoint | LuaLogisticPoint[]
 
   play_note(instrument: number, note: number): boolean
 
-  connect_rolling_stock(direction: typeof defines.rail_direction): boolean
+  connect_rolling_stock(direction: defines.rail_direction): boolean
 
-  disconnect_rolling_stock(direction: typeof defines.rail_direction): boolean
+  disconnect_rolling_stock(direction: defines.rail_direction): boolean
 
   update_connections(): void
 
@@ -2608,7 +2731,7 @@ interface LuaEntity extends LuaControl {
 
   can_wires_reach(entity: LuaEntity): boolean
 
-  get_connected_rolling_stock(direction: typeof defines.rail_direction): LuaEntity
+  get_connected_rolling_stock(direction: defines.rail_direction): LuaEntity
 
   is_registered_for_construction(): void
 
@@ -2836,7 +2959,7 @@ interface LuaEntityPrototype {
 
   has_flag(flag: string): boolean
 
-  get_inventory_size(index: typeof defines.inventory): number
+  get_inventory_size(index: defines.inventory): number
 
   help(): void
 }
@@ -2976,7 +3099,7 @@ interface LuaFlowStatistics {
   get_flow_count(table_0: {
     name: string
     input: boolean
-    precision_index: typeof defines.flow_precision_index
+    precision_index: defines.flow_precision_index
     count?: boolean
   }): number
 
@@ -3301,7 +3424,7 @@ interface LuaGameScript {
   readonly players: Record<number | string, LuaPlayer>
   readonly map_settings: MapSettings
   readonly difficulty_settings: DifficultySettings
-  readonly difficulty: typeof defines.difficulty
+  readonly difficulty: defines.difficulty
   readonly forces: Record<number | string, LuaForce>
   readonly entity_prototypes: Record<string, LuaEntityPrototype>
   readonly item_prototypes: Record<string, LuaItemPrototype>
@@ -3448,7 +3571,7 @@ interface LuaGameScript {
 
   disable_tutorial_triggers(): void
 
-  direction_to_string(direction: typeof defines.direction): void
+  direction_to_string(direction: defines.direction): void
 
   print(message: LocalisedString, color?: ColorIn): void
 
@@ -3589,7 +3712,7 @@ interface LuaHeatEnergySourcePrototype {
 /** @noSelf **/
 interface LuaInventoryBase {
   readonly "operator #": number
-  readonly index: typeof defines.inventory
+  readonly index: defines.inventory
   readonly entity_owner: LuaEntity
   readonly player_owner: LuaPlayer
   readonly equipment_owner: LuaEquipment
@@ -3788,9 +3911,9 @@ interface LuaItemStack {
   custom_description: LocalisedString
   entity_filters: string[]
   tile_filters: string[]
-  entity_filter_mode: typeof defines.deconstruction_item.entity_filter_mode
-  tile_filter_mode: typeof defines.deconstruction_item.tile_filter_mode
-  tile_selection_mode: typeof defines.deconstruction_item.tile_selection_mode
+  entity_filter_mode: defines.deconstruction_item.entity_filter_mode
+  tile_filter_mode: defines.deconstruction_item.tile_filter_mode
+  tile_selection_mode: defines.deconstruction_item.tile_selection_mode
   trees_and_rocks_only: boolean
   readonly entity_filter_count: number
   readonly tile_filter_count: number
@@ -3846,14 +3969,14 @@ interface LuaItemStack {
 
   set_blueprint_tiles(tiles: Tile[]): void
 
-  get_inventory(inventory: typeof defines.inventory): LuaInventory | undefined
+  get_inventory(inventory: defines.inventory): LuaInventory | undefined
 
   build_blueprint(table_0: {
     surface: SurfaceSpecification
     force: ForceSpecification
     position: PositionIn
     force_build?: boolean
-    direction?: typeof defines.direction
+    direction?: defines.direction
     skip_fog_of_war?: boolean
     by_player?: PlayerSpecification
     raise_built?: boolean
@@ -4009,7 +4132,7 @@ interface LuaLogisticPoint {
   readonly logistic_network: LuaLogisticNetwork
   readonly logistic_member_index: number
   readonly filters: LogisticFilter[]
-  readonly mode: typeof defines.logistic_mode
+  readonly mode: defines.logistic_mode
   readonly force: LuaForce
   readonly targeted_items_pickup: Record<string, number>
   readonly targeted_items_deliver: Record<string, number>
@@ -4141,8 +4264,8 @@ interface LuaPlayer extends LuaControl {
   readonly index: number
   readonly gui: LuaGui
   readonly opened_self: boolean
-  readonly controller_type: typeof defines.controllers
-  readonly stashed_controller_type: typeof defines.controllers
+  readonly controller_type: defines.controllers
+  readonly stashed_controller_type: defines.controllers
   game_view_settings: GameViewSettings
   minimap_enabled: boolean
   color: Color
@@ -4161,7 +4284,7 @@ interface LuaPlayer extends LuaControl {
   readonly display_resolution: DisplayResolution
   readonly display_scale: number
   readonly blueprint_to_setup: LuaItemStack
-  readonly render_mode: typeof defines.render_mode
+  readonly render_mode: defines.render_mode
   spectator: boolean
   remove_unfiltered_items: boolean
   infinity_inventory_filters: InfinityInventoryFilter[]
@@ -4183,7 +4306,7 @@ interface LuaPlayer extends LuaControl {
   set_goal_description(text?: LocalisedString, only_update?: boolean): void
 
   set_controller(table_0: {
-    type: typeof defines.controllers
+    type: defines.controllers
     character?: LuaEntity
     waypoints: {
       position?: PositionIn
@@ -4224,7 +4347,7 @@ interface LuaPlayer extends LuaControl {
 
   create_character(character?: string): boolean
 
-  add_alert(entity: LuaEntity, type: typeof defines.alert_type): void
+  add_alert(entity: LuaEntity, type: defines.alert_type): void
 
   add_custom_alert(entity: LuaEntity, icon: SignalID, message: LocalisedString, show_on_map: boolean): void
 
@@ -4232,7 +4355,7 @@ interface LuaPlayer extends LuaControl {
     entity?: LuaEntity
     prototype?: LuaEntityPrototype
     position?: PositionIn
-    type?: typeof defines.alert_type
+    type?: defines.alert_type
     surface?: SurfaceSpecification
     icon?: SignalID
     message?: LocalisedString
@@ -4242,29 +4365,29 @@ interface LuaPlayer extends LuaControl {
     entity?: LuaEntity
     prototype?: LuaEntityPrototype
     position?: PositionIn
-    type?: typeof defines.alert_type
+    type?: defines.alert_type
     surface?: SurfaceSpecification
-  }): Record<number, Record<typeof defines.alert_type[keyof typeof defines.alert_type], any[]>>
+  }): Record<number, Record<defines.alert_type, Alert[]>>
 
-  mute_alert(alert_type: typeof defines.alert_type): boolean
+  mute_alert(alert_type: defines.alert_type): boolean
 
-  unmute_alert(alert_type: typeof defines.alert_type): boolean
+  unmute_alert(alert_type: defines.alert_type): boolean
 
-  is_alert_muted(alert_type: typeof defines.alert_type): boolean
+  is_alert_muted(alert_type: defines.alert_type): boolean
 
-  enable_alert(alert_type: typeof defines.alert_type): boolean
+  enable_alert(alert_type: defines.alert_type): boolean
 
-  disable_alert(alert_type: typeof defines.alert_type): boolean
+  disable_alert(alert_type: defines.alert_type): boolean
 
-  is_alert_enabled(alert_type: typeof defines.alert_type): boolean
+  is_alert_enabled(alert_type: defines.alert_type): boolean
 
   pipette_entity(entity: string | LuaEntity | LuaEntityPrototype): boolean
 
-  can_place_entity(table_0: { name: string; position: PositionIn; direction?: typeof defines.direction }): boolean
+  can_place_entity(table_0: { name: string; position: PositionIn; direction?: defines.direction }): boolean
 
   can_build_from_cursor(table_0: {
     position: PositionIn
-    direction?: typeof defines.direction
+    direction?: defines.direction
     alt?: boolean
     terrain_building_size?: number
     skip_fog_of_war?: boolean
@@ -4272,7 +4395,7 @@ interface LuaPlayer extends LuaControl {
 
   build_from_cursor(table_0: {
     position: PositionIn
-    direction?: typeof defines.direction
+    direction?: defines.direction
     alt?: boolean
     terrain_building_size?: number
     skip_fog_of_war?: boolean
@@ -4902,8 +5025,8 @@ interface LuaStyle {
   right_margin: number
   bottom_margin: number
   left_margin: number
-  horizontal_align: string
-  vertical_align: string
+  horizontal_align: "left" | "center" | "right"
+  vertical_align: "top" | "center" | "bottom"
   font_color: Color
   font: string
   top_cell_padding: number
@@ -4914,7 +5037,7 @@ interface LuaStyle {
   vertically_stretchable: boolean
   horizontally_squashable: boolean
   vertically_squashable: boolean
-  rich_text_setting: typeof defines.rich_text_setting
+  rich_text_setting: defines.rich_text_setting
   hovered_font_color: Color
   clicked_font_color: Color
   disabled_font_color: Color
@@ -4989,16 +5112,16 @@ interface LuaSurface {
   can_place_entity(table_0: {
     name: string
     position: PositionIn
-    direction?: typeof defines.direction
+    direction?: defines.direction
     force?: ForceSpecification
-    build_check_type?: typeof defines.build_check_type
+    build_check_type?: defines.build_check_type
     forced?: boolean
   }): boolean
 
   can_fast_replace(table_0: {
     name: string
     position: PositionIn
-    direction?: typeof defines.direction
+    direction?: defines.direction
     force?: ForceSpecification
   }): boolean
 
@@ -5014,7 +5137,7 @@ interface LuaSurface {
     type?: string | string[]
     ghost_name?: string | string[]
     ghost_type?: string | string[]
-    direction?: typeof defines.direction | typeof defines.direction[]
+    direction?: defines.direction | defines.direction[]
     collision_mask?: CollisionMaskLayer | CollisionMaskLayer[]
     force?: ForceSpecification | ForceSpecification[]
     to_be_deconstructed?: boolean
@@ -5041,7 +5164,7 @@ interface LuaSurface {
     type?: string | string[]
     ghost_name?: string | string[]
     ghost_type?: string | string[]
-    direction?: typeof defines.direction | typeof defines.direction[]
+    direction?: defines.direction | defines.direction[]
     collision_mask?: CollisionMaskLayer | CollisionMaskLayer[]
     force?: ForceSpecification | ForceSpecification[]
     to_be_deconstructed?: boolean
@@ -5103,7 +5226,7 @@ interface LuaSurface {
   create_entity(table_0: {
     name: string
     position: PositionIn
-    direction?: typeof defines.direction
+    direction?: defines.direction
     force?: ForceSpecification
     target?: LuaEntity
     source?: LuaEntity
@@ -5151,7 +5274,7 @@ interface LuaSurface {
 
   force_generate_chunk_requests(): void
 
-  set_chunk_generated_status(position: ChunkPosition, status: typeof defines.chunk_generated_status): void
+  set_chunk_generated_status(position: ChunkPosition, status: defines.chunk_generated_status): void
 
   find_logistic_network_by_position(position: PositionIn, force: ForceSpecification): LuaLogisticNetwork | undefined
 
@@ -5324,7 +5447,7 @@ interface LuaSurface {
     prototype: EntityPrototypeSpecification,
     position: PositionIn,
     use_map_generation_bounding_box: boolean,
-    direction?: typeof defines.direction
+    direction?: defines.direction
   ): void
 
   decorative_prototype_collides(prototype: string, position: PositionIn): void
@@ -5451,11 +5574,11 @@ interface LuaTrain {
   readonly cargo_wagons: LuaEntity[]
   readonly fluid_wagons: LuaEntity[]
   schedule: TrainSchedule
-  readonly state: typeof defines.train_state
+  readonly state: defines.train_state
   readonly front_rail: LuaEntity
   readonly back_rail: LuaEntity
-  readonly rail_direction_from_front_rail: typeof defines.rail_direction
-  readonly rail_direction_from_back_rail: typeof defines.rail_direction
+  readonly rail_direction_from_front_rail: defines.rail_direction
+  readonly rail_direction_from_back_rail: defines.rail_direction
   readonly front_stock: LuaEntity
   readonly back_stock: LuaEntity
   readonly station: LuaEntity
@@ -5562,7 +5685,7 @@ interface LuaTrivialSmokePrototype {
 interface LuaUnitGroup {
   readonly members: LuaEntity[]
   readonly position: Position
-  readonly state: typeof defines.group_state
+  readonly state: defines.group_state
   readonly force: LuaForce
   readonly surface: LuaSurface
   readonly group_number: number
@@ -5613,8 +5736,14 @@ interface LuaVoidEnergySourcePrototype {
 /** events */
 // typescript hack
 type EventId<Payload> = number & {
-  ["#payloadType"]: Payload
+  "#payloadType": Payload
 }
+
+type CustomInputName = string & {
+  "#isCustomInputName": true
+}
+
+type GetPayload<N> = N extends EventId<infer P> ? P : N extends string ? CustomInputEvent : never
 
 /**
  *
@@ -5625,7 +5754,7 @@ type EventId<Payload> = number & {
  */
 type OnTickPayload /** @noSelf **/ = {}
 
-type OnCustomInputPayload /** @noSelf **/ = {
+type CustomInputEvent /** @noSelf **/ = {
   player_index: number
   input_name: string
   cursor_position: Position
@@ -5638,7 +5767,7 @@ type OnCustomInputPayload /** @noSelf **/ = {
  */
 type OnAiCommandCompletedPayload /** @noSelf **/ = {
   unit_number: number
-  result: typeof defines.behavior_result
+  result: defines.behavior_result
   was_distracted: boolean
 }
 
@@ -6031,7 +6160,7 @@ type OnGuiCheckedStateChangedPayload /** @noSelf **/ = {
 type OnGuiClickPayload /** @noSelf **/ = {
   element: LuaGuiElement
   player_index: number
-  button: typeof defines.mouse_button_type
+  button: defines.mouse_button_type
   alt: boolean
   control: boolean
   shift: boolean
@@ -6044,7 +6173,7 @@ type OnGuiClickPayload /** @noSelf **/ = {
  */
 type OnGuiClosedPayload /** @noSelf **/ = {
   player_index: number
-  gui_type: typeof defines.gui_type
+  gui_type: defines.gui_type
   entity?: LuaEntity
   item?: LuaItemStack
   equipment?: LuaEquipment
@@ -6094,7 +6223,7 @@ type OnGuiLocationChangedPayload /** @noSelf **/ = {
  */
 type OnGuiOpenedPayload /** @noSelf **/ = {
   player_index: number
-  gui_type: typeof defines.gui_type
+  gui_type: defines.gui_type
   entity?: LuaEntity
   item?: LuaItemStack
   equipment?: LuaEquipment
@@ -6191,7 +6320,7 @@ type OnMarkedForUpgradePayload /** @noSelf **/ = {
   entity: LuaEntity
   target: LuaEntityPrototype
   player_index?: number
-  direction?: typeof defines.direction
+  direction?: defines.direction
 }
 
 /**
@@ -6570,7 +6699,7 @@ type OnPlayerKickedPayload /** @noSelf **/ = {
  */
 type OnPlayerLeftGamePayload /** @noSelf **/ = {
   player_index: number
-  reason: typeof defines.disconnect_reason
+  reason: defines.disconnect_reason
 }
 
 /**
@@ -6701,7 +6830,7 @@ type OnPlayerRespawnedPayload /** @noSelf **/ = {
  */
 type OnPlayerRotatedEntityPayload /** @noSelf **/ = {
   entity: LuaEntity
-  previous_direction: typeof defines.direction
+  previous_direction: defines.direction
   player_index: number
 }
 
@@ -6834,7 +6963,7 @@ type OnPreBuildPayload /** @noSelf **/ = {
   player_index: number
   position: Position
   shift_build: boolean
-  direction: typeof defines.direction
+  direction: defines.direction
   flip_horizontal: boolean
   flip_vertical: boolean
   created_by_moving: boolean
@@ -6920,7 +7049,7 @@ type OnPrePlayerDiedPayload /** @noSelf **/ = {
  */
 type OnPrePlayerLeftGamePayload /** @noSelf **/ = {
   player_index: number
-  reason: typeof defines.disconnect_reason
+  reason: defines.disconnect_reason
 }
 
 /**
@@ -7267,7 +7396,7 @@ type OnTechnologyEffectsResetPayload /** @noSelf **/ = { force: LuaForce }
  */
 type OnTrainChangedStatePayload /** @noSelf **/ = {
   train: LuaTrain
-  old_state: typeof defines.train_state
+  old_state: defines.train_state
 }
 
 /**

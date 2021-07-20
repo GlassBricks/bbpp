@@ -11,26 +11,7 @@ export function isEmpty(a: AnyTable | undefined): boolean {
   return !x
 }
 
-/**
- * more efficient than Object.keys
- */
-export function mapKeys<K extends keyof any, R>(obj: Record<K, any>, func: (key: K) => R): R[] {
-  const result: R[] = []
-  for (const [k] of pairs(obj)) {
-    result[result.length] = func(k)
-  }
-  return result
-}
-
-export function mapValues<V, R>(obj: Record<any, V>, func: (value: V) => R): R[] {
-  const result: R[] = []
-  for (const [, v] of pairs(obj)) {
-    result[result.length] = func(v)
-  }
-  return result
-}
-
-export function mapEntries<K extends keyof any, V, R>(obj: Record<K, V>, func: (key: K, value: V) => R): R[] {
+export function map<K extends keyof any, V, R>(obj: Record<K, V>, func: (key: K, value: V) => R): R[] {
   const result: R[] = []
   for (const [k, v] of pairs(obj)) {
     result[result.length] = func(k, v)

@@ -3,7 +3,7 @@ import Reactorio, { renderIn } from "./gui"
 import { dlog } from "./logging"
 import { registerFunc } from "./funcRef"
 import { registerHandler } from "./events"
-import { destroyIfValid, mapKeys } from "./util"
+import { destroyIfValid, map } from "./util"
 import { onPlayerInit } from "./onPlayerInit"
 
 const devActions: Record<string, (player: LuaPlayer) => void> = {}
@@ -12,13 +12,6 @@ export function DevButton(name: string, action: (player: LuaPlayer) => void): vo
   if (!DEV) return
   assert(!devActions[name])
   devActions[name] = action
-}
-
-export function DevButtons(actions: Record<string, (player: LuaPlayer) => void>): void {
-  if (!DEV) return
-  for (const [name, action] of pairs(actions)) {
-    DevButton(name, action)
-  }
 }
 
 const onClick = registerFunc((element: LuaGuiElement) => {
@@ -34,7 +27,7 @@ function createDevButtons(player: LuaPlayer) {
   destroyDevButtons(player)
   const DevButtonsComponent = (
     <frame direction={"vertical"} name={"bbpp:devButtons"} caption="BBPP dev buttons" location={{ x: 0, y: 1000 }}>
-      {mapKeys(devActions, (name) => (
+      {map(devActions, (name) => (
         <button
           styleMod={{
             width: 200,

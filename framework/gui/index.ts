@@ -1,4 +1,5 @@
 import * as Reactorio from "./jsx"
+import "./confirm"
 
 export * from "./component"
 export * from "./spec"

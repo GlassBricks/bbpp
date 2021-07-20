@@ -1,11 +1,9 @@
-import { registerHandlers } from "./events"
+import { registerHandler, registerHandlers } from "./events"
 import { vlog } from "./logging"
 
-interface PlayerDataGlobal {
+declare const global: {
   playerData: Record<string, Record<number, unknown>>
 }
-
-declare const global: PlayerDataGlobal
 
 registerHandlers({
   on_init() {
@@ -18,7 +16,11 @@ interface Data<T> {
 }
 
 /** @noSelf */
-function setupPlayerData<T>(holder: Data<T>, uniqueName: string, initData: (player: LuaPlayer) => T) {
+function setupPlayerData<T>(
+  holder: Data<T>,
+  uniqueName: string,
+  initData: ((player: LuaPlayer) => T) | undefined
+): void {
   vlog("creating player data", uniqueName)
   const loadData = () => {
     holder.data = global.playerData[uniqueName] as Record<number, T>
@@ -27,18 +29,23 @@ function setupPlayerData<T>(holder: Data<T>, uniqueName: string, initData: (play
       global.playerData[uniqueName] = holder.data
     }
   }
-
+  if (initData) {
+    registerHandlers({
+      on_init() {
+        loadData()
+        for (const [index, player] of pairs(game.players)) {
+          holder.data[index as number] = initData(player)
+        }
+      },
+      on_player_created: (e) => {
+        holder.data[e.player_index] = initData(game.get_player(e.player_index))
+      },
+    })
+  } else {
+    registerHandler("on_init", loadData)
+  }
   registerHandlers({
-    on_init() {
-      loadData()
-      for (const [index, player] of pairs(game.players)) {
-        holder.data[index as number] = initData(player)
-      }
-    },
     on_load: loadData,
-    on_player_created: (e) => {
-      holder.data[e.player_index] = initData(game.get_player(e.player_index))
-    },
     on_player_removed: (e) => {
       holder.data[e.player_index] = undefined as any
     },
@@ -50,13 +57,23 @@ export interface PlayerData<T> {
 }
 
 /** @noSelf */
-export function PlayerData<T>(uniqueName: string, initData: (player: LuaPlayer) => T): PlayerData<T> {
+export function PlayerData<T>(uniqueName: string): PlayerData<T | undefined>
+/** @noSelf */
+export function PlayerData<T>(uniqueName: string, initData: (player: LuaPlayer) => T): PlayerData<T>
+/** @noSelf */
+export function PlayerData<T>(uniqueName: string, initData?: (player: LuaPlayer) => T): PlayerData<T> {
   const result = { data: {} }
   setupPlayerData(result, uniqueName, initData)
   return result
 }
 
-export type PlayerDataObserver<T> = (playerIndex: number, oldValue: T, newValue: T) => void
+export interface PlayerDataChangedEvent<T> {
+  player: LuaPlayer
+  oldValue: T
+  newValue: T
+}
+
+export type PlayerDataObserver<T> = (event: PlayerDataChangedEvent<T>) => void
 
 export class ObservablePlayerData<T> {
   private data!: Record<number, T>
@@ -70,15 +87,16 @@ export class ObservablePlayerData<T> {
     this.observers[this.observers.length] = observer
   }
 
-  get(playerIndex: number): Readonly<T> {
-    return this.data[playerIndex]
+  get(player: LuaPlayer): T {
+    return this.data[player.index]
   }
 
-  set(playerIndex: number, newValue: T): void {
-    const oldValue = this.data[playerIndex]
-    this.data[playerIndex] = newValue
+  set(player: LuaPlayer, newValue: T): void {
+    const oldValue = this.data[player.index]
+    if (oldValue === newValue) return
+    this.data[player.index] = newValue
     for (const observer of this.observers) {
-      observer(playerIndex, oldValue, newValue)
+      observer({ player, oldValue, newValue })
     }
   }
 }

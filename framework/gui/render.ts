@@ -3,7 +3,6 @@ import { registerHandlers } from "../events"
 import { AnySpec, ComponentSpec, ElementSpec } from "./spec"
 import { Component, componentNew, Refs } from "./component"
 import { destroyIfValid, isEmpty } from "../util"
-import { Blank } from "./jsx"
 
 const isGuiElementType: Record<GuiElementType, true> & Record<any, boolean> = {
   "choose-elem-button": true,
@@ -105,8 +104,8 @@ registerHandlers({
 // </editor-fold>
 // <editor-fold desc="Instantiate">
 
-function getCreationSpec(element: ElementSpec, index?: number): GuiAddSpec {
-  const spec: Partial<GuiAddSpec> = element.creationSpec || {}
+function getCreationSpec(element: ElementSpec, index?: number): AddSpec {
+  const spec: Partial<AddSpec> = element.creationSpec || {}
   spec.type = element.type
   spec.index = index
   return spec as any
@@ -138,6 +137,8 @@ function instantiateElement(
   for (const [luaIndexInParent, child] of ipairs(childSpecs)) {
     childInstances[childInstances.length] = instantiate(guiElement, luaIndexInParent, child, currentRefs)
   }
+  if (spec.onLateCreated) spec.onLateCreated(guiElement as any)
+  if (spec.onLateUpdate) spec.onLateUpdate(guiElement as any)
   return newInstance
 }
 
@@ -203,12 +204,8 @@ function instantiate(
   spec: AnySpec | undefined,
   currentRefs: Refs
 ): AnyInstance {
-  if (!spec) {
+  if (!spec || spec.type === "blank") {
     return instantiateEmpty(parent, indexInParent)
-  } else if (spec.type === Blank) {
-    error(
-      "Blank type cannot be used to create a new element. It is only applicable for elements during update (for now)."
-    )
   } else if (isGuiElementType[spec.type]) {
     return instantiateElement(parent, indexInParent, spec as ElementSpec, currentRefs)
   } else {
@@ -295,8 +292,8 @@ function getKeyToLuaIndex(childSpecs: AnySpec[]) {
  * This includes children reconciliation.
  *
  * The only available operations are to delete and add at index, no rearranging elements.
- * The reconciliation algorithm matches by name. If no keyed elements are _rearranged_ (only added or deleted), then this
- * is most optimal; else it may delete some other keyed elements to reuse a keyed element.
+ * The reconciliation algorithm matches by name. If no keyed elements are _rearranged_ (only added or deleted),
+ * then this is most optimal; else it may delete some other keyed elements to reuse a keyed element.
  *
  * This definitely has room for (constant time) optimization.
  */
@@ -319,7 +316,7 @@ function reconcileChildren(instance: ElementInstance, spec: ElementSpec, current
   let oldLuaIndex = 1
   for (const [luaNewIndex, newSpec] of ipairs(newChildSpecs)) {
     // blank spec is not allowed in full update; only updateOnly
-    if (newSpec.type === Blank) error("Blank element is only allowed in updateOnly mode, not in full-update.")
+    if (newSpec.type === "blank") error("Blank element is only allowed in updateOnly mode, not in full-update.")
     const key = newSpec.name || luaNewIndex
 
     const existingLuaIndex = oldKeyToLuaIndex[key]
@@ -398,11 +395,11 @@ function reconcileElement(
 ): ElementInstance {
   // update this element
   updateElement(instance.guiElement, instance, spec, updateOnly, currentRefs)
-  if (updateOnly) {
-    return updateOnlyOnChildren(instance, spec, currentRefs)
-  } else {
-    return reconcileChildren(instance, spec, currentRefs)
-  }
+  const nextInstance = updateOnly
+    ? updateOnlyOnChildren(instance, spec, currentRefs)
+    : reconcileChildren(instance, spec, currentRefs)
+  if (spec.onLateUpdate) spec.onLateUpdate(instance.guiElement as any)
+  return nextInstance
 }
 
 // same name, same type
@@ -437,7 +434,7 @@ function reconcileComponent(
   const oldChildInstance = instance.childInstance
   const refs = instance.publicInstance.refs
   const childInstance = reconcile(instance.parentGuiElement, instance.indexInParent, oldChildInstance, spec, refs)
-  instance.publicInstance.firstGuiElement = childInstance.guiElement
+  component.firstGuiElement = childInstance.guiElement
   instance.guiElement = childInstance.guiElement
   instance.childInstance = childInstance
 }
@@ -465,7 +462,7 @@ function reconcile(
   spec: AnySpec | undefined,
   currentRefs: Refs
 ): AnyInstance {
-  const thisIsUpdateOnly = spec !== undefined && (spec.updateOnly === true || spec.type === undefined)
+  const thisIsUpdateOnly = spec !== undefined && (spec.updateOnly === true || spec.type === "blank")
   const specType = spec && (spec.type === "blank" ? oldInstance.type : spec.type)
   if (oldInstance === undefined) {
     // new

@@ -4,36 +4,39 @@ import {
   BlankSpec,
   ComponentSpec,
   ElementSpec,
-  ElementSpecOfType,
+  ElementSpecByType,
   ElementSpecProps,
   GuiEventHandlers,
 } from "./spec"
-import { Component } from "./component"
+import { Component, getComponentName } from "./component"
 import { EventHandlerTags, GuiEventName } from "./guievents"
 import { FuncRef } from "../funcRef"
 
-type IntrinsicElement<Type extends GuiElementType> = ElementSpecProps<Type> & // props specifically on spec (onCreated, onUpdate, styleMod, children)
-  GuiEventHandlers<Type> & // event handlers for this gui element
+type JsxChildren = AnySpec | false | (AnySpec | false | (AnySpec | false)[])[]
+
+type IntrinsicElement<
+  Element extends BaseGuiElement,
+  AddSpec extends BaseAddSpec,
+  GuiEvents
+> = ElementSpecProps<Element> &
+  // props specifically on spec (onCreated, onUpdate, styleMod, children)
+  GuiEventHandlers<GuiEvents, Element> & // event handlers for this gui element
   // elementMod (directly as props)
-  ModOf<GuiElementByType[Type]> & {
-    children?: AnySpec | (AnySpec | AnySpec[])[] // children
-    // gui add spec, but only if updateOnly is false
-  } & (
-    | { updateOnly: true; onCreated?: never }
-    | ({ updateOnly?: false } & Omit<GuiAddSpecByType[Type], "type" | "index">)
-  )
+  ModOf<Element> & {
+    children?: JsxChildren
+  } & ({ updateOnly: true; onCreated?: never } | ({ updateOnly?: false } & Omit<AddSpec, "type" | "index">))
 
 // Union instead of intersection of ModableKeys
 type AllModableKeys<T> = T extends infer I ? ModableKeys<I> : never
 
 // Typescript abuse:
 const rawElementPropType: Record<
-  // Properties in GuiAddSpec but not in LuaGuiElement
-  Exclude<AllModableKeys<GuiAddSpecByType[GuiElementType]>, AllModableKeys<GuiElementByType[GuiElementType]>>,
+  // Properties in AddSpec but not in LuaGuiElement
+  Exclude<AllModableKeys<AddSpecByType[GuiElementType]>, AllModableKeys<GuiElementByType[GuiElementType]>>,
   "creation"
 > &
   // props for in ElementSpec
-  Record<Exclude<keyof ElementSpecProps<any>, "name">, "spec"> &
+  Record<Exclude<keyof ElementSpecProps<any>, "name"> | "children", "spec"> &
   // GUI event names
   Record<GuiEventName, "guiEvent"> = {
   index: "creation",
@@ -49,7 +52,6 @@ const rawElementPropType: Record<
   fluid: "creation",
   item: "creation",
   "item-group": "creation",
-  items: "creation",
   maximum_value: "creation",
   minimum_value: "creation",
   recipe: "creation",
@@ -67,7 +69,9 @@ const rawElementPropType: Record<
   children: "spec",
 
   onCreated: "spec",
+  onLateCreated: "spec",
   onUpdate: "spec",
+  onLateUpdate: "spec",
 
   onCheckedStateChanged: "guiEvent",
   onClick: "guiEvent",
@@ -89,7 +93,7 @@ function createElementSpec(
   props: Record<string, unknown> | undefined,
   flattenedChildren: AnySpec[] | undefined
 ): ElementSpec {
-  const spec: Partial<ElementSpecOfType<any>> = {}
+  const spec: Partial<ElementSpecByType[GuiElementType]> = {}
   const creationSpec: Record<string, unknown> = {}
   const elementMod: Record<string, unknown> = {}
   if (props) {
@@ -128,7 +132,7 @@ function createComponentSpec<Props>(
   const theProps: any = props || {}
   theProps.children = flattenedChildren
   return {
-    type: type.name,
+    type: getComponentName(type) || error(`The component of class type ${type.constructor.name} is not registered!`),
     props: theProps,
     name: theProps.name,
     updateOnly: theProps.updateOnly,
@@ -136,59 +140,72 @@ function createComponentSpec<Props>(
   }
 }
 
-function flattenChildren(children: Children | undefined): AnySpec[] | undefined {
+function flattenChildren(children: JsxChildren | undefined): AnySpec[] | undefined {
   if (!children) return undefined
-  if ((children as any).type !== undefined) return [children as AnySpec]
+  if (!Array.isArray(children)) return [children]
   const result: AnySpec[] = []
-  for (const elem of children as any[]) {
-    if (elem.type !== undefined) {
-      result[result.length] = elem
-    } else {
-      for (const spec of elem as AnySpec[]) {
-        result[result.length] = spec
+  for (const elem of children) {
+    if (!elem) continue
+    if (Array.isArray(elem)) {
+      for (const spec of elem) {
+        if (spec) result[result.length] = spec
       }
+    } else {
+      result[result.length] = elem
     }
   }
   return result.length === 0 ? undefined : result
 }
 
-type Children = AnySpec | undefined | (AnySpec | undefined | (AnySpec | undefined)[])[]
+const typeFunc = type
 
 // noinspection JSUnusedGlobalSymbols
 export function createElement<Type extends GuiElementType>(
   type: Type,
-  props: IntrinsicElement<Type>,
-  children: Children
-): ElementSpecOfType<Type>
+  props: JSX.IntrinsicElements[Type],
+  children?: JsxChildren
+): ElementSpecByType[Type]
+// noinspection JSUnusedGlobalSymbols
+export function createElement(type: "blank", props?: { name?: string }, children?: JsxChildren): BlankSpec
 // noinspection JSUnusedGlobalSymbols
 export function createElement<Props>(
   type: Class<Component<Props>>,
   props: Props,
-  children: Children
+  children?: JsxChildren
 ): ComponentSpec<Props>
 // noinspection JSUnusedGlobalSymbols
+export function createElement<Props>(
+  type: (this: unknown, props: Props) => AnySpec,
+  props: Props,
+  children?: JsxChildren
+): AnySpec | undefined
+// noinspection JSUnusedGlobalSymbols
 export function createElement(
-  type: GuiElementType | Class<Component<any>> | "blank",
+  type: GuiElementType | Class<Component<unknown>> | "blank" | ((this: unknown, props: unknown) => AnySpec | undefined),
   props?: Record<any, any>,
-  children?: Children
-): AnySpec {
+  children?: JsxChildren
+): AnySpec | undefined {
   const flattenedChildren = flattenChildren(children)
-  if (type === Blank) {
-    return {
-      type: Blank,
-      name: props && props.name,
-      children: flattenedChildren,
-    } as BlankSpec
-  } else if (typeof type === "string") {
-    return createElementSpec(type, props, flattenedChildren)
-  } else if (typeof type === "object") {
-    return createComponentSpec(type, props, flattenedChildren)
+  const typeofType = typeFunc(type)
+  if (typeofType === "string") {
+    if (type === "blank") {
+      return {
+        type: "blank",
+        name: props && props.name,
+        children: flattenedChildren,
+      } as BlankSpec
+    }
+    return createElementSpec(type as GuiElementType, props, flattenedChildren)
+  } else if (typeofType === "function") {
+    props = props || {}
+    props.children = children
+    return (type as (this: unknown, props: unknown) => AnySpec | undefined)(props)
+  } else if (typeofType === "table") {
+    return createComponentSpec(type as Class<Component<unknown>>, props, flattenedChildren)
   } else {
     error(`component of type ${globalThis.type(type)} not supported`)
   }
 }
-
-export const Blank = "blank" as const
 
 /* eslint-disable */
 declare global {
@@ -205,7 +222,7 @@ declare global {
 
     // noinspection JSUnusedGlobalSymbols
     interface ElementAttributesProperty {
-      ____props: {} // for type checking only; see Component.____props
+      props: {}
     }
 
     type IntrinsicAttributes = {
@@ -216,33 +233,37 @@ declare global {
 
     // noinspection JSUnusedGlobalSymbols
     interface IntrinsicElements {
-      "choose-elem-button": IntrinsicElement<"choose-elem-button">
-      "drop-down": IntrinsicElement<"drop-down">
-      "empty-widget": IntrinsicElement<"empty-widget">
-      "entity-preview": IntrinsicElement<"entity-preview">
-      "list-box": IntrinsicElement<"list-box">
-      "scroll-pane": IntrinsicElement<"scroll-pane">
-      "sprite-button": IntrinsicElement<"sprite-button">
-      "tabbed-pane": IntrinsicElement<"tabbed-pane">
-      "text-box": IntrinsicElement<"text-box">
-      button: IntrinsicElement<"button">
-      camera: IntrinsicElement<"camera">
-      checkbox: IntrinsicElement<"checkbox">
-      flow: IntrinsicElement<"flow">
-      frame: IntrinsicElement<"frame">
-      label: IntrinsicElement<"label">
-      line: IntrinsicElement<"line">
-      minimap: IntrinsicElement<"minimap">
-      progressbar: IntrinsicElement<"progressbar">
-      radiobutton: IntrinsicElement<"radiobutton">
-      slider: IntrinsicElement<"slider">
-      sprite: IntrinsicElement<"sprite">
-      switch: IntrinsicElement<"switch">
-      tab: IntrinsicElement<"tab">
-      table: IntrinsicElement<"table">
-      textfield: IntrinsicElement<"textfield">
+      "choose-elem-button": IntrinsicElement<
+        ChooseElemButtonGuiElement,
+        ChooseElemButtonAddSpec,
+        ChooseElemButtonEvents
+      >
+      "drop-down": IntrinsicElement<DropDownGuiElement, DropDownAddSpec, DropDownEvents>
+      "empty-widget": IntrinsicElement<EmptyWidgetGuiElement, EmptyWidgetAddSpec, EmptyWidgetEvents>
+      "entity-preview": IntrinsicElement<EntityPreviewGuiElement, EntityPreviewAddSpec, EntityPreviewEvents>
+      "list-box": IntrinsicElement<ListBoxGuiElement, ListBoxAddSpec, ListBoxEvents>
+      "scroll-pane": IntrinsicElement<ScrollPaneGuiElement, ScrollPaneAddSpec, ScrollPaneEvents>
+      "sprite-button": IntrinsicElement<SpriteButtonGuiElement, SpriteButtonAddSpec, SpriteButtonEvents>
+      "tabbed-pane": IntrinsicElement<TabbedPaneGuiElement, TabbedPaneAddSpec, TabbedPaneEvents>
+      "text-box": IntrinsicElement<TextBoxGuiElement, TextBoxAddSpec, TextBoxEvents>
+      button: IntrinsicElement<ButtonGuiElement, ButtonAddSpec, ButtonEvents>
+      camera: IntrinsicElement<CameraGuiElement, CameraAddSpec, CameraEvents>
+      checkbox: IntrinsicElement<CheckboxGuiElement, CheckboxAddSpec, CheckboxEvents>
+      flow: IntrinsicElement<FlowGuiElement, FlowAddSpec, FlowEvents>
+      frame: IntrinsicElement<FrameGuiElement, FrameAddSpec, FrameEvents>
+      label: IntrinsicElement<LabelGuiElement, LabelAddSpec, LabelEvents>
+      line: IntrinsicElement<LineGuiElement, LineAddSpec, LineEvents>
+      minimap: IntrinsicElement<MinimapGuiElement, MinimapAddSpec, MinimapEvents>
+      progressbar: IntrinsicElement<ProgressbarGuiElement, ProgressbarAddSpec, ProgressbarEvents>
+      radiobutton: IntrinsicElement<RadiobuttonGuiElement, RadiobuttonAddSpec, RadiobuttonEvents>
+      slider: IntrinsicElement<SliderGuiElement, SliderAddSpec, SliderEvents>
+      sprite: IntrinsicElement<SpriteGuiElement, SpriteAddSpec, SpriteEvents>
+      switch: IntrinsicElement<SwitchGuiElement, SwitchAddSpec, SwitchEvents>
+      tab: IntrinsicElement<TabGuiElement, TabAddSpec, TabEvents>
+      table: IntrinsicElement<TableGuiElement, TableAddSpec, TableEvents>
+      textfield: IntrinsicElement<TextfieldGuiElement, TextfieldAddSpec, TextfieldEvents>
 
-      blank: IntrinsicElement<any>
+      blank: IntrinsicElement<any, any, any>
     }
   }
 }

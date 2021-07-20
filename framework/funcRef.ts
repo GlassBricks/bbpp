@@ -1,7 +1,7 @@
 /** @noSelfInFile */
 import { isFunction } from "./util"
 import { vlog } from "./logging"
-import { getObject, getObjectRef, ObjectRef } from "./objectRef"
+import { getInstance, getInstanceRef, InstanceRef, WithIsValid } from "./instanceRef"
 
 /**
  * Represents a reference to a function.
@@ -11,8 +11,8 @@ export type SimpleFuncRef<F extends Function> = string & {
 }
 
 export interface BoundFuncRef<F extends Function> {
-  thisRef: ObjectRef<unknown>
-  funcName: string
+  thisRef: InstanceRef<WithIsValid>
+  funcName: string | number
   "#funcType": F
 }
 
@@ -54,23 +54,23 @@ export function registerFuncs<T extends object>(table: T, prefix: string = ""): 
 }
 
 /** Gets a function reference from a function, or raises error if function is not registered. */
-export function getRef<F extends Function>(func: F): SimpleFuncRef<F> {
+export function getFuncRef<F extends Function>(func: F): SimpleFuncRef<F> {
   const name =
     funcToName.get(func) ?? error("Attempt to get a reference to a function that was not registered, func:" + func)
   return name as SimpleFuncRef<F>
 }
 
 /** Gets a function reference from a function, or nil if function is not registered. */
-export function getRefOrNil<F extends Function>(func: F): FuncRef<F> | undefined {
-  return funcToName.get(func) as SimpleFuncRef<F>
+export function getFuncRefOrNil<F extends Function>(func: F): FuncRef<F> | undefined {
+  return funcToName.get(func) as SimpleFuncRef<F> | undefined
 }
 
-export function createBoundFunc<T extends object, K extends keyof T & string, F extends Function & T[K]>(
+export function createBoundFunc<T extends object, K extends keyof T, F extends Function & T[K]>(
   thisRef: T,
   funcName: K
 ): BoundFuncRef<F> {
   return {
-    thisRef: getObjectRef(thisRef),
+    thisRef: getInstanceRef(thisRef),
     funcName,
   } as Partial<BoundFuncRef<F>> as BoundFuncRef<F>
 }
@@ -78,7 +78,7 @@ export function createBoundFunc<T extends object, K extends keyof T & string, F 
 export function callFuncRef<F extends (...a: any) => any>(funcRef: FuncRef<F>, ...args: Parameters<F>): ReturnType<F> {
   if ((funcRef as BoundFuncRef<F>).thisRef !== undefined) {
     const boundFuncRef = funcRef as BoundFuncRef<F>
-    const thisRef = getObject(boundFuncRef.thisRef) as any
+    const thisRef = getInstance(boundFuncRef.thisRef) as any
     const func = thisRef[boundFuncRef.funcName] as (this: unknown, ...a: any[]) => ReturnType<F>
     if (!func) {
       error(
@@ -98,4 +98,28 @@ export function callFuncRef<F extends (...a: any) => any>(funcRef: FuncRef<F>, .
     )
   }
   return func(...(args as any[]))
+}
+
+export type Funcs<T> = {
+  readonly [K in keyof T]: T[K] extends Function ? FuncRef<T[K]> : never
+}
+
+export const funcsMeta = {
+  __index(this: { __self: any }, name: string): BoundFuncRef<any> {
+    return createBoundFunc(this.__self, name)
+  },
+} as LuaMetatable<{ __self: any }>
+
+export const staticFuncsMeta = {
+  __index(this: { __self: any }, name: string): SimpleFuncRef<any> {
+    return getFuncRef(this.__self[name])
+  },
+} as LuaMetatable<{ __self: any }>
+
+export function makeStaticFuncs<T>(table: T): Funcs<T> {
+  return setmetatable({ __self: table }, staticFuncsMeta) as any
+}
+
+export function makeBindingFuncs<T>(instance: T): Funcs<T> {
+  return setmetatable({ __self: instance }, funcsMeta) as any
 }

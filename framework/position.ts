@@ -49,10 +49,10 @@ export function diagonalLength([a, b]: Area): number {
   return Math.sqrt(ly * ly + lx * lx)
 }
 
-export function isIn({ x, y }: Position, area: Area): boolean {
+export function isIn(pos: Position, area: Area): boolean {
   const tl = area[0]
   const br = area[1]
-  return x >= tl.x && y >= tl.y && x < br.x && y < br.y
+  return pos.x >= tl.x && pos.y >= tl.y && pos.x < br.x && pos.y < br.y
 }
 
 // element by element multiplication
@@ -61,4 +61,17 @@ export function elemMul(a: Position, b: Position): Position {
     x: a.x * b.x,
     y: a.y * b.y,
   }
+}
+
+export function multiplyArea(area: Area, b: number): Area {
+  return [
+    {
+      x: area[0].x * b,
+      y: area[0].y * b,
+    },
+    {
+      x: area[1].x * b,
+      y: area[1].y * b,
+    },
+  ]
 }

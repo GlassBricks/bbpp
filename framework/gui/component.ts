@@ -1,32 +1,17 @@
 /** @noSelfInFile */
 import { AnySpec } from "./spec"
-import { BoundFuncRef, createBoundFunc, FuncRef, getRef, registerFuncs, SimpleFuncRef } from "../funcRef"
+import { Funcs, funcsMeta, makeBindingFuncs, makeStaticFuncs, registerFuncs } from "../funcRef"
 import { dlog } from "../logging"
 import { registerHandlers } from "../events"
 import { isValid } from "../util"
-
-export type Funcs<T> = {
-  readonly [K in keyof T]: T[K] extends Function ? FuncRef<T[K]> : never
-}
-
-const funcsMeta = {
-  __index(this: { __self: any }, name: string): BoundFuncRef<any> {
-    return createBoundFunc(this.__self, name)
-  },
-} as LuaMetatable<{ __self: any }>
-
-const staticFuncsMeta = {
-  __index(this: { __self: any }, name: string): SimpleFuncRef<any> {
-    return getRef(this.__self[name])
-  },
-} as LuaMetatable<{ __self: any }>
+import { WithIsValid } from "../instanceRef"
 
 export type Refs = PRecord<string | number, LuaGuiElement | Component<unknown>>
 
-export abstract class Component<Props> {
-  firstGuiElement!: LuaGuiElement
+export abstract class Component<Props> implements WithIsValid {
   parentGuiElement!: LuaGuiElement
-  private static readonly _staticFuncs: Funcs<any>
+  private static readonly _staticFuncs: Funcs<unknown>
+  firstGuiElement!: LuaGuiElement
   readonly refs: Refs = {}
   private static readonly _applySpec: (this: void, component: Component<unknown>, spec: AnySpec | undefined) => void
 
@@ -34,22 +19,14 @@ export abstract class Component<Props> {
   _internalInstance: unknown
   protected props!: Props
   private isFirstUpdate: boolean = true
-  // noinspection JSUnusedLocalSymbols
-  private ____props!:
-    | Props
-    | ({
-        updateOnly: true
-        name: string
-      } & Partial<Props>)
 
   constructor() {
     global.componentInstanceTypes.set(this, this.constructor.name)
-
-    this.funcs = setmetatable({ __self: this }, funcsMeta) as any
+    this.funcs = makeBindingFuncs(this)
   }
 
   static funcs<T extends Function>(this: T): Funcs<T> {
-    return (this as unknown as typeof Component)._staticFuncs
+    return (this as unknown as typeof Component)._staticFuncs as Funcs<T>
   }
 
   createWith(props: Props): AnySpec | undefined {
@@ -70,7 +47,8 @@ export abstract class Component<Props> {
   }
 
   isValid(): boolean {
-    return isValid(this.firstGuiElement)
+    // see render.ts
+    return this._internalInstance !== undefined && isValid((this._internalInstance as any).guiElement)
   }
 
   protected abstract create(): AnySpec | undefined
@@ -80,10 +58,14 @@ export abstract class Component<Props> {
   }
 
   protected abstract update(prevProps: Props, firstUpdate: boolean): void
+
+  protected getPlayer(): LuaPlayer {
+    return game.get_player(this.parentGuiElement.player_index)
+  }
 }
 
 /**
- * A component where you handle creation/updates manually in the `update` function
+ * A component where you handle creation/updates manually in the `updateAllPlayers` function
  */
 export abstract class ManagedComponent<Props> extends Component<Props> {
   create(): AnySpec | undefined {
@@ -92,7 +74,7 @@ export abstract class ManagedComponent<Props> extends Component<Props> {
 }
 
 /**
- * A component which is the same every time; i.e. only `create`, nothing on `update`
+ * A component which is the same every time; i.e. only `create`, nothing on `updateAllPlayers`
  */
 export abstract class StaticComponent extends Component<Empty> {
   update(): void {
@@ -110,6 +92,7 @@ export abstract class ReactiveComponent<Props> extends Component<Props> {
 }
 
 const registeredComponents: Record<string, Class<Component<unknown>>> = {}
+const componentNames: LuaTable<Class<Component<unknown>>, string | undefined> = new LuaTable()
 
 export type PropsOf<C extends Component<any>> = C extends Component<infer P> ? P : never
 
@@ -119,15 +102,18 @@ export type PropsOf<C extends Component<any>> = C extends Component<infer P> ? P
  *
  * All _static_ functions of the class will also be registered.
  */
-export function registerComponent<C extends Component<any>>(this: unknown, component: Class<C>): void {
-  const componentName = component.name
-  if (registeredComponents[componentName]) {
-    error(`A gui component with the name "${componentName}" is already registered`)
+export function registerComponent<C extends Component<any>>(asName?: string) {
+  return function (this: unknown, component: Class<C>): void {
+    const componentName = asName ?? component.name
+    if (registeredComponents[componentName]) {
+      error(`A gui component with the name "${componentName}" is already registered`)
+    }
+    registeredComponents[componentName] = component
+    componentNames.set(component, componentName)
+    registerFuncs(component, componentName)
+    ;(component as any)._staticFuncs = makeStaticFuncs(component)
+    dlog("registered component", componentName)
   }
-  registeredComponents[componentName] = component
-  registerFuncs(component, componentName)
-  ;(component as any)._staticFuncs = setmetatable({ __self: component }, staticFuncsMeta)
-  dlog("registered component", componentName)
 }
 
 function getRegisteredComponent(name: string): Class<Component<unknown>> {
@@ -138,12 +124,12 @@ function getRegisteredComponent(name: string): Class<Component<unknown>> {
   return componentClass as any
 }
 
-export function isRegisteredComponent<C extends Component<any>>(component: Class<C>): boolean {
-  return component.name in registeredComponents
+export function getComponentName<C extends Component<unknown>>(component: Class<C>): string | undefined {
+  return componentNames.get(component)
 }
 
 interface ComponentsGlobal {
-  componentInstanceTypes: LuaTable<Component<any>, string>
+  componentInstanceTypes: LuaTable<Component<unknown>, string>
 }
 
 declare const global: ComponentsGlobal
@@ -160,7 +146,9 @@ function restoreMetatables() {
 
 registerHandlers({
   on_init() {
-    global.componentInstanceTypes = setmetatable(new LuaTable(), { __mode: "k" })
+    global.componentInstanceTypes = setmetatable(new LuaTable(), {
+      __mode: "k",
+    })
   },
   on_load: restoreMetatables,
 })

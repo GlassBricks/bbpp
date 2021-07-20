@@ -15,31 +15,22 @@ import { literalVisitors } from "typescript-to-lua/dist/transformation/visitors/
 
 const transformObjectLiteral = literalVisitors[
   ts.SyntaxKind.ObjectLiteralExpression
-  ] as FunctionVisitor<ts.ObjectLiteralExpression>
+] as FunctionVisitor<ts.ObjectLiteralExpression>
 const transformArrayLiteral = literalVisitors[
   ts.SyntaxKind.ArrayLiteralExpression
-  ] as FunctionVisitor<ts.ArrayLiteralExpression>
+] as FunctionVisitor<ts.ArrayLiteralExpression>
 
 function transformJsxAttributesExpression(
   expression: ts.JsxAttributes,
-  context: TransformationContext,
+  context: TransformationContext
 ): VisitorResult<ts.Expression> {
-  if (
-    expression.properties.find(
-      element => element.kind === ts.SyntaxKind.JsxSpreadAttribute,
-    )
-  ) {
+  if (expression.properties.find((element) => element.kind === ts.SyntaxKind.JsxSpreadAttribute)) {
     throw new Error("Unsupported: JsxSpreadAttribute")
   }
   const properties = expression.properties
-    .filter(
-      (element): element is ts.JsxAttribute =>
-        element.kind !== ts.SyntaxKind.JsxSpreadAttribute,
-    )
-    .map(element => {
-      const valueOrExpression = element.initializer
-        ? element.initializer
-        : ts.createLiteral(true)
+    .filter((element): element is ts.JsxAttribute => element.kind !== ts.SyntaxKind.JsxSpreadAttribute)
+    .map((element) => {
+      const valueOrExpression = element.initializer ? element.initializer : ts.createLiteral(true)
       return ts.createPropertyAssignment(element.name, valueOrExpression)
     })
 
@@ -49,7 +40,7 @@ function transformJsxAttributesExpression(
 function transformJsxOpeningElement(
   expression: ts.JsxSelfClosingElement | ts.JsxOpeningElement,
   context: TransformationContext,
-  children?: ts.NodeArray<ts.JsxChild>,
+  children?: ts.NodeArray<ts.JsxChild>
 ): VisitorResult<ts.JsxSelfClosingElement | ts.JsxOpeningElement> {
   // <Something a="b" />
   // React.createElement(Something, {a = 'b'})
@@ -60,36 +51,26 @@ function transformJsxOpeningElement(
   if (create === undefined) {
     createElement = createIdentifier(library)
   } else {
-    createElement = createTableIndexExpression(
-      createIdentifier(library),
-      createStringLiteral(create),
-    )
+    createElement = createTableIndexExpression(createIdentifier(library), createStringLiteral(create))
   }
   const tagName = expression.tagName.getText()
 
-  const tag =
-    tagName.toLowerCase() === tagName
-      ? createStringLiteral(tagName)
-      : createIdentifier(tagName)
+  const tag = tagName.toLowerCase() === tagName ? createStringLiteral(tagName) : createIdentifier(tagName)
 
-  const props = transformJsxAttributesExpression(
-    expression.attributes,
-    context,
-  )
+  const props = transformJsxAttributesExpression(expression.attributes, context)
 
   if (children) {
     const childrenOrStringLiterals = children
-      .filter(child => !ts.isJsxText(child) || child.text.trim() !== "")
-      .map(child =>
-        ts.isJsxText(child) ? ts.createStringLiteral(child.text.trim()) : child,
-      )
+      .filter((child) => {
+        if (ts.isJsxExpression(child)) {
+          return !!child.expression
+        }
+        return !ts.isJsxText(child) || child.text.trim() !== ""
+      })
+      .map((child) => (ts.isJsxText(child) ? ts.createStringLiteral(child.text.trim()) : child))
     const arrayLiteral = ts.createArrayLiteral(childrenOrStringLiterals, true)
 
-    return createCallExpression(
-      createElement,
-      [tag, props, transformArrayLiteral(arrayLiteral, context)],
-      expression,
-    )
+    return createCallExpression(createElement, [tag, props, transformArrayLiteral(arrayLiteral, context)], expression)
   }
 
   return createCallExpression(createElement, [tag, props], expression)
@@ -97,24 +78,18 @@ function transformJsxOpeningElement(
 
 function transformJsxElement(
   expression: ts.JsxElement | ts.JsxSelfClosingElement,
-  context: TransformationContext,
+  context: TransformationContext
 ): VisitorResult<ts.JsxElement | ts.JsxSelfClosingElement> {
   if (ts.isJsxSelfClosingElement(expression)) {
     return transformJsxOpeningElement(expression, context)
   }
-  return transformJsxOpeningElement(
-    expression.openingElement,
-    context,
-    expression.children,
-  )
+  return transformJsxOpeningElement(expression.openingElement, context, expression.children)
 }
 
 export default {
   visitors: {
-    [ts.SyntaxKind.JsxSelfClosingElement]: (node, context) =>
-      transformJsxElement(node, context),
-    [ts.SyntaxKind.JsxElement]: (node, context) =>
-      transformJsxElement(node, context),
+    [ts.SyntaxKind.JsxSelfClosingElement]: (node, context) => transformJsxElement(node, context),
+    [ts.SyntaxKind.JsxElement]: (node, context) => transformJsxElement(node, context),
     [ts.SyntaxKind.JsxExpression]: (node, context) => {
       if (node.expression) {
         return context.transformExpression(node.expression)

@@ -1,8 +1,9 @@
 import { registerHandlers } from "../framework/events"
 import { Prototypes } from "../constants"
 import { getBpForce } from "./forces"
-import { BpArea, BpAreaEntityData } from "./BpArea"
+import { BpAreaEntityData } from "./BpArea"
 import { getEntityData } from "../framework/entityData"
+import { configureIncluded, configureView } from "./viewInclude"
 
 /** @noSelf */
 function include(e: OnPlayerSelectedAreaPayload) {
@@ -11,6 +12,7 @@ function include(e: OnPlayerSelectedAreaPayload) {
   for (const entity of e.entities) {
     if (entity.force === viewForce) {
       entity.force = includeForce
+      configureIncluded(entity)
     }
   }
 }
@@ -22,9 +24,10 @@ function exclude(e: OnPlayerAltSelectedAreaPayload) {
     const entityData = getEntityData<BpAreaEntityData>(entity)
     if (!entityData) continue
     if (entity.force === includeForce) {
-      const isViewing = BpArea.getById(entityData.areaId).relations[entityData.relationLuaIndex - 1].viewing
+      const isViewing = entityData.area.relations[entityData.relationLuaIndex - 1].viewing
       if (isViewing) {
         entity.force = viewForce
+        configureView(entity)
       } else {
         entity.destroy()
       }

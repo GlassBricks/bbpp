@@ -28,7 +28,7 @@ type GuiElementType =
   | "textfield"
 
 /** @noSelf */
-interface BaseGuiAddSpec {
+interface BaseAddSpec {
   readonly type: GuiElementType
   name?: string
   caption?: LocalisedString
@@ -43,25 +43,25 @@ interface BaseGuiAddSpec {
 }
 
 /** @noSelf */
-interface ButtonGuiAddSpec extends BaseGuiAddSpec {
+interface ButtonAddSpec extends BaseAddSpec {
   type: "button"
   mouse_button_filter?: MouseButtonFlags
 }
 
 /** @noSelf */
-interface FlowGuiAddSpec extends BaseGuiAddSpec {
+interface FlowAddSpec extends BaseAddSpec {
   type: "flow"
   direction?: Direction
 }
 
 /** @noSelf */
-interface FrameGuiAddSpec extends BaseGuiAddSpec {
+interface FrameAddSpec extends BaseAddSpec {
   type: "frame"
   direction?: Direction
 }
 
 /** @noSelf */
-interface TableGuiAddSpec extends BaseGuiAddSpec {
+interface TableAddSpec extends BaseAddSpec {
   type: "table"
   column_count: number
   draw_vertical_lines?: boolean
@@ -71,7 +71,7 @@ interface TableGuiAddSpec extends BaseGuiAddSpec {
 }
 
 /** @noSelf */
-interface TextfieldGuiAddSpec extends BaseGuiAddSpec {
+interface TextfieldAddSpec extends BaseAddSpec {
   type: "textfield"
   text?: string
   numeric?: boolean
@@ -83,25 +83,25 @@ interface TextfieldGuiAddSpec extends BaseGuiAddSpec {
 }
 
 /** @noSelf */
-interface ProgressbarGuiAddSpec extends BaseGuiAddSpec {
+interface ProgressbarAddSpec extends BaseAddSpec {
   type: "progressbar"
   value?: number
 }
 
 /** @noSelf */
-interface CheckboxGuiAddSpec extends BaseGuiAddSpec {
+interface CheckboxAddSpec extends BaseAddSpec {
   type: "checkbox"
   state: boolean
 }
 
 /** @noSelf */
-interface RadiobuttonGuiAddSpec extends BaseGuiAddSpec {
+interface RadiobuttonAddSpec extends BaseAddSpec {
   type: "radiobutton"
   state: boolean
 }
 
 /** @noSelf */
-interface SpriteButtonGuiAddSpec extends BaseGuiAddSpec {
+interface SpriteButtonAddSpec extends BaseAddSpec {
   type: "sprite-button"
   sprite?: SpritePath
   hovered_sprite?: SpritePath
@@ -112,41 +112,41 @@ interface SpriteButtonGuiAddSpec extends BaseGuiAddSpec {
 }
 
 /** @noSelf */
-interface SpriteGuiAddSpec extends BaseGuiAddSpec {
+interface SpriteAddSpec extends BaseAddSpec {
   type: "sprite"
   sprite?: SpritePath
   resize_to_sprite?: boolean
 }
 
 /** @noSelf */
-interface ScrollPaneGuiAddSpec extends BaseGuiAddSpec {
+interface ScrollPaneAddSpec extends BaseAddSpec {
   type: "scroll-pane"
   horizontal_scroll_policy?: ScrollPolicy
   vertical_scroll_policy?: ScrollPolicy
 }
 
 /** @noSelf */
-interface DropDownGuiAddSpec extends BaseGuiAddSpec {
+interface DropDownAddSpec extends BaseAddSpec {
   type: "drop-down"
   items?: [LocalisedString]
   selected_index?: number
 }
 
 /** @noSelf */
-interface LineGuiAddSpec extends BaseGuiAddSpec {
+interface LineAddSpec extends BaseAddSpec {
   type: "line"
   direction: Direction
 }
 
 /** @noSelf */
-interface ListBoxGuiAddSpec extends BaseGuiAddSpec {
+interface ListBoxAddSpec extends BaseAddSpec {
   type: "list-box"
   items?: LocalisedString[]
   selected_index?: number
 }
 
 /** @noSelf */
-interface CameraGuiAddSpec extends BaseGuiAddSpec {
+interface CameraAddSpec extends BaseAddSpec {
   type: "camera"
   surface_index?: number
   zoom?: number
@@ -177,22 +177,22 @@ type ChooseElementButtonItem<Type extends keyof ChooseElemButtonTypes> = {
 }
 
 /** @noSelf */
-interface ChooseElemButtonGuiAddSpec<Type extends keyof ChooseElemButtonTypes = keyof ChooseElemButtonTypes>
-  extends BaseGuiAddSpec,
+interface ChooseElemButtonAddSpec<Type extends keyof ChooseElemButtonTypes = keyof ChooseElemButtonTypes>
+  extends BaseAddSpec,
     ChooseElementButtonItem<Type> {
   type: "choose-elem-button"
   elem_type: Type
 }
 
 /** @noSelf */
-interface TextBoxGuiAddSpec extends BaseGuiAddSpec {
+interface TextBoxAddSpec extends BaseAddSpec {
   type: "text-box"
   text?: string
   clear_and_focus_on_right_click?: boolean
 }
 
 /** @noSelf */
-interface SliderGuiAddSpec extends BaseGuiAddSpec {
+interface SliderAddSpec extends BaseAddSpec {
   type: "slider"
   minimum_value?: number
   maximum_value?: number
@@ -203,7 +203,7 @@ interface SliderGuiAddSpec extends BaseGuiAddSpec {
 }
 
 /** @noSelf */
-interface MinimapGuiAddSpec extends BaseGuiAddSpec {
+interface MinimapAddSpec extends BaseAddSpec {
   type: "minimap"
   position?: Position
   surface_index?: number
@@ -213,13 +213,13 @@ interface MinimapGuiAddSpec extends BaseGuiAddSpec {
 }
 
 /** @noSelf */
-interface TabGuiAddSpec extends BaseGuiAddSpec {
+interface TabAddSpec extends BaseAddSpec {
   type: "tab"
   badge_text?: LocalisedString
 }
 
 /** @noSelf */
-interface SwitchGuiAddSpec extends BaseGuiAddSpec {
+interface SwitchAddSpec extends BaseAddSpec {
   type: "switch"
   switch_state?: SwitchState
   allow_none_state?: boolean
@@ -230,55 +230,55 @@ interface SwitchGuiAddSpec extends BaseGuiAddSpec {
 }
 
 /** @noSelf */
-interface LabelGuiAddSpec extends BaseGuiAddSpec {
+interface LabelAddSpec extends BaseAddSpec {
   type: "label"
 }
 
 /** @noSelf */
-interface EntityPreviewGuiAddSpec extends BaseGuiAddSpec {
+interface EntityPreviewAddSpec extends BaseAddSpec {
   type: "entity-preview"
 }
 
 /** @noSelf */
-interface EmptyWidgetGuiAddSpec extends BaseGuiAddSpec {
+interface EmptyWidgetAddSpec extends BaseAddSpec {
   type: "empty-widget"
 }
 
 /** @noSelf */
-interface TabbedPaneGuiAddSpec extends BaseGuiAddSpec {
+interface TabbedPaneAddSpec extends BaseAddSpec {
   type: "tabbed-pane"
 }
 
-interface GuiAddSpecByType {
-  "choose-elem-button": ChooseElemButtonGuiAddSpec
-  "drop-down": DropDownGuiAddSpec
-  "empty-widget": EmptyWidgetGuiAddSpec
-  "entity-preview": EntityPreviewGuiAddSpec
-  "list-box": ListBoxGuiAddSpec
-  "scroll-pane": ScrollPaneGuiAddSpec
-  "sprite-button": SpriteButtonGuiAddSpec
-  "tabbed-pane": TabbedPaneGuiAddSpec
-  "text-box": TextBoxGuiAddSpec
-  button: ButtonGuiAddSpec
-  camera: CameraGuiAddSpec
-  checkbox: CheckboxGuiAddSpec
-  flow: FlowGuiAddSpec
-  frame: FrameGuiAddSpec
-  label: LabelGuiAddSpec
-  line: LineGuiAddSpec
-  minimap: MinimapGuiAddSpec
-  progressbar: ProgressbarGuiAddSpec
-  radiobutton: RadiobuttonGuiAddSpec
-  slider: SliderGuiAddSpec
-  sprite: SpriteGuiAddSpec
-  switch: SwitchGuiAddSpec
-  tab: TabGuiAddSpec
-  table: TableGuiAddSpec
-  textfield: TextfieldGuiAddSpec
+interface AddSpecByType {
+  "choose-elem-button": ChooseElemButtonAddSpec
+  "drop-down": DropDownAddSpec
+  "empty-widget": EmptyWidgetAddSpec
+  "entity-preview": EntityPreviewAddSpec
+  "list-box": ListBoxAddSpec
+  "scroll-pane": ScrollPaneAddSpec
+  "sprite-button": SpriteButtonAddSpec
+  "tabbed-pane": TabbedPaneAddSpec
+  "text-box": TextBoxAddSpec
+  button: ButtonAddSpec
+  camera: CameraAddSpec
+  checkbox: CheckboxAddSpec
+  flow: FlowAddSpec
+  frame: FrameAddSpec
+  label: LabelAddSpec
+  line: LineAddSpec
+  minimap: MinimapAddSpec
+  progressbar: ProgressbarAddSpec
+  radiobutton: RadiobuttonAddSpec
+  slider: SliderAddSpec
+  sprite: SpriteAddSpec
+  switch: SwitchAddSpec
+  tab: TabAddSpec
+  table: TableAddSpec
+  textfield: TextfieldAddSpec
 }
 
 /** @noSelf */
-type GuiAddSpec = GuiAddSpecByType[GuiElementType]
+type AddSpec = AddSpecByType[GuiElementType]
 
 // Element
 /** @noSelf */
@@ -303,7 +303,7 @@ interface BaseGuiElement extends LuaReadonlyIndexing<string, LuaGuiElement | und
   readonly valid: boolean
   readonly object_name: string
 
-  add<Spec extends GuiAddSpec>(element: Spec): GuiElementByType[Spec["type"]]
+  add<Spec extends AddSpec>(element: Spec): GuiElementByType[Spec["type"]]
 
   clear(): void
 
@@ -433,6 +433,7 @@ interface LineGuiElement extends BaseGuiElement {
 /** @noSelf */
 interface DropDownGuiElement extends BaseGuiElement {
   type: "drop-down"
+  items: LocalisedString[]
   selected_index: number
 
   clear_items(): void
@@ -449,6 +450,7 @@ interface DropDownGuiElement extends BaseGuiElement {
 /** @noSelf */
 interface ListBoxGuiElement extends BaseGuiElement {
   type: "list-box"
+  items: LocalisedString[]
   selected_index: number
 
   clear_items(): void
@@ -591,7 +593,7 @@ interface TabbedPaneGuiElement extends BaseGuiElement {
 
   add_tab(tab: TabGuiElement, content: LuaGuiElement): void
 
-  remove_tab(tab: LuaGuiElement): void
+  remove_tab(tab: TabGuiElement): void
 }
 
 interface GuiElementByType {
@@ -626,63 +628,63 @@ interface GuiElementByType {
 type LuaGuiElement = GuiElementByType[GuiElementType]
 
 // gui events
-interface ButtonGuiEvents {
+interface ButtonEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface SpriteButtonGuiEvents {
+interface SpriteButtonEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface CheckboxGuiEvents {
+interface CheckboxEvents {
   on_gui_click: true
   on_gui_checked_state_changed: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface FlowGuiEvents {
+interface FlowEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface FrameGuiEvents {
+interface FrameEvents {
   on_gui_click: true
   on_gui_location_changed: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface LabelGuiEvents {
+interface LabelEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface LineGuiEvents {
+interface LineEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface ProgressbarGuiEvents {
+interface ProgressbarEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface TableGuiEvents {
+interface TableEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface TextfieldGuiEvents {
+interface TextfieldEvents {
   on_gui_click: true
   on_gui_confirmed: true
   on_gui_text_changed: true
@@ -690,53 +692,53 @@ interface TextfieldGuiEvents {
   on_gui_closed: true
 }
 
-interface RadiobuttonGuiEvents {
+interface RadiobuttonEvents {
   on_gui_click: true
   on_gui_checked_state_changed: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface SpriteGuiEvents {
+interface SpriteEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface ScrollPaneGuiEvents {
+interface ScrollPaneEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface DropDownGuiEvents {
-  on_gui_click: true
-  on_gui_selection_state_changed: true
-  on_gui_opened: true
-  on_gui_closed: true
-}
-
-interface ListBoxGuiEvents {
+interface DropDownEvents {
   on_gui_click: true
   on_gui_selection_state_changed: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface CameraGuiEvents {
+interface ListBoxEvents {
+  on_gui_click: true
+  on_gui_selection_state_changed: true
+  on_gui_opened: true
+  on_gui_closed: true
+}
+
+interface CameraEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface ChooseElemButtonGuiEvents {
+interface ChooseElemButtonEvents {
   on_gui_click: true
   on_gui_elem_changed: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface TextBoxGuiEvents {
+interface TextBoxEvents {
   on_gui_click: true
   on_gui_confirmed: true
   on_gui_text_changed: true
@@ -744,45 +746,45 @@ interface TextBoxGuiEvents {
   on_gui_closed: true
 }
 
-interface SliderGuiEvents {
+interface SliderEvents {
   on_gui_click: true
   on_gui_value_changed: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface MinimapGuiEvents {
+interface MinimapEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface EntityPreviewGuiEvents {
+interface EntityPreviewEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface EmptyWidgetGuiEvents {
+interface EmptyWidgetEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface TabbedPaneGuiEvents {
+interface TabbedPaneEvents {
   on_gui_click: true
   on_gui_selected_tab_changed: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface TabGuiEvents {
+interface TabEvents {
   on_gui_click: true
   on_gui_opened: true
   on_gui_closed: true
 }
 
-interface SwitchGuiEvents {
+interface SwitchEvents {
   on_gui_click: true
   on_gui_switch_state_changed: true
   on_gui_opened: true
@@ -790,31 +792,31 @@ interface SwitchGuiEvents {
 }
 
 interface GuiEventsByType {
-  "choose-elem-button": ChooseElemButtonGuiEvents
-  "drop-down": DropDownGuiEvents
-  "empty-widget": EmptyWidgetGuiEvents
-  "entity-preview": EntityPreviewGuiEvents
-  "list-box": ListBoxGuiEvents
-  "scroll-pane": ScrollPaneGuiEvents
-  "sprite-button": SpriteButtonGuiEvents
-  "tabbed-pane": TabbedPaneGuiEvents
-  "text-box": TextBoxGuiEvents
-  button: ButtonGuiEvents
-  camera: CameraGuiEvents
-  checkbox: CheckboxGuiEvents
-  flow: FlowGuiEvents
-  frame: FrameGuiEvents
-  label: LabelGuiEvents
-  line: LineGuiEvents
-  minimap: MinimapGuiEvents
-  progressbar: ProgressbarGuiEvents
-  radiobutton: RadiobuttonGuiEvents
-  slider: SliderGuiEvents
-  sprite: SpriteGuiEvents
-  switch: SwitchGuiEvents
-  tab: TabGuiEvents
-  table: TableGuiEvents
-  textfield: TextfieldGuiEvents
+  "choose-elem-button": ChooseElemButtonEvents
+  "drop-down": DropDownEvents
+  "empty-widget": EmptyWidgetEvents
+  "entity-preview": EntityPreviewEvents
+  "list-box": ListBoxEvents
+  "scroll-pane": ScrollPaneEvents
+  "sprite-button": SpriteButtonEvents
+  "tabbed-pane": TabbedPaneEvents
+  "text-box": TextBoxEvents
+  button: ButtonEvents
+  camera: CameraEvents
+  checkbox: CheckboxEvents
+  flow: FlowEvents
+  frame: FrameEvents
+  label: LabelEvents
+  line: LineEvents
+  minimap: MinimapEvents
+  progressbar: ProgressbarEvents
+  radiobutton: RadiobuttonEvents
+  slider: SliderEvents
+  sprite: SpriteEvents
+  switch: SwitchEvents
+  tab: TabEvents
+  table: TableEvents
+  textfield: TextfieldEvents
 }
 
 // Concepts
