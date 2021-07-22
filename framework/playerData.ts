@@ -83,7 +83,7 @@ export class ObservablePlayerData<T> {
     setupPlayerData(this as unknown as Data<T>, uniqueName, initData)
   }
 
-  addObserver(observer: PlayerDataObserver<T>): void {
+  subscribe(observer: PlayerDataObserver<T>): void {
     this.observers[this.observers.length] = observer
   }
 

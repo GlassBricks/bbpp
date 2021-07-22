@@ -148,12 +148,6 @@ function instantiateComponent(
   spec: ComponentSpec<any>,
   currentRefs: Refs
 ): ComponentInstance {
-  if (spec.updateOnly) {
-    error(
-      "Update only is only allowed to update exising components (an element is trying to be created). Spec:" +
-        serpent.block(spec)
-    )
-  }
   const publicInstance = componentNew(spec.type)
   publicInstance.parentGuiElement = parent
   if (spec.ref) {
@@ -175,12 +169,10 @@ function instantiateComponent(
     indexInParent: indexInParent,
     ref: spec.ref,
   }
-  publicInstance.firstGuiElement = childInstance.guiElement
   publicInstance._internalInstance = newInstance
 
-  if (!spec.updateOnly) {
-    reconcileComponent(parent, indexInParent, newInstance, spec, currentRefs)
-  }
+  updateComponent(parent, indexInParent, newInstance, spec, currentRefs)
+  if (publicInstance.onCreated) publicInstance.onCreated()
 
   return newInstance
 }
@@ -217,8 +209,17 @@ function instantiate(
 // <editor-fold desc="Destroy and cleanup">
 function destroyInstance(instance: AnyInstance, currentRefs: Refs | undefined): void {
   destroyIfValid(instance.guiElement)
-  if (currentRefs && instance.ref) {
-    currentRefs[instance.ref] = undefined
+  if (currentRefs) clearRefs(instance, currentRefs)
+}
+
+function clearRefs(instance: AnyInstance, refs: Refs): void {
+  if (instance.ref) {
+    refs[instance.ref] = undefined
+  }
+  if (instance.type && isGuiElementType[instance.type]) {
+    for (const childInstance of (instance as ElementInstance).childInstances) {
+      clearRefs(childInstance, refs)
+    }
   }
 }
 
@@ -402,6 +403,23 @@ function reconcileElement(
   return nextInstance
 }
 
+function updateComponent(
+  parent: LuaGuiElement,
+  indexInParent: number,
+  instance: ComponentInstance,
+  spec: ComponentSpec<any>,
+  currentRefs: Refs
+): void {
+  instance.indexInParent = indexInParent
+
+  const publicInstance = instance.publicInstance
+  publicInstance.firstGuiElement = instance.guiElement
+
+  if (instance.ref) currentRefs[instance.ref] = undefined
+  if (spec.ref) currentRefs[spec.ref] = publicInstance
+  instance.ref = spec.ref
+}
+
 // same name, same type
 function reconcileComponent(
   parent: LuaGuiElement,
@@ -410,21 +428,9 @@ function reconcileComponent(
   spec: ComponentSpec<any>,
   currentRefs: Refs
 ): ComponentInstance {
-  const publicInstance = instance.publicInstance
-  // publicInstance.parentGuiElement = parent
-  // instance.parentGuiElement = parent
-  // publicInstance.props = nextProps
-  instance.indexInParent = indexInParent
+  updateComponent(parent, indexInParent, instance, spec, currentRefs)
 
-  if (instance.ref) currentRefs[instance.ref] = undefined
-  if (spec.ref) currentRefs[spec.ref] = publicInstance
-  instance.ref = spec.ref
-
-  if (spec.updateOnly) {
-    publicInstance.updateMerge(spec.props)
-  } else {
-    publicInstance.updateWith(spec.props)
-  }
+  instance.publicInstance.updateWith(spec.props)
 
   return instance
 }
@@ -462,14 +468,14 @@ function reconcile(
   spec: AnySpec | undefined,
   currentRefs: Refs
 ): AnyInstance {
-  const thisIsUpdateOnly = spec !== undefined && (spec.updateOnly === true || spec.type === "blank")
+  const isUpdateOnly = spec !== undefined && (spec.type === "blank" || (spec as any).updateOnly)
   const specType = spec && (spec.type === "blank" ? oldInstance.type : spec.type)
   if (oldInstance === undefined) {
     // new
     return instantiate(parent, indexInParent, spec, currentRefs)
   } else if (oldInstance.type !== specType) {
     // replace
-    if (thisIsUpdateOnly) {
+    if (isUpdateOnly) {
       error(`Types much match in update only mode. Old type: ${oldInstance.type}, New type: ${specType}`)
     }
     destroyInstance(oldInstance, currentRefs)
@@ -478,16 +484,18 @@ function reconcile(
   // update
   if (specType === undefined) {
     return oldInstance as NilInstance
-  } else if (isGuiElementType[specType]) {
-    return reconcileElement(oldInstance as ElementInstance, spec as ElementSpec, thisIsUpdateOnly, currentRefs)
   } else {
-    return reconcileComponent(
-      parent,
-      indexInParent,
-      oldInstance as ComponentInstance,
-      spec as ComponentSpec<any>,
-      currentRefs
-    )
+    if (spec && isGuiElementType[specType]) {
+      return reconcileElement(oldInstance as ElementInstance, spec as ElementSpec, isUpdateOnly, currentRefs)
+    } else {
+      return reconcileComponent(
+        parent,
+        indexInParent,
+        oldInstance as ComponentInstance,
+        spec as ComponentSpec<any>,
+        currentRefs
+      )
+    }
   }
 }
 

@@ -1,17 +1,29 @@
-import { Component, PropsOf } from "./component"
+import { NoUpdateComponent } from "./component"
 import { PlayerData } from "../playerData"
 import { destroyIn, renderIn } from "./render"
 import { ComponentSpec } from "./spec"
 import { FuncRef, registerFunc } from "../funcRef"
 
-export class Window<C extends Component<{}>> {
+export class Window<C extends NoUpdateComponent> {
   private readonly currentComponent: PlayerData<C | undefined>
-  private readonly spec: ComponentSpec<PropsOf<C>>
+  private readonly spec: ComponentSpec<{}>
 
   readonly toggleRef: FuncRef<(e: { player_index: number }) => void>
 
-  render(player: LuaPlayer, props?: PropsOf<C>): C {
-    this.spec.props = props || {}
+  constructor(public readonly componentClass: Class<C>, public readonly name: string = componentClass.name) {
+    this.currentComponent = PlayerData("window " + name, () => undefined)
+    this.spec = {
+      type: componentClass.name,
+      props: {},
+      ref: "component",
+    }
+
+    this.toggleRef = registerFunc((e) => {
+      this.toggle(game.get_player(e.player_index))
+    }, `window ${name}:toggleRef`)
+  }
+
+  render(player: LuaPlayer): C {
     const component = renderIn(player.gui.screen, this.name, this.spec).component as C
     this.currentComponent.data[player.index] = component
     return component
@@ -29,33 +41,13 @@ export class Window<C extends Component<{}>> {
     return this.render(player)
   }
 
-  constructor(public readonly componentClass: Class<C>, public readonly name = componentClass.name) {
-    this.currentComponent = PlayerData("window " + name, () => undefined)
-    this.spec = {
-      type: componentClass.name,
-      props: {} as PropsOf<C>,
-      ref: "component",
-    }
-
-    this.toggleRef = registerFunc((e) => {
-      this.toggle(game.get_player(e.player_index))
-    }, `window ${name}:toggleRef`)
-  }
-
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   currentOrNil(playerIndex: number): C | undefined {
     return this.currentComponent.data[playerIndex]
   }
 
-  update(player: LuaPlayer, props?: PropsOf<C>): C | undefined {
-    const current = this.currentComponent.data[player.index]
-    if (current) current.updateWith(props || {})
-    return current
-  }
-
-  updateAll(props?: PropsOf<C>): void {
-    for (const [, component] of pairs(this.currentComponent.data)) {
-      component.updateMerge(props || {})
-    }
+  currentForAllPlayers(): Readonly<PRecord<number, C>> {
+    return this.currentComponent.data
   }
 
   rerenderIfPresent(player: LuaPlayer): void {

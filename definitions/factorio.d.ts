@@ -958,8 +958,8 @@ interface PersonalLogisticParameters {
 
 /** @noSelf **/
 interface Position {
-  readonly x: number
-  readonly y: number
+  x: number
+  y: number
 }
 
 type PositionIn = Position | Vector
@@ -995,9 +995,7 @@ interface OldTileAndPosition {
   position: TilePosition
 }
 
-interface Tags  {
-  [key: string]: string | boolean | number | Partial<Record<string, unknown>> | undefined | unknown
-}
+type Tags = any
 
 /** @noSelf **/
 interface SmokeSource {
@@ -2025,9 +2023,9 @@ interface LuaBootstrap {
 
   get_event_order(): void
 
-  set_event_filter(event: number, filters?: Filters): void
+  set_event_filter(event: EventId<any>, filters?: Filters): void
 
-  get_event_filter(event: number): any | undefined
+  get_event_filter(event: EventId<any>): any | undefined
 
   raise_event<T>(event: EventId<T>, arg_1: T): void
 
@@ -3710,8 +3708,7 @@ interface LuaHeatEnergySourcePrototype {
 }
 
 /** @noSelf **/
-interface LuaInventoryBase {
-  readonly "operator #": number
+interface LuaInventory extends Array<LuaItemStack> {
   readonly index: defines.inventory
   readonly entity_owner: LuaEntity
   readonly player_owner: LuaPlayer
@@ -3752,8 +3749,6 @@ interface LuaInventoryBase {
 
   find_item_stack(item: string): LuaItemStack | undefined
 
-  size: LuaLengthMethod<number>
-
   count_empty_stacks(include_filtered?: boolean): number
 
   get_insertable_count(item: string): void
@@ -3767,11 +3762,6 @@ interface LuaInventoryBase {
   destroy(): void
 
   help(): void
-}
-
-/** @noSelf **/
-type LuaInventory = LuaInventoryBase & {
-  readonly [index: number]: LuaItemStack
 }
 
 /** @noSelf **/
@@ -3872,10 +3862,7 @@ interface BlueprintEntity {
   connections?: BlueprintCircuitConnection
   control_behavior?: BlueprintControlBehavior
   schedule?: TrainScheduleRecord[]
-
-  set position(position: PositionIn)
-
-  get position(): Position
+  position: PositionIn
 }
 
 /** @noSelf **/
@@ -3890,15 +3877,8 @@ interface LuaItemStack {
   durability: number
   ammo: number
   blueprint_icons: any[]
-
-  set blueprint_snap_to_grid(p: PositionIn)
-
-  get blueprint_snap_to_grid(): Position
-
-  set blueprint_position_relative_to_grid(p: PositionIn)
-
-  get blueprint_position_relative_to_grid(): Position
-
+  blueprint_snap_to_grid: PositionIn
+  blueprint_position_relative_to_grid: PositionIn
   blueprint_absolute_snapping: boolean
   label: string
   label_color: Color
@@ -3957,7 +3937,7 @@ interface LuaItemStack {
 
   transfer_stack(stack: ItemStackSpecification): boolean
 
-  export_stack(): void
+  export_stack(): string
 
   import_stack(data: string): number
 
@@ -4343,7 +4323,7 @@ interface LuaPlayer extends LuaControl {
 
   unlock_achievement(name: string): void
 
-  clear_cursor(): void
+  clear_cursor(): boolean
 
   create_character(character?: string): boolean
 
@@ -5415,7 +5395,7 @@ interface LuaSurface {
 
   get_script_areas(name?: string): ScriptArea[]
 
-  get_script_area(key?: string | number): ScriptArea
+  get_script_area(key: string | number): ScriptArea
 
   edit_script_area(id: number, area: ScriptArea): void
 

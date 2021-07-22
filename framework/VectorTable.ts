@@ -6,13 +6,19 @@ export type VectorTable<V> = {
 }
 
 export function put<V>(table: VectorTable<V>, x: number, y: number, value: V | undefined): void {
+  if (value === undefined) return remove(table, x, y)
   let xs = table[x]
   if (!xs) {
-    if (value === undefined) return
     xs = {}
     table[x] = xs
   }
   xs[y] = value
+}
+
+export function remove<V>(table: VectorTable<V>, x: number, y: number): void {
+  const xs = table[x]
+  if (!xs) return
+  xs[y] = undefined
   if (isEmpty(xs)) {
     table[x] = undefined
   }

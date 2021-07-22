@@ -24,15 +24,15 @@ function transformJsxAttributesExpression(
   expression: ts.JsxAttributes,
   context: TransformationContext
 ): VisitorResult<ts.Expression> {
-  if (expression.properties.find((element) => element.kind === ts.SyntaxKind.JsxSpreadAttribute)) {
-    throw new Error("Unsupported: JsxSpreadAttribute")
-  }
-  const properties = expression.properties
-    .filter((element): element is ts.JsxAttribute => element.kind !== ts.SyntaxKind.JsxSpreadAttribute)
-    .map((element) => {
+  const properties = expression.properties.map((element) => {
+    if (ts.isJsxAttribute(element)) {
       const valueOrExpression = element.initializer ? element.initializer : ts.createLiteral(true)
       return ts.createPropertyAssignment(element.name, valueOrExpression)
-    })
+    } else {
+      // is jxsSpreadAttribute
+      return ts.createSpreadAssignment(element.expression)
+    }
+  })
 
   return transformObjectLiteral(ts.createObjectLiteral(properties), context)
 }
@@ -53,10 +53,12 @@ function transformJsxOpeningElement(
   } else {
     createElement = createTableIndexExpression(createIdentifier(library), createStringLiteral(create))
   }
-  const tagName = expression.tagName.getText()
-
-  const tag = tagName.toLowerCase() === tagName ? createStringLiteral(tagName) : createIdentifier(tagName)
-
+  const tagName = expression.tagName
+  const text = tagName.getText()
+  const tag =
+    ts.isIdentifier(tagName) && text.toLowerCase() === text
+      ? createStringLiteral(text, tagName)
+      : context.transformExpression(tagName)
   const props = transformJsxAttributesExpression(expression.attributes, context)
 
   if (children) {

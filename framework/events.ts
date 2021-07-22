@@ -36,27 +36,40 @@ function registerRootHandler(eventKey: keyof ScriptEvents | EventId<any> | strin
 
 export function registerHandler<N extends keyof GameEvents>(
   eventName: N,
-  handler: EventHandler<GetPayload<GameEvents[N]>>
+  handler: EventHandler<GetPayload<GameEvents[N]>>,
+  early?: boolean
 ): void
-export function registerHandler<N extends EventId<any>>(eventName: N, handler: EventHandler<GetPayload<N>>): void
-export function registerHandler<N extends CustomInputName>(eventName: N, handler: EventHandler<CustomInputEvent>): void
-export function registerHandler(eventName: any, handler: EventHandler<any>): void {
+export function registerHandler<N extends EventId<any>>(
+  eventName: N,
+  handler: EventHandler<GetPayload<N>>,
+  early?: boolean
+): void
+export function registerHandler<N extends CustomInputName>(
+  eventName: N,
+  handler: EventHandler<CustomInputEvent>,
+  early?: boolean
+): void
+export function registerHandler(eventName: any, handler: EventHandler<any>, early?: boolean): void {
   const eventKey = defines.events[eventName as keyof typeof defines.events] || eventName
 
   if (!eventHandlers[eventKey]) {
     registerRootHandler(eventKey)
   }
-  table.insert(eventHandlers[eventKey]!, handler)
+  if (early) {
+    table.insert(eventHandlers[eventKey]!, 1, handler)
+  } else {
+    table.insert(eventHandlers[eventKey]!, handler)
+  }
 }
 
 export type EventHandlerContainer = {
   [N in keyof GameEvents]?: EventHandler<GameEvents[N]["#payloadType"]>
 }
 
-export function registerHandlers(handlers: EventHandlerContainer): void {
+export function registerHandlers(handlers: EventHandlerContainer, early?: boolean): void {
   for (const [eventName, handler] of pairs(handlers)) {
     // eslint-disable-next-line
-    registerHandler(eventName as any, handler as EventHandler<any>)
+    registerHandler(eventName as any, handler as EventHandler<any>, early)
   }
 }
 

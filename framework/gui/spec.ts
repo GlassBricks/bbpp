@@ -20,6 +20,8 @@ export type ElementSpecProps<Element extends BaseGuiElement> = JSX.IntrinsicAttr
   onUpdate?: (element: Element) => void
   onLateUpdate?: (element: Element) => void
 
+  updateOnly?: boolean
+
   styleMod?: ModOf<LuaStyle>
 }
 
@@ -95,25 +97,16 @@ export interface ElementSpecByType {
 
 export type ElementSpec = ElementSpecByType[GuiElementType]
 
-export type BlankSpec = {
+export interface BlankSpec {
   type: "blank"
   name?: string
-  updateOnly?: true
   children?: AnySpec[]
 }
 
 // Component
-export type ComponentSpec<Props> = JSX.IntrinsicAttributes & {
+export interface ComponentSpec<Props> extends JSX.IntrinsicAttributes {
   type: string
-} & (
-    | {
-        updateOnly: true
-        props?: Partial<Props>
-      }
-    | {
-        updateOnly?: false
-        props: Props
-      }
-  )
+  props: Props
+}
 
 export type AnySpec = ElementSpecByType[GuiElementType] | ComponentSpec<any> | BlankSpec

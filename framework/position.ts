@@ -54,24 +54,3 @@ export function isIn(pos: Position, area: Area): boolean {
   const br = area[1]
   return pos.x >= tl.x && pos.y >= tl.y && pos.x < br.x && pos.y < br.y
 }
-
-// element by element multiplication
-export function elemMul(a: Position, b: Position): Position {
-  return {
-    x: a.x * b.x,
-    y: a.y * b.y,
-  }
-}
-
-export function multiplyArea(area: Area, b: number): Area {
-  return [
-    {
-      x: area[0].x * b,
-      y: area[0].y * b,
-    },
-    {
-      x: area[1].x * b,
-      y: area[1].y * b,
-    },
-  ]
-}

@@ -8,7 +8,7 @@ import {
   ElementSpecProps,
   GuiEventHandlers,
 } from "./spec"
-import { Component, getComponentName } from "./component"
+import { Component, getRegisteredComponentName } from "./component"
 import { EventHandlerTags, GuiEventName } from "./guievents"
 import { FuncRef } from "../funcRef"
 
@@ -29,37 +29,44 @@ type IntrinsicElement<
 // Union instead of intersection of ModableKeys
 type AllModableKeys<T> = T extends infer I ? ModableKeys<I> : never
 
+type AddOnlyKeys = Exclude<
+  AllModableKeys<AddSpecByType[GuiElementType]>,
+  AllModableKeys<GuiElementByType[GuiElementType]>
+>
+
+type BothKeys = {
+  [T in GuiElementType]: Extract<Exclude<RequiredKeys<AddSpecByType[T]>, "type">, WritableKeys<GuiElementByType[T]>>
+}[GuiElementType]
+
 // Typescript abuse:
-const rawElementPropType: Record<
-  // Properties in AddSpec but not in LuaGuiElement
-  Exclude<AllModableKeys<AddSpecByType[GuiElementType]>, AllModableKeys<GuiElementByType[GuiElementType]>>,
-  "creation"
-> &
-  // props for in ElementSpec
+const rawElementPropType: Record<AddOnlyKeys, "add"> &
+  Record<BothKeys, "addAndElement"> &
   Record<Exclude<keyof ElementSpecProps<any>, "name"> | "children", "spec"> &
-  // GUI event names
   Record<GuiEventName, "guiEvent"> = {
-  index: "creation",
-  achievement: "creation",
-  chart_player_index: "creation",
-  column_count: "creation",
-  decorative: "creation",
-  direction: "creation",
-  discrete_slider: "creation",
-  discrete_values: "creation",
-  elem_type: "creation",
-  equipment: "creation",
-  fluid: "creation",
-  item: "creation",
-  "item-group": "creation",
-  maximum_value: "creation",
-  minimum_value: "creation",
-  recipe: "creation",
-  signal: "creation",
-  signalId: "creation",
-  technology: "creation",
-  tile: "creation",
-  value_step: "creation",
+  index: "add",
+  achievement: "add",
+  chart_player_index: "add",
+  column_count: "add",
+  decorative: "add",
+  direction: "add",
+  discrete_slider: "add",
+  discrete_values: "add",
+  elem_type: "add",
+  equipment: "add",
+  fluid: "add",
+  item: "add",
+  "item-group": "add",
+  maximum_value: "add",
+  minimum_value: "add",
+  recipe: "add",
+  signal: "add",
+  signalId: "add",
+  technology: "add",
+  tile: "add",
+  value_step: "add",
+
+  position: "addAndElement",
+  state: "addAndElement",
 
   // name is special
   updateOnly: "spec",
@@ -86,7 +93,7 @@ const rawElementPropType: Record<
   onTextChanged: "guiEvent",
   onValueChanged: "guiEvent",
 }
-const elementPropType: PRecord<string, "creation" | "spec" | "guiEvent"> = rawElementPropType
+const elementPropType: PRecord<string, "add" | "addAndElement" | "spec" | "guiEvent"> = rawElementPropType
 
 function createElementSpec(
   type: GuiElementType,
@@ -107,8 +114,11 @@ function createElementSpec(
       } else if (specType === "guiEvent") {
         guiHandlers[key] = value as FuncRef<any>
       } else {
-        // == creation
+        // == add or addAndSpec
         creationSpec[key] = value
+        if (specType === "addAndElement") {
+          elementMod[key] = value
+        }
       }
     }
     if (next(guiHandlers) !== undefined) {
@@ -132,10 +142,11 @@ function createComponentSpec<Props>(
   const theProps: any = props || {}
   theProps.children = flattenedChildren
   return {
-    type: getComponentName(type) || error(`The component of class type ${type.constructor.name} is not registered!`),
+    type:
+      getRegisteredComponentName(type) ??
+      error(`The component of class type ${type.constructor.name} is not registered!`),
     props: theProps,
     name: theProps.name,
-    updateOnly: theProps.updateOnly,
     ref: theProps.ref,
   }
 }
@@ -227,7 +238,6 @@ declare global {
 
     type IntrinsicAttributes = {
       name?: string
-      updateOnly?: boolean
       ref?: string | number
     }
 

@@ -9,16 +9,16 @@ import { WithIsValid } from "../instanceRef"
 export type Refs = PRecord<string | number, LuaGuiElement | Component<unknown>>
 
 export abstract class Component<Props> implements WithIsValid {
-  parentGuiElement!: LuaGuiElement
   private static readonly _staticFuncs: Funcs<unknown>
+
+  parentGuiElement!: LuaGuiElement
   firstGuiElement!: LuaGuiElement
   readonly refs: Refs = {}
-  private static readonly _applySpec: (this: void, component: Component<unknown>, spec: AnySpec | undefined) => void
 
   readonly funcs: Funcs<this>
-  _internalInstance: unknown
+  private static readonly _applySpec: (this: void, component: Component<unknown>, spec: AnySpec | undefined) => void
   protected props!: Props
-  private isFirstUpdate: boolean = true
+  _internalInstance: unknown
 
   constructor() {
     global.componentInstanceTypes.set(this, this.constructor.name)
@@ -29,6 +29,8 @@ export abstract class Component<Props> implements WithIsValid {
     return (this as unknown as typeof Component)._staticFuncs as Funcs<T>
   }
 
+  onCreated?(): void
+
   createWith(props: Props): AnySpec | undefined {
     this.props = props
     return this.create()
@@ -37,13 +39,7 @@ export abstract class Component<Props> implements WithIsValid {
   updateWith(props: Props): void {
     const prevProps = this.props
     this.props = props
-    this.update(prevProps, this.isFirstUpdate)
-    this.isFirstUpdate = false
-  }
-
-  updateMerge(props?: Partial<Props>): void {
-    const newProps = { ...this.props, ...props }
-    this.updateWith(newProps)
+    this.update(prevProps)
   }
 
   isValid(): boolean {
@@ -53,31 +49,24 @@ export abstract class Component<Props> implements WithIsValid {
 
   protected abstract create(): AnySpec | undefined
 
+  updateMerge(props?: Partial<Props>): void {
+    const newProps = { ...this.props, ...props }
+    this.updateWith(newProps)
+  }
+
   protected applySpec(spec: AnySpec | undefined): void {
     Component._applySpec(this, spec)
   }
 
-  protected abstract update(prevProps: Props, firstUpdate: boolean): void
-
   protected getPlayer(): LuaPlayer {
     return game.get_player(this.parentGuiElement.player_index)
   }
+
+  protected abstract update(prevProps: Props): void
 }
 
-/**
- * A component where you handle creation/updates manually in the `updateAllPlayers` function
- */
-export abstract class ManagedComponent<Props> extends Component<Props> {
-  create(): AnySpec | undefined {
-    return undefined
-  }
-}
-
-/**
- * A component which is the same every time; i.e. only `create`, nothing on `updateAllPlayers`
- */
-export abstract class StaticComponent extends Component<Empty> {
-  update(): void {
+export abstract class NoUpdateComponent<Props = {}> extends Component<Props> {
+  protected update(): void {
     // noop
   }
 }
@@ -124,7 +113,7 @@ function getRegisteredComponent(name: string): Class<Component<unknown>> {
   return componentClass as any
 }
 
-export function getComponentName<C extends Component<unknown>>(component: Class<C>): string | undefined {
+export function getRegisteredComponentName<C extends Component<unknown>>(component: Class<C>): string | undefined {
   return componentNames.get(component)
 }
 

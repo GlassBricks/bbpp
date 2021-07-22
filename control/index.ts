@@ -1,6 +1,8 @@
 import "./BpArea"
 import "./inclusionTool"
+import "./pasteAction"
 
-import "./gui/AreaNavigator.tsx"
+import "./gui/BpAreaEditorWindow"
 
 import "./dev"
+import "./areaPlacement"

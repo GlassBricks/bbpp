@@ -2,13 +2,8 @@ import { registerHandlers } from "../events"
 import { Prototypes } from "../../constants"
 import { callFuncRef, FuncRef } from "../funcRef"
 
-/**
- * To make something confirmable, set the tag [onConfirm], and also set it to opened
- */
-declare global {
-  interface Tags {
-    onConfirmFunc?: FuncRef<() => void> | false
-  }
+export interface Tags {
+  onConfirmFunc?: FuncRef<() => void> | false
 }
 
 registerHandlers({

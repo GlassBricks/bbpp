@@ -128,7 +128,7 @@ interface ScrollPaneAddSpec extends BaseAddSpec {
 /** @noSelf */
 interface DropDownAddSpec extends BaseAddSpec {
   type: "drop-down"
-  items?: [LocalisedString]
+  items?: LocalisedString[]
   selected_index?: number
 }
 
@@ -151,9 +151,7 @@ interface CameraAddSpec extends BaseAddSpec {
   surface_index?: number
   zoom?: number
 
-  set position(position: PositionIn)
-
-  get position(): Position
+  position: PositionIn
 }
 
 /** @noSelf */
@@ -473,9 +471,7 @@ interface CameraGuiElement extends BaseGuiElement {
   zoom: number
   entity?: LuaEntity
 
-  set position(position: PositionIn)
-
-  get position(): Position
+  position: PositionIn
 }
 
 /** @noSelf */
@@ -487,9 +483,7 @@ interface MinimapGuiElement extends BaseGuiElement {
   force?: string
   entity?: LuaEntity
 
-  set position(position: PositionIn)
-
-  get position(): Position
+  position: PositionIn
 }
 
 /** @noSelf */

@@ -1,9 +1,8 @@
-import { registerHandlers } from "../framework/events"
+import { BpSurface } from "./BpArea"
 
-declare const global: {
-  isEmptySurface: PRecord<number, true>
-}
-
+/**
+ * Also immediately creates BpSurface
+ */
 export function createEmptySurface(name: string): LuaSurface {
   const surface = game.create_surface(name, {
     default_enable_all_autoplace_controls: false,
@@ -25,19 +24,6 @@ export function createEmptySurface(name: string): LuaSurface {
   })
   surface.freeze_daytime = true
   surface.generate_with_lab_tiles = true
-  global.isEmptySurface[surface.index] = true
+  BpSurface._on_surface_created(surface)
   return surface
 }
-
-registerHandlers({
-  on_init() {
-    global.isEmptySurface = {}
-  },
-  on_surface_deleted(e) {
-    global.isEmptySurface[e.surface_index] = undefined
-  },
-  on_chunk_generated(e) {
-    if (!global.isEmptySurface[e.surface.index]) return
-    e.surface.build_checkerboard(e.area)
-  },
-})

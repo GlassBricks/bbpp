@@ -6,10 +6,10 @@ import { onPlayerInit } from "../framework/onPlayerInit"
 import * as modGui from "mod-gui"
 import Reactorio, { renderIn } from "../framework/gui"
 import { getFuncRef, registerFunc } from "../framework/funcRef"
-import { BpAreaEditor } from "./gui/BpAreaEditor"
+import { BpAreaEditorWindow } from "./gui/BpAreaEditorWindow"
 import { createEmptySurface } from "./surfaces"
-import { Area } from "../framework/position"
 import { dlog } from "../framework/logging"
+import { getValueOrError } from "../framework/result"
 
 registerHandlers({
   on_init() {
@@ -20,11 +20,7 @@ registerHandlers({
       let lastLastArea: BpArea | undefined
       for (let i = 0; i < 2; i++) {
         for (let j = 0; j < 2; j++) {
-          const bounds: Area = [
-            { x: i, y: j },
-            { x: i, y: j },
-          ]
-          const area = bpSurface.createNewArea(`test area ${i},${j}`, bounds, 2)
+          const area = getValueOrError(bpSurface.tryCreateNewArea("foo", { x: i, y: j }, { x: 1, y: 1 }, 1))
 
           if (lastArea) {
             area.addRelation({
@@ -49,7 +45,6 @@ registerHandlers({
         }
       }
     }
-    game.speed = 0.5
   },
 })
 
@@ -87,17 +82,17 @@ DevButton("Delete view only", (player) => {
 DevButton("Open bp", (player) => {
   const area = getArea(player)
   if (!area) return
-  player.opened = area.inventory[1]
+  player.opened = area.inventory[0]
 })
 
 DevButton("Open include bps", (player) => {
   const area = getArea(player)
   if (!area) return
-  player.opened = area.inventory[2]
+  player.opened = area.inventory[1]
 })
 // todo move
 // const devWindow = AreaNavigator.window
-const devWindow = BpAreaEditor.window
+const devWindow = BpAreaEditorWindow.window
 
 function toggleDevWindow({ player_index }: { player_index: number }) {
   devWindow.toggle(game.get_player(player_index))

@@ -3,13 +3,6 @@ import { Prototypes } from "./constants"
 
 declare const data: Data
 
-const boundaryTile = table.deepcopy(data.raw.tile["lab-white"])
-boundaryTile.name = Prototypes.boundaryTileWhite
-boundaryTile.order = "z[other]-d[bbpp]-[boundary]"
-boundaryTile.collision_mask = ["ground-tile", "object-layer"]
-
-data.extend([boundaryTile])
-
 const inclusionTool = {
   type: "selection-tool",
   name: Prototypes.inclusionTool,
@@ -44,12 +37,119 @@ const inclusionToolShortcut = {
   order: "m[bbpp]-[inclusion-tool]",
   icon: {
     filename: "__bbpp__/graphics/icons/inclusion-tool.png",
+    priority: "extra-high-no-scale",
     flags: ["icon"],
     size: 32,
   },
 }
 
 data.extend([inclusionTool, inclusionToolShortcut])
+
+const boundaryTile = table.deepcopy(data.raw.tile["lab-white"])
+boundaryTile.name = Prototypes.boundaryTileWhite
+boundaryTile.order = "z[other]-d[bbpp]-[boundary]"
+boundaryTile.collision_mask = ["ground-tile", "object-layer"]
+
+data.extend([boundaryTile])
+
+const temporaryBlueprint = table.deepcopy(data.raw.blueprint.blueprint)
+temporaryBlueprint.name = Prototypes.temporaryBlueprint
+;(temporaryBlueprint.flags as string[]).push("only-in-cursor")
+data.extend([temporaryBlueprint])
+
+const labWhite = "__base__/graphics/terrain/lab-tiles/lab-white.png"
+const tileEntity = {
+  type: "simple-entity",
+  name: Prototypes.tileEntityWhite,
+  icon: labWhite,
+  icon_size: 32,
+  picture: {
+    filename: labWhite,
+    size: 32,
+  },
+  collision_box: [
+    [-0.35, -0.35],
+    [0.35, 0.35],
+  ],
+  flags: ["hidden", "player-creation"],
+}
+const tileEntityItem = {
+  // required for blueprinting
+  type: "item",
+  name: Prototypes.tileEntityWhite,
+  icon: labWhite,
+  icon_size: 32,
+  flags: ["hidden"],
+  place_result: Prototypes.tileEntityWhite,
+  stack_size: 1,
+}
+
+data.extend([tileEntity, tileEntityItem])
+
+/*
+const referencePointImage = "__core__/graphics/reference-point.png"
+const referencePoint = {
+  type: "simple-entity",
+  name: Prototypes.referencePoint,
+  icon: referencePointImage,
+  icon_size: 100,
+  picture: {
+    filename: referencePointImage,
+    size: 100,
+    scale: 64 / 100,
+    shift: [0, -0.1],
+  },
+  selection_box: [
+    [-0.5, -0.5],
+    [0.5, 0.5],
+  ],
+  collision_box: [
+    [-0.3, -0.3],
+    [0.3, 0.3],
+  ],
+  collision_mask: ["doodad-layer"],
+  flags: ["hidden", "not-selectable-in-game", "placeable-off-grid", "player-creation"],
+}
+const referencePointItem = {
+  // required for blueprinting
+  type: "item",
+  name: Prototypes.referencePoint,
+  icon: referencePointImage,
+  icon_size: 100,
+  flags: ["hidden"],
+  place_result: Prototypes.referencePoint,
+  stack_size: 1,
+}
+*/
+
+const emptyImage = "__core__/graphics/empty.png"
+const copyPasteIcon = "__base__/graphics/icons/copy-paste-tool.png"
+const emptySprite = {
+  filename: emptyImage,
+  priority: "extra-high",
+  size: 1,
+}
+const pasteAction = {
+  type: "simple-entity",
+  name: Prototypes.pasteAction,
+  icon: copyPasteIcon,
+  icon_size: 64,
+  picture: emptySprite,
+  collision_mask: ["doodad-layer"],
+  flags: ["hidden", "not-selectable-in-game", "placeable-off-grid", "player-creation"],
+}
+const pasteActionItem = {
+  // required for blueprinting
+  type: "item",
+  name: Prototypes.pasteAction,
+  icon: copyPasteIcon,
+  icon_size: 64,
+  flags: ["hidden"],
+  place_result: Prototypes.pasteAction,
+  stack_size: 1,
+}
+
+data.extend([pasteAction, pasteActionItem])
 
 const confirmInput = {
   type: "custom-input",

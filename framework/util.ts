@@ -115,6 +115,6 @@ export function isValid(a: { valid: boolean } | undefined): a is { valid: true }
   return a !== undefined && a.valid
 }
 
-export function destroyIfValid(a: { valid: boolean; destroy: (this: void) => void } | undefined): void {
+export function destroyIfValid(a: { valid: boolean; destroy(this: void): void } | undefined): void {
   if (isValid(a)) a.destroy()
 }

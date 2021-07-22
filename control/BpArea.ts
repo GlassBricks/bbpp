@@ -1,12 +1,14 @@
 import { userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty } from "../framework/util"
-import { add, Area, getCenter, multiplyArea, subtract } from "../framework/position"
+import { add, Area, getCenter, multiply, subtract } from "../framework/position"
 import { Prototypes } from "../constants"
-import { get, put, VectorTable, vectorTableRemoveValue } from "../framework/VectorTable"
+import { get, VectorTable } from "../framework/VectorTable"
 import { getEntityData, setEntityData } from "../framework/entityData"
 import { getBpForce } from "./forces"
 import { configureIncluded, configureView } from "./viewInclude"
+import { Result } from "../framework/result"
+import { Event } from "../framework/Event"
 
 // global
 interface BpAreasGlobal {
@@ -24,10 +26,6 @@ registerHandlers({
 
     global.nextBpAreaId = 1
     global.bpAreaById = {}
-
-    for (const [, surface] of pairs(game.surfaces)) {
-      BpSurface._on_surface_created(surface)
-    }
   },
   on_load() {
     for (const [, set] of pairs(global.bpSurfaceByIndex)) {
@@ -54,7 +52,12 @@ export class BpSurface {
   }
 
   static _on_surface_created(surface: LuaSurface): void {
-    global.bpSurfaceByIndex[surface.index] = new BpSurface(surface)
+    const existing = global.bpSurfaceByIndex[surface.index]
+    if (!existing) {
+      global.bpSurfaceByIndex[surface.index] = new BpSurface(surface)
+    } else {
+      assert(existing.surface.valid && existing.surface.index === surface.index)
+    }
   }
 
   static _on_surface_deleted(e: OnSurfaceDeletedPayload): void {
@@ -77,23 +80,101 @@ export class BpSurface {
   // </editor-fold>
 
   // <editor-fold desc="Areas">
-  createNewArea(name: string, chunkArea: Area, boundaryThickness: number): BpArea {
-    const area = multiplyArea(chunkArea, 32)
-    const bpArea = BpArea._create(this, area, name)
+
+  static getBoundaryTiles(fullArea: Area, boundaryThickness: number, prototype: string): Tile[] {
+    const tiles: Tile[] = []
+    for (let t = 0; t < boundaryThickness; t++) {
+      for (let x = fullArea[0].x + boundaryThickness; x < fullArea[1].x - boundaryThickness; x++) {
+        tiles.push(
+          {
+            name: prototype,
+            position: { x: x + 0.5, y: fullArea[0].y + t + 0.5 },
+          },
+          {
+            name: prototype,
+            position: { x: x + 0.5, y: fullArea[1].y - t - 0.5 },
+          }
+        )
+      }
+      for (let y = fullArea[0].y; y < fullArea[1].y; y++) {
+        tiles.push(
+          {
+            name: prototype,
+            position: { x: fullArea[0].x + t + 0.5, y: y + 0.5 },
+          },
+          {
+            name: prototype,
+            position: { x: fullArea[1].x - t - 0.5, y: y + 0.5 },
+          }
+        )
+      }
+    }
+    return tiles
+  }
+
+  tryCreateNewArea(
+    name: string,
+    chunkTopLeft: Position,
+    chunkSize: Position,
+    boundaryThickness: number
+  ): Result<BpArea> {
+    // generate chunks/set chunks
+    for (let x = chunkTopLeft.x; x < chunkTopLeft.x + chunkSize.x; x++) {
+      const xs = this.bpAreasByChunk[x]
+      if (!xs) continue
+      for (let y = chunkTopLeft.y; y < chunkTopLeft.y + chunkSize.y; y++) {
+        if (xs[y])
+          return {
+            result: "error",
+            message: "Selected area intersects with an existing area.",
+          }
+      }
+    }
+    return {
+      result: "ok",
+      value: this.createNewArea(name, chunkTopLeft, chunkSize, boundaryThickness),
+    }
+  }
+
+  _areaDeleted(area: BpArea): void {
+    // todo: go to EVERY area referenced and delete
+    assert(!area.valid)
+    if (!this.valid) return
+
+    arrayRemoveValue(this.areas, area)
+    for (let x = area.topLeft.x; x < area.topLeft.x + area.chunkSize.x; x++) {
+      const xs = this.bpAreasByChunk[x]!
+      if (!xs) continue
+      for (let y = area.topLeft.y; y < area.topLeft.y + area.chunkSize.y; y++) {
+        xs[y] = undefined
+      }
+      if (isEmpty(xs)) this.bpAreasByChunk[x] = undefined
+    }
+  }
+
+  private createNewArea(name: string, chunkTopLeft: Position, chunkSize: Position, boundaryThickness: number): BpArea {
+    const bpArea = BpArea._create(this, name, chunkTopLeft, chunkSize)
 
     this.areas[this.areas.length] = bpArea
-    // generate chunks/set chunks
-    for (const x of $range(chunkArea[0].x, chunkArea[1].x)) {
-      for (const y of $range(chunkArea[0].y, chunkArea[1].y)) {
+    for (let x = chunkTopLeft.x; x < chunkTopLeft.x + chunkSize.x; x++) {
+      let xs = this.bpAreasByChunk[x]
+      if (!xs) {
+        xs = {}
+        this.bpAreasByChunk[x] = xs
+      }
+      for (let y = chunkTopLeft.y; y < chunkTopLeft.y + chunkSize.y; y++) {
         if (!this.surface.is_chunk_generated([x, y])) {
           this.surface.set_chunk_generated_status([x, y], defines.chunk_generated_status.entities)
         }
-        put(this.bpAreasByChunk, x, y, bpArea)
+        xs[y] = bpArea
       }
     }
-    this.surface.build_checkerboard(area)
-    this.createBoundary(area, boundaryThickness)
 
+    const area = bpArea.area
+    this.surface.build_checkerboard(area)
+    this.generateBoundary(area, boundaryThickness)
+
+    BpArea.onCreated.raise(bpArea)
     return bpArea
   }
 
@@ -103,43 +184,8 @@ export class BpSurface {
     return get(this.bpAreasByChunk, blockX, blockY)
   }
 
-  _areaDeleted(area: BpArea): void {
-    // todo: go to EVERY area referenced and delete
-    assert(!area.valid)
-    if (!this.valid) return
-
-    arrayRemoveValue(this.areas, area)
-    vectorTableRemoveValue(this.bpAreasByChunk, area)
-  }
-
-  private createBoundary(fullArea: Area, boundaryThickness: number) {
-    const tiles: Tile[] = []
-    for (let t = 0; t < boundaryThickness; t++) {
-      for (let x = fullArea[0].x + boundaryThickness; x < fullArea[1].x; x++) {
-        tiles.push(
-          {
-            name: BpArea.boundaryTile,
-            position: { x: x + 0.5, y: fullArea[0].y + t + 0.5 },
-          },
-          {
-            name: BpArea.boundaryTile,
-            position: { x: x + 0.5, y: fullArea[1].y + t + 0.5 },
-          }
-        )
-      }
-      for (let y = fullArea[0].y; y < fullArea[1].y + boundaryThickness; y++) {
-        tiles.push(
-          {
-            name: BpArea.boundaryTile,
-            position: { x: fullArea[0].x + t + 0.5, y: y + 0.5 },
-          },
-          {
-            name: BpArea.boundaryTile,
-            position: { x: fullArea[1].x + t + 0.5, y: y + 0.5 },
-          }
-        )
-      }
-    }
+  private generateBoundary(fullArea: Area, boundaryThickness: number) {
+    const tiles = BpSurface.getBoundaryTiles(fullArea, boundaryThickness, Prototypes.boundaryTileWhite)
     this.surface.set_tiles(tiles)
   }
 
@@ -147,6 +193,11 @@ export class BpSurface {
 }
 
 registerHandlers({
+  on_init() {
+    for (const [, surface] of pairs(game.surfaces)) {
+      BpSurface._on_surface_created(surface)
+    }
+  },
   on_surface_created(e) {
     BpSurface._on_surface_created(game.get_surface(e.surface_index)!)
   },
@@ -181,33 +232,43 @@ export interface BpAreaEntityData {
 // TODO: BpAreas changed event/listeners
 
 export class BpArea {
+  static onCreated = new Event<BpArea>()
+  static onDeleted = new Event<{
+    id: number
+    bpSurface: BpSurface
+  }>()
+
   readonly id: number
   valid: boolean = true
 
   readonly surface: LuaSurface
-
+  readonly area: Area
   readonly center: Position
+
+  readonly inventory: LuaInventory = game.create_inventory(8)
+  readonly dataBp = this.inventory[0]
+  private readonly includeBps: LuaInventory
+
   readonly relations: AreaRelationInternal[] = []
   editingAreaId: number
 
-  readonly inventory: LuaInventory = game.create_inventory(8)
-  readonly dataBp = this.inventory[1]
-  private readonly includeBps: LuaInventory
-
-  public static readonly boundaryTile = Prototypes.boundaryTileWhite
-
   // <editor-fold desc="Creation and deletion">
 
-  private constructor(public readonly bpSurface: BpSurface, public readonly area: Area, public name: string) {
+  private constructor(
+    public readonly bpSurface: BpSurface,
+    public name: string,
+    public readonly topLeft: Position,
+    public readonly chunkSize: Position
+  ) {
     this.id = global.nextBpAreaId++
-    this.surface = this.bpSurface.surface
 
-    this.center = getCenter(area)
+    this.surface = this.bpSurface.surface
+    this.area = [multiply(topLeft, 32), multiply(add(topLeft, chunkSize), 32)]
+    this.center = getCenter(this.area)
 
     this.dataBp.set_stack({ name: "blueprint" })
-    this.inventory[2].set_stack({ name: "blueprint-book" })
-    this.includeBps = this.inventory[2].get_inventory(defines.inventory.item_main)!
-    this.editingAreaId = this.id
+    this.inventory[1].set_stack({ name: "blueprint-book" })
+    this.includeBps = this.inventory[1].get_inventory(defines.inventory.item_main)!
 
     this.addRelation({
       areaId: this.id,
@@ -215,12 +276,13 @@ export class BpArea {
       relativePosition: { x: 0, y: 0 },
       viewing: false,
     })
+    this.editingAreaId = this.id
 
     global.bpAreaById[this.id] = this
   }
 
-  static _create(bpSurface: BpSurface, area: Area, name: string): BpArea {
-    return new BpArea(bpSurface, area, name)
+  static _create(bpSurface: BpSurface, name: string, topLeft: Position, chunkArea: Position): BpArea {
+    return new BpArea(bpSurface, name, topLeft, chunkArea)
   }
 
   static getByIdOrNil(id: number): BpArea | undefined {
@@ -241,6 +303,12 @@ export class BpArea {
     this.inventory.destroy()
     global.bpAreaById[this.id] = undefined
     this.bpSurface._areaDeleted(this)
+    if (this.bpSurface.valid) {
+      BpArea.onDeleted.raise({
+        id: this.id,
+        bpSurface: this.bpSurface,
+      })
+    }
   }
 
   // <editor-fold desc="Relations">
@@ -296,10 +364,10 @@ export class BpArea {
   private findIncludeBpSlot(): number {
     const [, index] = this.includeBps.find_empty_stack()
     if (index) {
-      this.includeBps[index].set_stack({ name: "blueprint" })
+      this.includeBps[index - 1].set_stack({ name: "blueprint" })
       return index
     }
-    const newIndex = this.includeBps.size() + 1
+    const newIndex = this.includeBps.length + 1
     this.includeBps.insert({ name: "blueprint" })
     return newIndex
   }
