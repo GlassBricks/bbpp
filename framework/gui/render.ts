@@ -2,7 +2,7 @@
 import { registerHandlers } from "../events"
 import { AnySpec, ComponentSpec, ElementSpec } from "./spec"
 import { Component, componentNew, Refs } from "./component"
-import { destroyIfValid, isEmpty } from "../util"
+import { destroyIfValid, isEmpty, isValid } from "../util"
 
 const isGuiElementType: Record<GuiElementType, true> & Record<any, boolean> = {
   "choose-elem-button": true,
@@ -169,7 +169,7 @@ function instantiateComponent(
     indexInParent: indexInParent,
     ref: spec.ref,
   }
-  publicInstance._internalInstance = newInstance
+  publicInstance.__internalInstance = newInstance
 
   updateComponent(parent, indexInParent, newInstance, spec, currentRefs)
   if (publicInstance.onCreated) publicInstance.onCreated()
@@ -435,14 +435,18 @@ function reconcileComponent(
   return instance
 }
 
-;(Component as any)._applySpec = function (this: void, component: Component<unknown>, spec: AnySpec | undefined) {
-  const instance = component._internalInstance as ComponentInstance
+Component.__applySpec = function (this: void, component: Component<unknown>, spec: AnySpec | undefined) {
+  const instance = component.__internalInstance as ComponentInstance
   const oldChildInstance = instance.childInstance
   const refs = instance.publicInstance.refs
   const childInstance = reconcile(instance.parentGuiElement, instance.indexInParent, oldChildInstance, spec, refs)
   component.firstGuiElement = childInstance.guiElement
   instance.guiElement = childInstance.guiElement
   instance.childInstance = childInstance
+}
+
+Component.__isValid = function (this: void, component: Component<unknown>) {
+  return isValid((component.__internalInstance as ComponentInstance).guiElement)
 }
 
 // same name, not null

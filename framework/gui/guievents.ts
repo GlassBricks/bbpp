@@ -1,5 +1,6 @@
 import { EventHandlerContainer, registerHandlers } from "../events"
-import { callFuncRef, FuncRef } from "../funcRef"
+import { FuncRef } from "../funcRef"
+import { callGuiFunc } from "./component"
 
 export const guiEventNameMapping = {
   onCheckedStateChanged: "on_gui_checked_state_changed",
@@ -30,14 +31,13 @@ export interface EventHandlerTags {
 
 /** @noSelf */
 function handleGuiEvent(eventName: GuiEventName, event: AnyGuiEventPayload) {
-  // I want optional chaining!
   const element = event.element
   if (!element) return
-  const handlers = (element.tags as unknown as EventHandlerTags)["#guiEventHandlers"]
+  const handlers = (element.tags as EventHandlerTags)["#guiEventHandlers"]
   if (!handlers) return
   const handler = handlers[eventName]
   if (!handler) return
-  callFuncRef(handler, element, event)
+  callGuiFunc(handler, element, event)
 }
 
 const handlers: EventHandlerContainer = {}

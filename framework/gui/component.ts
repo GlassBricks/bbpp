@@ -1,33 +1,53 @@
 /** @noSelfInFile */
 import { AnySpec } from "./spec"
-import { Funcs, funcsMeta, makeBindingFuncs, makeStaticFuncs, registerFuncs } from "../funcRef"
-import { dlog } from "../logging"
+import { derefFuncOrNil, FuncRef, registerFuncs } from "../funcRef"
 import { registerHandlers } from "../events"
-import { isValid } from "../util"
-import { WithIsValid } from "../instanceRef"
+import { vlog } from "../logging"
+
+interface ComponentsGlobal {
+  componentInstances: Record<number, Component<any>>
+  nextInstanceId: number
+}
+
+declare const global: ComponentsGlobal
+
+registerHandlers({
+  on_init() {
+    global.componentInstances = setmetatable({}, { __mode: "v" })
+    global.nextInstanceId = 1
+  },
+  on_load() {
+    setmetatable(global.componentInstances, { __mode: "v" })
+    for (const [, instance] of pairs(global.componentInstances)) {
+      const prototype = getRegisteredComponent(instance.__componentName).prototype
+      setmetatable(instance, prototype)
+    }
+  },
+})
 
 export type Refs = PRecord<string | number, LuaGuiElement | Component<unknown>>
 
-export abstract class Component<Props> implements WithIsValid {
-  private static readonly _staticFuncs: Funcs<unknown>
+export abstract class Component<Props> {
+  static __componentName: string
+  static __funcNames?: LuaTable<Function, keyof any | undefined>
 
   parentGuiElement!: LuaGuiElement
   firstGuiElement!: LuaGuiElement
   readonly refs: Refs = {}
-
-  readonly funcs: Funcs<this>
-  private static readonly _applySpec: (this: void, component: Component<unknown>, spec: AnySpec | undefined) => void
+  public readonly __id: number
+  __componentName!: string
+  __internalInstance!: unknown
   protected props!: Props
-  _internalInstance: unknown
 
   constructor() {
-    global.componentInstanceTypes.set(this, this.constructor.name)
-    this.funcs = makeBindingFuncs(this)
+    this.__id = global.nextInstanceId
+    global.nextInstanceId = this.__id + 1
+    global.componentInstances[this.__id] = this
   }
 
-  static funcs<T extends Function>(this: T): Funcs<T> {
-    return (this as unknown as typeof Component)._staticFuncs as Funcs<T>
-  }
+  static __applySpec?(this: void, component: Component<unknown>, spec: AnySpec | undefined): void
+
+  static __isValid?(this: void, component: Component<unknown>): boolean
 
   onCreated?(): void
 
@@ -36,33 +56,32 @@ export abstract class Component<Props> implements WithIsValid {
     return this.create()
   }
 
+  protected abstract create(): AnySpec | undefined
+
+  protected abstract update(prevProps: Props): void
+
   updateWith(props: Props): void {
     const prevProps = this.props
     this.props = props
     this.update(prevProps)
   }
 
-  isValid(): boolean {
-    // see render.ts
-    return this._internalInstance !== undefined && isValid((this._internalInstance as any).guiElement)
-  }
-
-  protected abstract create(): AnySpec | undefined
-
-  updateMerge(props?: Partial<Props>): void {
-    const newProps = { ...this.props, ...props }
-    this.updateWith(newProps)
-  }
-
   protected applySpec(spec: AnySpec | undefined): void {
-    Component._applySpec(this, spec)
+    Component.__applySpec!(this, spec)
   }
 
   protected getPlayer(): LuaPlayer {
     return game.get_player(this.parentGuiElement.player_index)
   }
 
-  protected abstract update(prevProps: Props): void
+  protected r<F extends (this: this, ...args: any) => any>(func: F): ComponentBoundFunc<F> {
+    const name = (this.constructor as typeof Component).__funcNames!.get(func)
+    if (!name) error("The function given was not bindable (not part of prototype):" + func)
+    return {
+      componentId: this.__id,
+      funcName: name,
+    } as Partial<ComponentBoundFunc<F>> as ComponentBoundFunc<F>
+  }
 }
 
 export abstract class NoUpdateComponent<Props = {}> extends Component<Props> {
@@ -80,10 +99,40 @@ export abstract class ReactiveComponent<Props> extends Component<Props> {
   }
 }
 
-const registeredComponents: Record<string, Class<Component<unknown>>> = {}
-const componentNames: LuaTable<Class<Component<unknown>>, string | undefined> = new LuaTable()
+// function binding
+export type ComponentBoundFunc<F extends Function> = {
+  componentId: number
+  funcName: keyof any
+  "#funcType": F
+}
 
-export type PropsOf<C extends Component<any>> = C extends Component<infer P> ? P : never
+export type GuiFunc<F extends Function> = ComponentBoundFunc<F> | FuncRef<F>
+
+export function callGuiFunc<F extends (...a: any) => any>(
+  ref: GuiFunc<F> | undefined,
+  ...args: Parameters<F>
+): ReturnType<F>
+export function callGuiFunc<F extends (...a: any) => any>(
+  ref: GuiFunc<F>,
+  ...args: Parameters<F>
+): ReturnType<F> | undefined
+export function callGuiFunc<F extends (...a: any) => any>(
+  ref: GuiFunc<F> | undefined,
+  ...args: Parameters<F>
+): ReturnType<F> | undefined {
+  if (!ref) return
+  if (typeof ref === "string") {
+    const f = derefFuncOrNil(ref)
+    if (!f) error(`Could not find function ref with name ${ref}. Did you register the function/do migrations properly?`)
+    // eslint-disable-next-line no-useless-call
+    return f(...(args as any[]))
+  } else {
+    const instance = getComponentInstance(ref.componentId) as any
+    return (instance[ref.funcName] as (this: any, ...a: any) => any).call(instance, ...(args as any[]))
+  }
+}
+
+const registeredComponents: Record<string, Class<Component<unknown>>> = {}
 
 /**
  * Registers a gui component class. All components must be registered to be used.
@@ -93,15 +142,24 @@ export type PropsOf<C extends Component<any>> = C extends Component<infer P> ? P
  */
 export function registerComponent<C extends Component<any>>(asName?: string) {
   return function (this: unknown, component: Class<C>): void {
-    const componentName = asName ?? component.name
+    const componentClass = component as unknown as typeof Component
+    const componentName = asName ?? componentClass.name
     if (registeredComponents[componentName]) {
       error(`A gui component with the name "${componentName}" is already registered`)
     }
     registeredComponents[componentName] = component
-    componentNames.set(component, componentName)
-    registerFuncs(component, componentName)
-    ;(component as any)._staticFuncs = makeStaticFuncs(component)
-    dlog("registered component", componentName)
+    componentClass.__componentName = componentName
+    registerFuncs(componentClass, componentName)
+
+    const binds = new LuaTable<Function, keyof any | undefined>()
+    for (const [key, value] of pairs(componentClass.prototype)) {
+      if (typeof value === "function") {
+        binds.set(value, key)
+      }
+    }
+    componentClass.__funcNames = binds
+
+    vlog("registered class1", componentName)
   }
 }
 
@@ -110,39 +168,30 @@ function getRegisteredComponent(name: string): Class<Component<unknown>> {
   if (!componentClass) {
     error(`Component class with name ${name} not found. Did you register the class and perform migrations properly?`)
   }
-  return componentClass as any
+  return componentClass
 }
 
-export function getRegisteredComponentName<C extends Component<unknown>>(component: Class<C>): string | undefined {
-  return componentNames.get(component)
+export function getRegisteredComponentName<C extends Component<unknown>>(componentClass: Class<C>): string | undefined {
+  return (componentClass as unknown as typeof Component).__componentName
 }
-
-interface ComponentsGlobal {
-  componentInstanceTypes: LuaTable<Component<unknown>, string>
-}
-
-declare const global: ComponentsGlobal
-
-function restoreMetatables() {
-  // weak table for defensive programming
-  setmetatable(global.componentInstanceTypes, { __mode: "k" })
-  for (const [instance, componentName] of pairs(global.componentInstanceTypes)) {
-    const prototype = getRegisteredComponent(componentName).prototype
-    setmetatable(instance, prototype)
-    setmetatable(instance.funcs, funcsMeta as any)
-  }
-}
-
-registerHandlers({
-  on_init() {
-    global.componentInstanceTypes = setmetatable(new LuaTable(), {
-      __mode: "k",
-    })
-  },
-  on_load: restoreMetatables,
-})
 
 export function componentNew(componentName: string): Component<unknown> {
   const componentClass = getRegisteredComponent(componentName)
-  return new componentClass()
+  const instance = new componentClass()
+  instance.__componentName = componentName
+  return instance
+}
+
+export function getComponentInstance(id: number): Component<unknown> {
+  const instance = global.componentInstances[id]
+  if (!instance) {
+    error(`Could not find instance with id ${id}. Could it have been gc'ed?`)
+  }
+  if (!Component.__isValid!(instance)) {
+    error(
+      "Tried to reference an invalid component (destroyed or not yet ready)." +
+        `id ${id}, type "${instance.__componentName}"`
+    )
+  }
+  return instance
 }

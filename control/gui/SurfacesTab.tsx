@@ -4,9 +4,15 @@ import { displayNotice } from "../../framework/gui/components/SimpleConfirmation
 import { BpGuiUpdate, WithBpGuiUpdate } from "./BpAreaEditorWindow"
 import { map } from "../../framework/util"
 import { createEmptySurface } from "../surfaces"
+import { r } from "../../framework/funcRef"
 
 @registerComponent()
 export class SurfacesTab extends NoUpdateComponent implements WithBpGuiUpdate {
+  declare refs: {
+    surfaceListBox: ListBoxGuiElement
+    newSurfaceName: TextfieldGuiElement
+  }
+
   static teleportPlayer(el: ListBoxGuiElement): void {
     const player = game.get_player(el.player_index)
     const surface = game.get_surface(el.items[el.selected_index - 1] as string)
@@ -26,7 +32,7 @@ export class SurfacesTab extends NoUpdateComponent implements WithBpGuiUpdate {
   }
 
   createBpSurface(): void {
-    const surfaceName = (this.refs.newSurfaceName as TextfieldGuiElement).text
+    const surfaceName = this.refs.newSurfaceName.text
     const player = this.getPlayer()
     if (surfaceName.length === 0) {
       return displayNotice(player, "A surface name is required to create a blueprint surface.")
@@ -46,7 +52,7 @@ export class SurfacesTab extends NoUpdateComponent implements WithBpGuiUpdate {
           <label caption={"All surfaces"} tooltip={"Click to teleport to surface"} style={"caption_label"} />
           <list-box
             ref={"surfaceListBox"}
-            onSelectionStateChanged={SurfacesTab.funcs().teleportPlayer}
+            onSelectionStateChanged={r(SurfacesTab.teleportPlayer)}
             styleMod={{
               maximal_height: 300,
             }}
@@ -58,11 +64,11 @@ export class SurfacesTab extends NoUpdateComponent implements WithBpGuiUpdate {
           <flow style={"player_input_horizontal_flow"}>
             <label caption={"Name:"} />
             <HorizontalSpacer />
-            <textfield clear_and_focus_on_right_click ref={"newSurfaceName"} />
+            <textfield ref={"newSurfaceName"} clear_and_focus_on_right_click />
           </flow>
           <flow>
             <HorizontalSpacer />
-            <button style={"green_button"} caption={"Create"} onClick={this.funcs.createBpSurface} />
+            <button style={"green_button"} caption={"Create"} onClick={this.r(this.createBpSurface)} />
           </flow>
         </flow>
       </table>
@@ -70,15 +76,13 @@ export class SurfacesTab extends NoUpdateComponent implements WithBpGuiUpdate {
   }
 
   private updateSurfaceListBox(): void {
-    const surfaceNames: string[] = map(game.surfaces, (_, s) => s.name)
-    const surfaceList = this.refs.surfaceListBox as ListBoxGuiElement
-    surfaceList.items = surfaceNames
+    this.refs.surfaceListBox.items = map(game.surfaces, (_, s) => s.name)
     this.updateSelectedSurface()
   }
 
   private updateSelectedSurface(): void {
     const surface = this.getPlayer().surface
-    const surfaceList = this.refs.surfaceListBox as ListBoxGuiElement
+    const surfaceList = this.refs.surfaceListBox
     const index = surfaceList.items.indexOf(surface.name) + 1
     surfaceList.selected_index = index
     if (index !== 0) {

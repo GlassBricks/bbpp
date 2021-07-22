@@ -1,6 +1,6 @@
 import { GameEvents } from "../events"
 import { guiEventNameMapping } from "./guievents"
-import { FuncRef } from "../funcRef"
+import { GuiFunc } from "./component"
 
 type ReverseGuiEventNameMapping = {
   [P in keyof typeof guiEventNameMapping as typeof guiEventNameMapping[P]]: P
@@ -10,7 +10,7 @@ type FlexiblePayloadOf<T> = T extends keyof GameEvents ? GameEvents[T]["#payload
 export type GuiEventHandlers<GuiEvents, Element> = {
   [N in keyof GuiEvents as N extends keyof ReverseGuiEventNameMapping
     ? ReverseGuiEventNameMapping[N]
-    : never]?: FuncRef<(element: Element, payload: FlexiblePayloadOf<N>) => void>
+    : never]?: GuiFunc<(element: Element, payload: FlexiblePayloadOf<N>) => void>
 }
 
 // This type is separate from ElementSpecOfType as it is used by jsx defs

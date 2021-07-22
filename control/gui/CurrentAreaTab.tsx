@@ -7,22 +7,14 @@ import { BpArea } from "../BpArea"
 
 @registerComponent()
 export class CurrentAreaTab extends NoUpdateComponent implements WithBpGuiUpdate {
+  declare refs: {
+    areaList: AreasList
+    rename: ButtonGuiElement
+    teleport: ButtonGuiElement
+  }
+
   bpGuiUpdate(update: BpGuiUpdate): void {
-    ;(this.refs.areaList as AreasList).bpGuiUpdate(update)
-  }
-
-  _onSelectedAreaChanged(area: BpArea | undefined): void {
-    ;(this.refs.rename as ButtonGuiElement).enabled = area !== undefined
-  }
-
-  _setSync(el: CheckboxGuiElement): void {
-    ;(this.refs.areaList as AreasList).setAutoSelect(el.state)
-    ;(this.refs.teleportButton as ButtonGuiElement).enabled = !el.state
-  }
-
-  _teleportPlayer(): void {
-    const selected = (this.refs.areaList as AreasList).getSelectedArea()
-    if (selected) teleportPlayerToArea(this.getPlayer(), selected)
+    this.refs.areaList.bpGuiUpdate(update)
   }
 
   protected create(): AnySpec | undefined {
@@ -30,23 +22,36 @@ export class CurrentAreaTab extends NoUpdateComponent implements WithBpGuiUpdate
       <table style={"bordered_table"} column_count={1}>
         <flow direction="horizontal" styleMod={{ horizontally_stretchable: true }}>
           <label style={"caption_label"} caption={"Current area:"} />
+          <HorizontalSpacer />
           <flow direction="vertical">
             <AreasList
               kind={"drop-down"}
               ref={"areaList"}
               autoSelect={true}
-              onSelectedAreaChanged={this.funcs._onSelectedAreaChanged}
+              onSelectedAreaChanged={this.r(this.onSelectedAreaChanged)}
             />
-            <checkbox state={true} caption={"Sync area with player"} onCheckedStateChanged={this.funcs._setSync} />
+            <checkbox state={true} caption={"Sync area with player"} onCheckedStateChanged={this.r(this.setSync)} />
           </flow>
-          <HorizontalSpacer />
           <flow direction="vertical">
-            <button caption={"rename"} ref={"rename"} enabled={false} />
-            <button caption={"teleport"} enabled={false} ref={"teleportButton"} onClick={this.funcs._teleportPlayer} />
+            <button ref={"rename"} caption={"rename"} enabled={false} />
+            <button ref={"teleport"} caption={"teleport"} enabled={false} onClick={this.r(this.teleportPlayer)} />
           </flow>
         </flow>
-        <flow direction={"vertical"}></flow>
       </table>
     )
+  }
+
+  private onSelectedAreaChanged(area: BpArea | undefined): void {
+    this.refs.rename.enabled = area !== undefined
+  }
+
+  private setSync(el: CheckboxGuiElement): void {
+    this.refs.areaList.setAutoSelect(el.state)
+    this.refs.teleport.enabled = !el.state
+  }
+
+  private teleportPlayer(): void {
+    const selected = this.refs.areaList.getSelectedArea()
+    if (selected) teleportPlayerToArea(this.getPlayer(), selected)
   }
 }

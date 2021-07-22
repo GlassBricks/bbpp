@@ -26,8 +26,16 @@ function PosIntegerTextfield(props: { ref: string; initialValue?: number }): Any
 
 @registerComponent()
 export class AreasTab extends NoUpdateComponent implements WithBpGuiUpdate {
+  declare refs: {
+    areasList: AreasList
+    areaName: TextfieldGuiElement
+    areaSizeX: TextfieldGuiElement
+    areaSizeY: TextfieldGuiElement
+    boundarySize: TextfieldGuiElement
+  }
+
   bpGuiUpdate(update: BpGuiUpdate): void {
-    ;(this.refs.areasList as AreasList).bpGuiUpdate(update)
+    this.refs.areasList.bpGuiUpdate(update)
   }
 
   teleportPlayer(bpArea: BpArea | undefined): void {
@@ -35,13 +43,13 @@ export class AreasTab extends NoUpdateComponent implements WithBpGuiUpdate {
   }
 
   tryStartAreaPlacement(): void {
-    const name = (this.refs.areaName as TextfieldGuiElement).text
-    const sizeX = tonumber((this.refs.areaSizeX as TextfieldGuiElement).text)
-    const sizeY = tonumber((this.refs.areaSizeY as TextfieldGuiElement).text)
+    const name = this.refs.areaName.text
+    const sizeX = tonumber(this.refs.areaSizeX.text)
+    const sizeY = tonumber(this.refs.areaSizeY.text)
     if (!sizeX || sizeX <= 0 || !sizeY || sizeY <= 0) {
       return displayNotice(this.getPlayer(), "Size dimensions must be greater than 0.")
     }
-    const boundaryThickness = tonumber((this.refs.boundarySize as TextfieldGuiElement).text)
+    const boundaryThickness = tonumber(this.refs.boundarySize.text)
     if (!boundaryThickness || boundaryThickness <= 0) {
       return displayNotice(this.getPlayer(), "Boundary size must be greater than 0.")
     }
@@ -53,7 +61,12 @@ export class AreasTab extends NoUpdateComponent implements WithBpGuiUpdate {
       <table style={"bordered_table"} column_count={1}>
         <flow direction={"vertical"} name="areasListFlow" styleMod={{ horizontally_stretchable: true }}>
           <label style={"caption_label"} caption={"Areas on current surface"} tooltip={"Click to teleport to area"} />
-          <AreasList kind={"list-box"} autoSelect onSelectedAreaChanged={this.funcs.teleportPlayer} ref={"areasList"} />
+          <AreasList
+            kind={"list-box"}
+            autoSelect
+            onSelectedAreaChanged={this.r(this.teleportPlayer)}
+            ref={"areasList"}
+          />
         </flow>
         <flow direction={"vertical"}>
           <label style={"caption_label"} caption={"New area"} />
@@ -77,7 +90,7 @@ export class AreasTab extends NoUpdateComponent implements WithBpGuiUpdate {
           </flow>
           <flow>
             <HorizontalSpacer />
-            <button style={"green_button"} caption={"Place area"} onClick={this.funcs.tryStartAreaPlacement} />
+            <button style={"green_button"} caption={"Place area"} onClick={this.r(this.tryStartAreaPlacement)} />
           </flow>
         </flow>
       </table>

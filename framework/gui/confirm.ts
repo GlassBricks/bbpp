@@ -1,6 +1,7 @@
 import { registerHandlers } from "../events"
 import { Prototypes } from "../../constants"
-import { callFuncRef, FuncRef } from "../funcRef"
+import { FuncRef } from "../funcRef"
+import { callGuiFunc } from "./component"
 
 export interface Tags {
   onConfirmFunc?: FuncRef<() => void> | false
@@ -19,7 +20,7 @@ registerHandlers({
         path: "utility/confirm",
         override_sound_type: "gui-effect",
       })
-      callFuncRef(func)
+      callGuiFunc(func)
     }
   },
 })

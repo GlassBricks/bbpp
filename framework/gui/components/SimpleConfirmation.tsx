@@ -1,7 +1,7 @@
-import Reactorio, { ComponentSpec, destroyIn, renderIn } from "../index"
+import Reactorio, { callGuiFunc, ComponentSpec, destroyIn, renderIn } from "../index"
 import { ReactiveComponent, registerComponent } from "../component"
 import { AnySpec } from "../spec"
-import { callFuncRef, FuncRef } from "../../funcRef"
+import { FuncRef } from "../../funcRef"
 
 interface SimpleModalDialogueProps {
   title: LocalisedString
@@ -29,12 +29,12 @@ export class SimpleConfirmation extends ReactiveComponent<SimpleModalDialoguePro
   }
 
   onBack(): void {
-    if (this.props.onBack) callFuncRef(this.props.onBack)
+    if (this.props.onBack) callGuiFunc(this.props.onBack)
     destroyIn(this.parentGuiElement, SimpleConfirmationId)
   }
 
   onConfirm(): void {
-    if (this.props.onConfirm) callFuncRef(this.props.onConfirm)
+    if (this.props.onConfirm) callGuiFunc(this.props.onConfirm)
     destroyIn(this.parentGuiElement, SimpleConfirmationId)
   }
 
@@ -51,12 +51,9 @@ export class SimpleConfirmation extends ReactiveComponent<SimpleModalDialoguePro
           this.getPlayer().opened = el
           el.bring_to_front()
         }}
-        onLateUpdate={(el) => {
-          ;(this.refs.draggableSpace as EmptyWidgetGuiElement).drag_target = el
-        }}
-        onClosed={this.funcs.onBack}
+        onClosed={this.r(this.onBack)}
         tags={{
-          onConfirmFunc: this.props.redConfirm ? this.funcs.onBack : this.funcs.onConfirm,
+          onConfirmFunc: this.props.redConfirm ? this.r(this.onBack) : this.r(this.onConfirm),
         }}
       >
         <scroll-pane
@@ -70,25 +67,22 @@ export class SimpleConfirmation extends ReactiveComponent<SimpleModalDialoguePro
         <flow style={"dialog_buttons_horizontal_flow"}>
           {!!this.props.backText && (
             <flow>
-              <button style={"back_button"} caption={this.props.backText} onClick={this.funcs.onBack} />
+              <button style={"back_button"} caption={this.props.backText} onClick={this.r(this.onBack)} />
             </flow>
           )}
-          {
-            <empty-widget
-              style={"draggable_space"}
-              styleMod={{ horizontally_stretchable: true, vertically_stretchable: true }}
-              onCreated={(el) => {
-                el.drag_target = this.firstGuiElement
-              }}
-              ref={"draggableSpace"}
-            />
-          }
+          <empty-widget
+            style={"draggable_space"}
+            styleMod={{ horizontally_stretchable: true, vertically_stretchable: true }}
+            onCreated={(el) => {
+              el.drag_target = el.parent.parent
+            }}
+          />
           {!!this.props.confirmText && (
             <flow>
               <button
                 style={this.props.redConfirm ? "red_confirm_button" : "confirm_button"}
                 caption={this.props.confirmText}
-                onClick={this.funcs.onConfirm}
+                onClick={this.r(this.onConfirm)}
               />
             </flow>
           )}
