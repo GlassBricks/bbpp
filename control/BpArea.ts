@@ -426,7 +426,8 @@ export class BpArea {
   private placeBlueprint(
     bp: LuaItemStack,
     relativePosition: Position | undefined,
-    force: ForceSpecification
+    force: ForceSpecification,
+    revive: boolean
   ): LuaEntity[] {
     if (!bp.get_blueprint_entities()) return []
     const position = relativePosition ? add(this.center, relativePosition) : { x: 0, y: 0 }
@@ -441,12 +442,17 @@ export class BpArea {
     }
     const entities: LuaEntity[] = []
     for (const ghost of ghosts) {
-      const [, entity] = ghost.silent_revive()
-      if (!entity) {
-        userWarning("could not revive ghost (something in the way?)")
-        continue
+      let entity: LuaEntity | undefined
+      if (!revive) {
+        entity = ghost
+      } else {
+        ;[, entity] = ghost.silent_revive()
+        if (!entity) {
+          userWarning("could not revive ghost (something in the way?)")
+          entity = ghost
+        }
       }
-      table.insert(entities, entity)
+      entities[entities.length] = entity
     }
     return entities
   }
@@ -484,7 +490,8 @@ export class BpArea {
             this.placeBlueprint(
               this.includeBps[inclusion.includeBpIndex],
               inclusion.relativePosition,
-              getBpForce("include", true)
+              getBpForce("include", true),
+              true
             ),
             configureIncluded,
             inclusion
@@ -493,7 +500,7 @@ export class BpArea {
           break
         case InclusionMode.All:
           this.configureEntities(
-            this.placeBlueprint(otherArea.dataBp, inclusion.relativePosition, getBpForce("include", false)),
+            this.placeBlueprint(otherArea.dataBp, inclusion.relativePosition, getBpForce("include", false), true),
             configureIncluded,
             inclusion
           )
@@ -505,14 +512,15 @@ export class BpArea {
           this.placeBlueprint(
             otherArea.dataBp,
             inclusion.relativePosition,
-            getBpForce("view", inclusion.includeMode === InclusionMode.Select)
+            getBpForce("view", inclusion.includeMode === InclusionMode.Select),
+            false
           ),
           configureView,
           inclusion
         )
       }
     }
-    this.placeBlueprint(this.dataBp, undefined, "player")
+    this.placeBlueprint(this.dataBp, undefined, "player", true)
   }
 
   private writeBlueprint(bp: LuaItemStack, force: ForceSpecification, inclusion: AreaInclusion | undefined) {

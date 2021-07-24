@@ -14,6 +14,9 @@ export class AreaControlsTab extends BpGuiTab {
     areaSelector: AreaSelector
 
     inclusionControls: InclusionControls
+    editButtonsFlow: FlowGuiElement
+
+    deleteButton: ButtonGuiElement
   }
 
   protected create(): AnySpec | undefined {
@@ -21,21 +24,24 @@ export class AreaControlsTab extends BpGuiTab {
       <table style={"bordered_table"} column_count={1}>
         <AreaSelector ref={"areaSelector"} {...this.props} />
         <InclusionControls ref={"inclusionControls"} selectedArea={this.props.selectedArea} />
-        <flow>
-          <button
-            caption={"Commit changes"}
-            styleMod={{ horizontally_stretchable: true }}
-            onClick={this.r(this.commitChanges)}
-          />
-          <button
-            caption={"Reset area"}
-            style={"red_button"}
-            styleMod={{ horizontally_stretchable: true }}
-            onClick={this.r(this.showResetAreaConfirmation)}
-          />
+        <flow direction={"vertical"}>
+          <label style={"caption_label"} caption={"Save/reset"} />
+          <flow ref={"editButtonsFlow"}>
+            <button
+              caption={"Save changes"}
+              styleMod={{ horizontally_stretchable: true }}
+              onClick={this.r(this.commitChanges)}
+            />
+            <button
+              caption={"Reset area"}
+              style={"red_button"}
+              styleMod={{ horizontally_stretchable: true }}
+              onClick={this.r(this.showResetAreaConfirmation)}
+            />
+          </flow>
         </flow>
         <button
-          ref="deleteArea"
+          ref="deleteButton"
           caption={"Delete area"}
           style={"red_button"}
           styleMod={{ horizontally_stretchable: true }}
@@ -49,6 +55,11 @@ export class AreaControlsTab extends BpGuiTab {
     this.refs.areaSelector.mergeProps(change)
     if (change.selectedArea !== undefined) {
       this.refs.inclusionControls.mergeProps(change)
+      const enabled = change.selectedArea !== false
+      for (const button of this.refs.editButtonsFlow.children) {
+        button.enabled = enabled
+      }
+      this.refs.deleteButton.enabled = enabled
     }
   }
 

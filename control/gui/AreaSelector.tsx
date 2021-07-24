@@ -22,7 +22,7 @@ export class AreaSelector extends ManualReactiveComponent<SelectedAreaProps> imp
   protected create(): AnySpec | undefined {
     return (
       <flow direction="vertical" styleMod={{ horizontally_stretchable: true }}>
-        <label style={"caption_label"} caption={"Current area"} />
+        <label style={"caption_label"} caption={"Selected area"} />
         <table column_count={2}>
           <Subcomponent ref={"listOrName"} reref={this} />
           <button ref={"rename"} caption={"rename"} onClick={this.r(this.toggleRename)} />

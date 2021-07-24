@@ -6,6 +6,7 @@ import { displayNotice } from "../../framework/gui/components/SimpleConfirmation
 import { startInclusionPlacement } from "../inclusionPlacement"
 import { AreasUpdate, WithAreasUpdate } from "./BpGuiTab"
 import { showResetAreaConfirmation } from "./resetAreaConfirmation"
+import { HorizontalSpacer } from "../../framework/gui/components/Misc"
 
 interface InclusionControlsProps {
   selectedArea: BpArea | false
@@ -18,7 +19,7 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
   declare refs: {
     inclusionsTable: InclusionsTable
 
-    areaControlsFlow: FlowGuiElement
+    resetButton: ButtonGuiElement
 
     addNewInclusionList: AreasList
 
@@ -31,33 +32,39 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
       <flow direction={"vertical"}>
         <label style="caption_label" caption={"Inclusions"} />
         <InclusionsTable ref="inclusionsTable" selectedArea={this.props.selectedArea} />
-        <flow ref={"areaControlsFlow"}>
+        <flow>
+          <HorizontalSpacer />
           <button
-            ref={1}
+            ref={"resetButton"}
             caption={"Apply inclusion changes (resets area)"}
             onClick={this.r(this.showResetAreaConfirmation)}
           />
         </flow>
-        <label style="caption_label" caption={"Add inclusion"} />
-        <AreasList
-          ref={"addNewInclusionList"}
-          kind={"drop-down"}
-          selectedArea={false}
-          onSelectedAreaChanged={this.r(this.setAreaToInclude)}
-        />
+        <line direction={"horizontal"} />
         <flow>
-          <button
-            ref={"includeAtCenter"}
-            caption={"Include at center"}
-            onClick={this.r(this.addInclusionAtCenter)}
-            enabled={false}
-          />
-          <button
-            ref={"placeInclusion"}
-            caption={"Select location to include..."}
-            onClick={this.r(this.tryStartInclusionPlacement)}
-            enabled={false}
-          />
+          <label caption={"Add inclusion: "} />
+          <flow direction={"vertical"}>
+            <AreasList
+              ref={"addNewInclusionList"}
+              kind={"drop-down"}
+              selectedArea={false}
+              onSelectedAreaChanged={this.r(this.setAreaToInclude)}
+            />
+            <flow>
+              <button
+                ref={"includeAtCenter"}
+                caption={"Include at center"}
+                onClick={this.r(this.addInclusionAtCenter)}
+                enabled={false}
+              />
+              <button
+                ref={"placeInclusion"}
+                caption={"Select location to include..."}
+                onClick={this.r(this.tryStartInclusionPlacement)}
+                enabled={false}
+              />
+            </flow>
+          </flow>
         </flow>
       </flow>
     )
@@ -71,10 +78,7 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
   protected propsChanged(change: Partial<InclusionControlsProps>): void {
     if (change.selectedArea !== undefined) {
       this.refs.inclusionsTable.mergeProps(change)
-      const controlsEnabled = change.selectedArea !== false
-      for (const button of this.refs.areaControlsFlow.children) {
-        button.enabled = controlsEnabled
-      }
+      this.refs.resetButton.enabled = change.selectedArea !== false
     }
   }
 

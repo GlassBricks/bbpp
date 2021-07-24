@@ -21,7 +21,7 @@ function PosIntegerTextfield(props: { ref: string; initialValue?: number }): Any
 }
 
 @registerComponent()
-export class NewAreaBox extends NoPropComponent {
+export class NewAreaControls extends NoPropComponent {
   declare refs: {
     areaName: TextfieldGuiElement
     areaSizeX: TextfieldGuiElement
@@ -53,7 +53,11 @@ export class NewAreaBox extends NoPropComponent {
         </flow>
         <flow>
           <HorizontalSpacer />
-          <button style={"green_button"} caption={"Place area"} onClick={this.r(this.tryStartAreaPlacement)} />
+          <button
+            style={"green_button"}
+            caption={"Select area location..."}
+            onClick={this.r(this.tryStartAreaPlacement)}
+          />
         </flow>
       </flow>
     )

@@ -1,5 +1,5 @@
 import Reactorio, { AnySpec, registerComponent } from "../../framework/gui"
-import { NewAreaBox } from "./NewAreaBox"
+import { NewAreaControls } from "./NewAreaControls"
 import { AreaSelector } from "./AreaSelector"
 import { AreasList } from "./AreasList"
 import { AreasUpdate, BpGuiTab, SelectedAreaProps } from "./BpGuiTab"
@@ -22,7 +22,7 @@ export class AreasTab extends BpGuiTab {
             onSelectedAreaChanged={this.props.setSelectedArea}
           />
         </flow>
-        <NewAreaBox />
+        <NewAreaControls />
       </table>
     )
   }
