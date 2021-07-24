@@ -1,94 +1,112 @@
 import { registerHandlers } from "../../framework/events"
-import { PlayerArea } from "../playerAreaTracking"
-import { BpArea, BpSurface } from "../BpArea"
-import Reactorio, { AnySpec, NoUpdateComponent, registerComponent, Window } from "../../framework/gui"
-import { CloseButton } from "../../framework/gui/components/buttons"
+import { PlayerArea, teleportPlayerToArea } from "../playerAreaTracking"
+import { BpArea } from "../BpArea"
+import Reactorio, { AnySpec, NoPropComponent, registerComponent, renderIn, Window } from "../../framework/gui"
 import { SurfacesTab } from "./SurfacesTab"
-import { AreasTab } from "./AreasTab"
 import { setupTabbedPane } from "../../framework/gui/tabbedPane"
-import { CurrentAreaTab } from "./CurrentAreaTab"
-import { PlayerDataChangedEvent } from "../../framework/playerData"
+import { AreasTab } from "./AreasTab"
+import { AreaControlsTab } from "./AreaControlsTab"
+import { AreasUpdate, BpGuiTab, SelectedAreaProps, WithAreasUpdate } from "./BpGuiTab"
 
-export interface BpGuiUpdate {
-  surfaceCreated?: OnSurfaceCreatedPayload
-  surfaceDeleted?: OnSurfaceDeletedPayload
-  surfaceRenamed?: OnSurfaceRenamedPayload
-
-  playerChangedSurface?: OnPlayerChangedSurfacePayload
-  playerChangedArea?: PlayerDataChangedEvent<BpArea | undefined>
-
-  areaCreated?: BpArea
-  areaDeleted?: {
-    id: number
-    bpSurface: BpSurface
-  }
-}
-
-export interface WithBpGuiUpdate {
-  bpGuiUpdate(update: BpGuiUpdate): void
-}
+import { SimpleTitlebar } from "../../framework/gui/components/SimpleTitlebar"
+import { onPlayerInit } from "../../framework/onPlayerInit"
+import * as modGui from "mod-gui"
+import { DEV } from "../../framework/DEV"
 
 @registerComponent()
-export class BpAreaEditorWindow extends NoUpdateComponent implements WithBpGuiUpdate {
-  public static window = new Window(BpAreaEditorWindow)
+export class BpAreaEditorWindow extends NoPropComponent implements WithAreasUpdate {
+  public static readonly window = new Window(BpAreaEditorWindow)
 
-  static updateAllPlayers(update: BpGuiUpdate): void {
-    for (const [, component] of pairs(BpAreaEditorWindow.window.currentForAllPlayers())) {
-      component.bpGuiUpdate(update)
-    }
-  }
-
-  static updateFor(playerIndex: number, update: BpGuiUpdate): void {
-    const component = BpAreaEditorWindow.window.currentOrNil(playerIndex)
-    if (component) component.bpGuiUpdate(update)
-  }
-
-  bpGuiUpdate(update: BpGuiUpdate): void {
-    for (const [, tab] of ipairs(this.refs)) {
-      ;(tab as unknown as WithBpGuiUpdate).bpGuiUpdate(update)
-    }
-  }
+  public selectedArea: BpArea | undefined
+  public syncAreaWithPlayer: boolean = true
 
   protected create(): AnySpec | undefined {
+    this.selectedArea = PlayerArea.get(this.getPlayer())
+    const initialTabProps: SelectedAreaProps = {
+      selectedArea: this.selectedArea || false,
+      setSelectedArea: this.r(this.setSelectedArea),
+
+      syncAreaWithPlayer: this.syncAreaWithPlayer,
+      setSyncAreaWithPlayer: this.r(this.setSyncAreaWithPlayer),
+    }
     return (
       <frame
         direction="vertical"
         auto_center
         styleMod={{
-          minimal_width: 300,
           maximal_height: 1000,
+          maximal_width: 500,
           vertically_stretchable: false,
         }}
       >
-        <flow // titlebar
-          direction={"horizontal"}
-          styleMod={{ horizontal_spacing: 8, height: 28 }}
-          onCreated={(e) => {
-            e.drag_target = e.parent
-          }}
-        >
-          <label caption="Blueprint area editor" style="frame_title" ignored_by_interaction />
-          <empty-widget style="flib_titlebar_drag_handle" ignored_by_interaction />
-          <CloseButton onClick={BpAreaEditorWindow.window.toggleRef} />
-        </flow>
+        <SimpleTitlebar title={"Blueprint area editor"} onClose={BpAreaEditorWindow.window.toggleRef} />
         <frame style="inside_deep_frame_for_tabs">
           <tabbed-pane
             onLateCreated={(el) => {
               setupTabbedPane(el)
-              el.selected_tab_index = 2 // dev only!!!
+              el.selected_tab_index = 3 // dev only!!!
             }}
             ref={"tabbedPane"}
           >
             <tab caption="Surfaces" />
-            <SurfacesTab ref={1} />
+            <SurfacesTab ref={1} {...initialTabProps} />
             <tab caption="Areas" />
-            <AreasTab ref={2} />
-            <tab caption="Current area" />
-            <CurrentAreaTab ref={3} />
+            <AreasTab ref={2} {...initialTabProps} />
+            <tab caption="Area controls" />
+            <AreaControlsTab ref={3} {...initialTabProps} />
           </tabbed-pane>
         </frame>
       </frame>
     )
+  }
+
+  areasUpdate(update: AreasUpdate): void {
+    for (const [, tab] of ipairs(this.refs)) {
+      ;(tab as BpGuiTab).areasUpdate(update)
+    }
+    if (update.areaDeleted && this.selectedArea && this.selectedArea.id === update.areaDeleted.id) {
+      this.setSelectedArea(undefined)
+    }
+    if (update.playerChangedArea && this.syncAreaWithPlayer) {
+      this.setSelectedArea(update.playerChangedArea.newValue, true)
+    }
+  }
+
+  private updateAll(props: Partial<SelectedAreaProps>) {
+    for (const [, tab] of ipairs(this.refs)) {
+      ;(tab as BpGuiTab).mergeProps(props)
+    }
+  }
+
+  private setSelectedArea(area: BpArea | undefined, noTeleport?: boolean) {
+    if (area !== this.selectedArea) {
+      this.selectedArea = area
+      this.updateAll({ selectedArea: area || false })
+      if (area && !noTeleport && this.syncAreaWithPlayer) {
+        teleportPlayerToArea(this.getPlayer(), area)
+      }
+    }
+  }
+
+  private setSyncAreaWithPlayer(sync: boolean) {
+    if (this.syncAreaWithPlayer !== sync) {
+      this.syncAreaWithPlayer = sync
+      if (sync) {
+        this.setSelectedArea(PlayerArea.get(this.getPlayer()))
+      }
+      this.updateAll({ syncAreaWithPlayer: sync })
+    }
+  }
+
+  static updateAllPlayers(update: AreasUpdate): void {
+    for (const [, component] of pairs(BpAreaEditorWindow.window.currentForAllPlayers())) {
+      component.areasUpdate(update)
+    }
+  }
+
+  static updateFor(playerIndex: number, update: AreasUpdate): void {
+    const component = BpAreaEditorWindow.window.currentOrNil(playerIndex)
+    if (component) component.areasUpdate(update)
   }
 }
 
@@ -117,7 +135,28 @@ BpArea.onCreated.subscribeEarly((e) => {
 BpArea.onDeleted.subscribeEarly((e) => {
   BpAreaEditorWindow.updateAllPlayers({ areaDeleted: e })
 })
-
+BpArea.onRenamed.subscribe((e) => {
+  BpAreaEditorWindow.updateAllPlayers({ areaRenamed: e })
+})
+BpArea.onInclusionsModified.subscribe((e) => {
+  BpAreaEditorWindow.updateAllPlayers({ inclusionsChanged: e })
+})
 PlayerArea.subscribe((e) => {
   BpAreaEditorWindow.updateFor(e.player.index, { playerChangedArea: e })
+})
+
+onPlayerInit((player) => {
+  const button = (
+    <button
+      name={"bbpp:dev window"}
+      style={modGui.button_style}
+      caption="BBPP"
+      mouse_button_filter={["left"]}
+      onClick={BpAreaEditorWindow.window.toggleRef}
+    />
+  )
+  renderIn(modGui.get_button_flow(player), "bbpp:DevWindow", button)
+  if (DEV) {
+    BpAreaEditorWindow.window.toggle(player)
+  }
 })

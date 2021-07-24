@@ -1,7 +1,7 @@
 import { userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
-import { arrayRemoveValue, isEmpty } from "../framework/util"
-import { add, Area, getCenter, multiply, subtract } from "../framework/position"
+import { arrayRemoveValue, isEmpty, swap } from "../framework/util"
+import { add, Area, contract, getCenter, multiply, subtract } from "../framework/position"
 import { Prototypes } from "../constants"
 import { get, VectorTable } from "../framework/VectorTable"
 import { getEntityData, setEntityData } from "../framework/entityData"
@@ -42,7 +42,7 @@ export class BpSurface {
 
   readonly surfaceIndex: number
 
-  readonly areas: BpArea[] = []
+  private areas: PRecord<number, BpArea> = {}
   // [x][y]=id
   private readonly bpAreasByChunk: VectorTable<BpArea> = {}
 
@@ -64,7 +64,7 @@ export class BpSurface {
     const bpSurface = global.bpSurfaceByIndex[e.surface_index]!
     global.bpSurfaceByIndex[e.surface_index] = undefined
     bpSurface.valid = false
-    for (const area of bpSurface.areas) {
+    for (const [, area] of pairs(bpSurface.areas)) {
       area.delete()
     }
   }
@@ -81,7 +81,7 @@ export class BpSurface {
 
   // <editor-fold desc="Areas">
 
-  static getBoundaryTiles(fullArea: Area, boundaryThickness: number, prototype: string): Tile[] {
+  static createBoundaryTiles(fullArea: Area, boundaryThickness: number, prototype: string): Tile[] {
     const tiles: Tile[] = []
     for (let t = 0; t < boundaryThickness; t++) {
       for (let x = fullArea[0].x + boundaryThickness; x < fullArea[1].x - boundaryThickness; x++) {
@@ -126,7 +126,7 @@ export class BpSurface {
         if (xs[y])
           return {
             result: "error",
-            message: "Selected area intersects with an existing area.",
+            message: `Selected area intersects with an existing area (${xs[y]!.name})`,
           }
       }
     }
@@ -141,7 +141,7 @@ export class BpSurface {
     assert(!area.valid)
     if (!this.valid) return
 
-    arrayRemoveValue(this.areas, area)
+    this.areas[area.id] = undefined
     for (let x = area.topLeft.x; x < area.topLeft.x + area.chunkSize.x; x++) {
       const xs = this.bpAreasByChunk[x]!
       if (!xs) continue
@@ -153,9 +153,9 @@ export class BpSurface {
   }
 
   private createNewArea(name: string, chunkTopLeft: Position, chunkSize: Position, boundaryThickness: number): BpArea {
-    const bpArea = BpArea._create(this, name, chunkTopLeft, chunkSize)
+    const bpArea = BpArea._create(this, name, chunkTopLeft, chunkSize, boundaryThickness)
 
-    this.areas[this.areas.length] = bpArea
+    this.areas[bpArea.id] = bpArea
     for (let x = chunkTopLeft.x; x < chunkTopLeft.x + chunkSize.x; x++) {
       let xs = this.bpAreasByChunk[x]
       if (!xs) {
@@ -170,11 +170,13 @@ export class BpSurface {
       }
     }
 
-    const area = bpArea.area
-    this.surface.build_checkerboard(area)
-    this.generateBoundary(area, boundaryThickness)
+    this.surface.build_checkerboard(bpArea.area)
+    this.surface.set_tiles(
+      BpSurface.createBoundaryTiles(bpArea.fullArea, boundaryThickness, Prototypes.boundaryTileWhite)
+    )
 
     BpArea.onCreated.raise(bpArea)
+    bpArea.commitChanges()
     return bpArea
   }
 
@@ -182,11 +184,6 @@ export class BpSurface {
     const blockX = Math.floor(position.x / 32)
     const blockY = Math.floor(position.y / 32)
     return get(this.bpAreasByChunk, blockX, blockY)
-  }
-
-  private generateBoundary(fullArea: Area, boundaryThickness: number) {
-    const tiles = BpSurface.getBoundaryTiles(fullArea, boundaryThickness, Prototypes.boundaryTileWhite)
-    this.surface.set_tiles(tiles)
   }
 
   // </editor-fold>
@@ -204,32 +201,29 @@ registerHandlers({
   on_surface_deleted: BpSurface._on_surface_deleted,
 })
 
-export enum IncludeMode {
-  Never,
-  Keep,
+export enum InclusionMode {
+  None = 1,
+  Select,
   // New, // todo
   All,
 }
 
-export interface AreaRelation {
-  areaId: number
-  relativePosition: Position
-  viewing: boolean
-  includeMode: IncludeMode
-  // viewFilter: ??
-  // autoIncludeFilter: ??
+export interface AreaInclusion {
+  readonly sourceArea: BpArea
+  readonly destinationArea: BpArea
+  readonly relativePosition: Position
+  ghosts: boolean
+  includeMode: InclusionMode
 }
 
-interface AreaRelationInternal extends AreaRelation {
-  includeBpLuaIndex: number
+interface AreaInclusionInternal extends AreaInclusion {
+  readonly includeBpIndex: number
 }
 
 export interface BpAreaEntityData {
   readonly area: BpArea
-  readonly relationLuaIndex: number
+  readonly inclusion: AreaInclusion
 }
-
-// TODO: BpAreas changed event/listeners
 
 export class BpArea {
   static onCreated = new Event<BpArea>()
@@ -238,10 +232,15 @@ export class BpArea {
     bpSurface: BpSurface
   }>()
 
+  static onRenamed = new Event<BpArea>()
+
+  static onInclusionsModified = new Event<{ area: BpArea }>()
+
   readonly id: number
   valid: boolean = true
 
   readonly surface: LuaSurface
+  readonly fullArea: Area // includes boundary
   readonly area: Area
   readonly center: Position
 
@@ -249,8 +248,7 @@ export class BpArea {
   readonly dataBp = this.inventory[0]
   private readonly includeBps: LuaInventory
 
-  readonly relations: AreaRelationInternal[] = []
-  editingAreaId: number
+  private readonly inclusions: ArrayAndTable<AreaInclusionInternal, AreaInclusionInternal, boolean> = [] as any
 
   // <editor-fold desc="Creation and deletion">
 
@@ -258,31 +256,31 @@ export class BpArea {
     public readonly bpSurface: BpSurface,
     public name: string,
     public readonly topLeft: Position,
-    public readonly chunkSize: Position
+    public readonly chunkSize: Position,
+    public readonly boundaryThickness: number
   ) {
     this.id = global.nextBpAreaId++
 
     this.surface = this.bpSurface.surface
-    this.area = [multiply(topLeft, 32), multiply(add(topLeft, chunkSize), 32)]
+    this.fullArea = [multiply(topLeft, 32), multiply(add(topLeft, chunkSize), 32)]
+    this.area = contract(this.fullArea, boundaryThickness)
     this.center = getCenter(this.area)
 
     this.dataBp.set_stack({ name: "blueprint" })
     this.inventory[1].set_stack({ name: "blueprint-book" })
     this.includeBps = this.inventory[1].get_inventory(defines.inventory.item_main)!
 
-    this.addRelation({
-      areaId: this.id,
-      includeMode: IncludeMode.All,
-      relativePosition: { x: 0, y: 0 },
-      viewing: false,
-    })
-    this.editingAreaId = this.id
-
     global.bpAreaById[this.id] = this
   }
 
-  static _create(bpSurface: BpSurface, name: string, topLeft: Position, chunkArea: Position): BpArea {
-    return new BpArea(bpSurface, name, topLeft, chunkArea)
+  static _create(
+    bpSurface: BpSurface,
+    name: string,
+    topLeft: Position,
+    chunkArea: Position,
+    boundarySize: number
+  ): BpArea {
+    return new BpArea(bpSurface, name, topLeft, chunkArea, boundarySize)
   }
 
   static getByIdOrNil(id: number): BpArea | undefined {
@@ -295,6 +293,10 @@ export class BpArea {
       error(`No user area with id ${id}`)
     }
     return area
+  }
+
+  static areasById(): ReadonlyRecord<number, BpArea | undefined> {
+    return global.bpAreaById
   }
 
   delete(): void {
@@ -312,27 +314,64 @@ export class BpArea {
   }
 
   // <editor-fold desc="Relations">
-  addRelation(relation: AreaRelation): void {
-    this.relations[this.relations.length] = {
-      includeBpLuaIndex: this.findIncludeBpSlot(),
-      ...relation,
+  addInclusion(sourceArea: BpArea, relativePosition: Position = { x: 0, y: 0 }): AreaInclusion {
+    const inclusion: AreaInclusionInternal = {
+      sourceArea,
+      destinationArea: this,
+      relativePosition,
+      ghosts: false,
+      includeMode: InclusionMode.All,
+      includeBpIndex: this.findIncludeBpSlot(),
     }
+    this.inclusions[this.inclusions.length] = inclusion
+    BpArea.onInclusionsModified.raise({ area: this })
+    return inclusion
   }
 
-  writeChanges(): void {
-    this.writeBlueprint(BpArea.getById(this.editingAreaId)!.dataBp, "player", undefined)
-    for (const i of $range(1, this.relations.length)) {
-      const relation = this.relations[i - 1]
-      if (relation.includeMode !== IncludeMode.Keep) continue // TODO; also && !== New
-      this.writeBlueprint(this.includeBps[relation.includeBpLuaIndex], getBpForce("include", true), i)
+  deleteInclusion(i: AreaInclusion): boolean {
+    if (!arrayRemoveValue(this.inclusions, i)) return false
+    this.includeBps[(i as AreaInclusionInternal).includeBpIndex].clear()
+    BpArea.onInclusionsModified.raise({ area: this })
+    return true
+  }
+
+  private swapInclusions(i: number, j: number) {
+    swap(this.inclusions, i, j)
+    BpArea.onInclusionsModified.raise({ area: this })
+  }
+
+  moveInclusionUp(inclusion: AreaInclusion): boolean {
+    const index = this.inclusions.indexOf(inclusion as AreaInclusionInternal)
+    if (index === 0) return false
+    this.swapInclusions(index, index - 1)
+    return true
+  }
+
+  moveInclusionDown(inclusion: AreaInclusion): boolean {
+    const index = this.inclusions.indexOf(inclusion as AreaInclusionInternal)
+    if (index === this.inclusions.length - 1) return false
+    this.swapInclusions(index, index + 1)
+    return true
+  }
+
+  getInclusions(): ReadonlyArray<AreaInclusion> {
+    return this.inclusions
+  }
+
+  commitChanges(): void {
+    this.writeBlueprint(this.dataBp, "player", undefined)
+    for (const inclusion of this.inclusions) {
+      if (inclusion.includeMode !== InclusionMode.Select) continue
+      this.writeBlueprint(this.includeBps[inclusion.includeBpIndex], getBpForce("include", true), inclusion)
+      // TODO: detect entities deleted
     }
   }
 
   // </editor-fold>
 
-  resetArea(): void {
+  reset(): void {
     this.deleteAllEntities()
-    this.placeRelations()
+    this.placeInclusions()
   }
 
   private rawPlaceBlueprint(bp: LuaItemStack, position: Position, force: ForceSpecification, forceBuild: boolean) {
@@ -362,14 +401,14 @@ export class BpArea {
   }
 
   private findIncludeBpSlot(): number {
-    const [, index] = this.includeBps.find_empty_stack()
-    if (index) {
-      this.includeBps[index - 1].set_stack({ name: "blueprint" })
-      return index
+    const [, luaIndex] = this.includeBps.find_empty_stack()
+    if (luaIndex) {
+      this.includeBps[luaIndex - 1].set_stack({ name: "blueprint" })
+      return luaIndex - 1
     }
-    const newIndex = this.includeBps.length + 1
+    const index = this.includeBps.length
     this.includeBps.insert({ name: "blueprint" })
-    return newIndex
+    return index
   }
 
   // <editor-fold desc="Area editing">
@@ -384,9 +423,13 @@ export class BpArea {
     }
   }
 
-  private placeBlueprint(bp: LuaItemStack, relativePosition: Position, force: ForceSpecification): LuaEntity[] {
+  private placeBlueprint(
+    bp: LuaItemStack,
+    relativePosition: Position | undefined,
+    force: ForceSpecification
+  ): LuaEntity[] {
     if (!bp.get_blueprint_entities()) return []
-    const position = add(this.center, relativePosition)
+    const position = relativePosition ? add(this.center, relativePosition) : { x: 0, y: 0 }
     let ghosts = this.rawPlaceBlueprint(bp, position, force, false)
     if (isEmpty(ghosts)) {
       userWarning(
@@ -405,29 +448,17 @@ export class BpArea {
       }
       table.insert(entities, entity)
     }
-
-    // if (relationLuaIndex !== undefined) {
-    //   setEntityData<BpAreaEntityData>(entity, {
-    //     areaId: this.id,
-    //     relationLuaIndex, // todo: make less volatile
-    //   })
-    // }
-    //
     return entities
   }
 
-  private configureEntities(
-    entities: LuaEntity[],
-    mod: (entity: LuaEntity) => void,
-    relationId: number | undefined
-  ): void {
+  private configureEntities(entities: LuaEntity[], mod: (entity: LuaEntity) => void, inclusion: AreaInclusion): void {
     for (const entity of entities) {
       mod(entity)
     }
-    if (relationId !== undefined) {
+    if (inclusion !== undefined) {
       const data: BpAreaEntityData = {
         area: this,
-        relationLuaIndex: relationId,
+        inclusion,
       }
       for (const entity of entities) {
         setEntityData<BpAreaEntityData>(entity, data)
@@ -435,61 +466,56 @@ export class BpArea {
     }
   }
 
-  private placeRelations() {
-    for (const i of $range(1, this.relations.length)) {
-      const relation = this.relations[i - 1]
-      const otherArea = BpArea.getByIdOrNil(relation.areaId)
-      if (!otherArea) {
-        userWarning("Area relation includes an invalid area. Skipping...")
+  private placeInclusions() {
+    for (const i of $range(1, this.inclusions.length)) {
+      const inclusion = this.inclusions[i - 1]
+      const otherArea = inclusion.sourceArea
+      if (!otherArea || !otherArea.valid) {
+        userWarning(
+          "Area inclusion includes an invalid area. This shouldn't happen, please report to the mod author. Skipping..."
+        )
         continue
       }
-      if (relation.areaId === this.editingAreaId) {
-        this.placeBlueprint(otherArea.dataBp, relation.relativePosition, "player")
-        // no setup necessary ?
-        // todo: make editing overwrite some data
-        continue
-      }
-
-      switch (relation.includeMode) {
-        case IncludeMode.Never:
+      switch (inclusion.includeMode) {
+        case InclusionMode.None:
           break
-        case IncludeMode.Keep:
+        case InclusionMode.Select:
           this.configureEntities(
             this.placeBlueprint(
-              this.includeBps[relation.includeBpLuaIndex],
-              relation.relativePosition,
+              this.includeBps[inclusion.includeBpIndex],
+              inclusion.relativePosition,
               getBpForce("include", true)
             ),
             configureIncluded,
-            i
+            inclusion
           )
 
           break
-        case IncludeMode.All:
+        case InclusionMode.All:
           this.configureEntities(
-            this.placeBlueprint(otherArea.dataBp, relation.relativePosition, getBpForce("include", false)),
+            this.placeBlueprint(otherArea.dataBp, inclusion.relativePosition, getBpForce("include", false)),
             configureIncluded,
-            i
+            inclusion
           )
           break
       }
-      if (relation.viewing && relation.includeMode !== IncludeMode.All) {
-        // todo: should be active or not?
+      if (inclusion.ghosts && inclusion.includeMode !== InclusionMode.All) {
         // todo: make ghosts
         this.configureEntities(
           this.placeBlueprint(
             otherArea.dataBp,
-            relation.relativePosition,
-            getBpForce("view", relation.includeMode === IncludeMode.Keep)
+            inclusion.relativePosition,
+            getBpForce("view", inclusion.includeMode === InclusionMode.Select)
           ),
           configureView,
-          i
+          inclusion
         )
       }
     }
+    this.placeBlueprint(this.dataBp, undefined, "player")
   }
 
-  private writeBlueprint(bp: LuaItemStack, force: ForceSpecification, relationLuaIndex: number | undefined) {
+  private writeBlueprint(bp: LuaItemStack, force: ForceSpecification, inclusion: AreaInclusion | undefined) {
     const entityMapping = bp.create_blueprint({
       surface: this.surface,
       force,
@@ -507,9 +533,9 @@ export class BpArea {
     for (let i = 1; i <= l; i++) {
       const bpEntity = bpEntities[i - 1]!
       const entity = entityMapping[i]
-      if (relationLuaIndex) {
+      if (inclusion) {
         const entityData = getEntityData<BpAreaEntityData>(entity)
-        if (!entityData || entityData.relationLuaIndex !== relationLuaIndex) {
+        if (!entityData || entityData.inclusion !== inclusion) {
           bpEntities[i - 1] = undefined as any
           continue
         }

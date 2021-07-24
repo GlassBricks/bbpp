@@ -291,7 +291,7 @@ interface BaseGuiElement extends LuaReadonlyIndexing<string, LuaGuiElement | und
   visible: boolean
   readonly children_names: string[]
   readonly player_index: number
-  tooltip: LocalisedString
+  tooltip?: LocalisedString
   readonly children: LuaGuiElement[]
   location?: GuiLocation
   enabled: boolean

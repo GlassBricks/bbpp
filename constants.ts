@@ -3,6 +3,7 @@ export const Prototypes = {
 
   temporaryBlueprint: "bbpp:temporary-blueprint",
   tileEntityWhite: "bbpp:tile-entity-white",
+  etherealTileEntityWhite: "bbpp:ethereal-tile-entity-white",
   // referencePoint: "bbpp:reference-point",
   pasteAction: "bbpp:paste-action",
 
@@ -10,4 +11,23 @@ export const Prototypes = {
   inclusionToolShortcut: "bbpp:inclusion-tool-shortcut",
 
   guiConfirmInput: "bbpp:confirm-gui-linked" as CustomInputName,
+}
+export const Styles = {
+  inclusionsTable: "bbpp:inclusions-table",
+  moveButton: "bbpp:move-button",
+}
+
+export const GuiConstants = {
+  windowWidth: 500,
+
+  areaListWidth: 300,
+  areaListHeight: 300,
+
+  Inclusions: {
+    moveButtonsWidth: 20,
+    nameWidth: 200,
+    inclusionModeSelectionWidth: 80,
+    checkboxWidth: 35,
+    smallButtonWidth: 28,
+  },
 }

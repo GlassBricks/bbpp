@@ -1,5 +1,5 @@
 import { Data } from "DataStage"
-import { Prototypes } from "./constants"
+import { GuiConstants, Prototypes, Styles } from "./constants"
 
 declare const data: Data
 
@@ -57,34 +57,40 @@ temporaryBlueprint.name = Prototypes.temporaryBlueprint
 ;(temporaryBlueprint.flags as string[]).push("only-in-cursor")
 data.extend([temporaryBlueprint])
 
-const labWhite = "__base__/graphics/terrain/lab-tiles/lab-white.png"
-const tileEntity = {
-  type: "simple-entity",
-  name: Prototypes.tileEntityWhite,
-  icon: labWhite,
-  icon_size: 32,
-  picture: {
-    filename: labWhite,
-    size: 32,
-  },
-  collision_box: [
-    [-0.35, -0.35],
-    [0.35, 0.35],
-  ],
-  flags: ["hidden", "player-creation"],
-}
-const tileEntityItem = {
-  // required for blueprinting
-  type: "item",
-  name: Prototypes.tileEntityWhite,
-  icon: labWhite,
-  icon_size: 32,
-  flags: ["hidden"],
-  place_result: Prototypes.tileEntityWhite,
-  stack_size: 1,
+function createTileEntity(name: string, collisionMask?: string[]) {
+  const labWhite = "__base__/graphics/terrain/lab-tiles/lab-white.png"
+  const tileEntity = {
+    type: "simple-entity",
+    name,
+    icon: labWhite,
+    icon_size: 32,
+    picture: {
+      filename: labWhite,
+      size: 32,
+    },
+    collision_box: [
+      [-0.49, -0.49],
+      [0.49, 0.49],
+    ],
+    collision_mask: collisionMask,
+    flags: ["hidden", "player-creation"],
+  }
+  const tileEntityItem = {
+    // required for blueprinting
+    type: "item",
+    name,
+    icon: labWhite,
+    icon_size: 32,
+    flags: ["hidden"],
+    place_result: name,
+    stack_size: 1,
+  }
+
+  data.extend([tileEntity, tileEntityItem])
 }
 
-data.extend([tileEntity, tileEntityItem])
+createTileEntity(Prototypes.tileEntityWhite)
+createTileEntity(Prototypes.etherealTileEntityWhite, [])
 
 /*
 const referencePointImage = "__core__/graphics/reference-point.png"
@@ -158,3 +164,38 @@ const confirmInput = {
   linked_game_control: "confirm-gui",
 }
 data.extend([confirmInput])
+
+const columnWidths = [
+  GuiConstants.Inclusions.moveButtonsWidth,
+  GuiConstants.Inclusions.nameWidth,
+  GuiConstants.Inclusions.checkboxWidth,
+  GuiConstants.Inclusions.inclusionModeSelectionWidth,
+  GuiConstants.Inclusions.smallButtonWidth,
+]
+
+const columnAlignments = []
+for (const i of $range(1, columnWidths.length)) {
+  columnAlignments[columnAlignments.length] = {
+    column: i,
+    alignment: "center",
+  }
+}
+data.raw["gui-style"].default[Styles.inclusionsTable] = {
+  type: "table_style",
+  parent: "bordered_table",
+  cell_padding: 1,
+  column_widths: columnWidths.map((val, index) => ({
+    column: index + 1,
+    width: val,
+  })),
+  column_alignments: columnAlignments,
+}
+
+data.raw["gui-style"].default[Styles.moveButton] = {
+  type: "button_style",
+  parent: "button",
+  width: GuiConstants.Inclusions.moveButtonsWidth,
+  height: 15,
+  padding: 0,
+  font: "default",
+}

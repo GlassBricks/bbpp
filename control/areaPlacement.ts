@@ -24,7 +24,7 @@ export function startAreaPlacement(
     x: -(chunkSize.x * 16) + 16,
     y: -(chunkSize.y * 16) + 16,
   }
-  const entities = BpSurface.getBoundaryTiles(
+  const entities = BpSurface.createBoundaryTiles(
     [
       topLeft,
       {

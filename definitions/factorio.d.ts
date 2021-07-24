@@ -1575,8 +1575,18 @@ interface ProgrammableSpeakerInstrument {
   notes: string[]
 }
 
-/** @noSelf **/
-interface Alignment {}
+type Alignment =
+  | "top-left"
+  | "middle-left"
+  | "left"
+  | "bottom-left"
+  | "top-center"
+  | "middle-center"
+  | "center"
+  | "bottom-center"
+  | "top-right"
+  | "right"
+  | "bottom-right"
 
 /** @noSelf **/
 interface NthTickEvent {
@@ -3708,7 +3718,7 @@ interface LuaHeatEnergySourcePrototype {
 }
 
 /** @noSelf **/
-interface LuaInventory extends Array<LuaItemStack> {
+interface LuaInventory extends ReadonlyArray<LuaItemStack> {
   readonly index: defines.inventory
   readonly entity_owner: LuaEntity
   readonly player_owner: LuaPlayer
@@ -3877,8 +3887,8 @@ interface LuaItemStack {
   durability: number
   ammo: number
   blueprint_icons: any[]
-  blueprint_snap_to_grid: PositionIn
-  blueprint_position_relative_to_grid: PositionIn
+  blueprint_snap_to_grid?: PositionIn
+  blueprint_position_relative_to_grid?: PositionIn
   blueprint_absolute_snapping: boolean
   label: string
   label_color: Color
@@ -5031,7 +5041,7 @@ interface LuaStyle {
   vertical_spacing: number
   use_header_filler: boolean
   color: Color
-  readonly column_alignments: any
+  readonly column_alignments: Alignment[]
   single_line: boolean
   extra_top_padding_when_activated: number
   extra_bottom_padding_when_activated: number

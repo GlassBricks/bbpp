@@ -315,10 +315,10 @@ function reconcileChildren(instance: ElementInstance, spec: ElementSpec, current
   // appearing element (in new elements) are deleted, regardless of any matching keyed elements that already existed
   // there (those elements are re-instantiated). Otherwise, every keyed element is reused.
   let oldLuaIndex = 1
-  for (const [luaNewIndex, newSpec] of ipairs(newChildSpecs)) {
+  for (const [newLuaIndex, newSpec] of ipairs(newChildSpecs)) {
     // blank spec is not allowed in full update; only updateOnly
     if (newSpec.type === "blank") error("Blank element is only allowed in updateOnly mode, not in full-update.")
-    const key = newSpec.name || luaNewIndex
+    const key = newSpec.name || newLuaIndex
 
     const existingLuaIndex = oldKeyToLuaIndex[key]
     // element with matching name?
@@ -332,9 +332,9 @@ function reconcileChildren(instance: ElementInstance, spec: ElementSpec, current
         oldLuaIndex++
       }
       // update the instance.
-      newChildInstances[luaNewIndex - 1] = reconcile(
+      newChildInstances[newLuaIndex - 1] = reconcile(
         guiElement,
-        luaNewIndex,
+        newLuaIndex,
         oldChildInstances[existingLuaIndex - 1],
         newSpec,
         currentRefs
@@ -342,17 +342,17 @@ function reconcileChildren(instance: ElementInstance, spec: ElementSpec, current
       oldLuaIndex++
     } else {
       // delete everything from the old elements that don't match a current element name.
-      for (; oldLuaIndex < oldChildrenLength; oldLuaIndex++) {
+      for (; oldLuaIndex <= oldChildrenLength; oldLuaIndex++) {
         const oldInstance = oldChildInstances[oldLuaIndex - 1]
         if (newKeyToLuaIndex[oldInstance.name]) break
         destroyInstance(oldInstance, currentRefs)
       }
       // add the element.
-      newChildInstances[luaNewIndex - 1] = instantiate(guiElement, luaNewIndex, newSpec, currentRefs)
+      newChildInstances[newLuaIndex - 1] = instantiate(guiElement, newLuaIndex, newSpec, currentRefs)
     }
   }
   // delete remaining elements, if any.
-  for (; oldLuaIndex < oldChildrenLength; oldLuaIndex++) {
+  for (; oldLuaIndex <= oldChildrenLength; oldLuaIndex++) {
     const oldInstance = oldChildInstances[oldLuaIndex - 1]
     destroyInstance(oldInstance, currentRefs)
   }
@@ -430,7 +430,7 @@ function reconcileComponent(
 ): ComponentInstance {
   updateComponent(parent, indexInParent, instance, spec, currentRefs)
 
-  instance.publicInstance.updateWith(spec.props)
+  instance.publicInstance.updateProps(spec.props)
 
   return instance
 }
@@ -446,7 +446,8 @@ Component.__applySpec = function (this: void, component: Component<unknown>, spe
 }
 
 Component.__isValid = function (this: void, component: Component<unknown>) {
-  return isValid((component.__internalInstance as ComponentInstance).guiElement)
+  const internalInstance = component.__internalInstance as ComponentInstance
+  return internalInstance && isValid(internalInstance.guiElement)
 }
 
 // same name, not null
@@ -496,7 +497,7 @@ function reconcile(
         parent,
         indexInParent,
         oldInstance as ComponentInstance,
-        spec as ComponentSpec<any>,
+        spec as ComponentSpec<unknown>,
         currentRefs
       )
     }
@@ -518,11 +519,10 @@ function reconcile(
  *
  * @return Refs refs from the given spec
  */
-export function renderIn(parent: LuaGuiElement, id: string, spec: AnySpec): Refs {
+export function renderIn(parent: LuaGuiElement, id: string, spec: AnySpec, refs: Refs = {}): Refs {
   const reactorio = global.reactorio
   let existingSet = reactorio.rootInstances[parent.index]
   const prevInstance = existingSet && existingSet[id]
-  const refs: Refs = {}
   const nextInstance = prevInstance
     ? reconcile(parent, 0, prevInstance, spec, refs)
     : instantiate(parent, 0, spec, refs)
@@ -533,6 +533,19 @@ export function renderIn(parent: LuaGuiElement, id: string, spec: AnySpec): Refs
   }
   existingSet[id] = nextInstance
 
+  return refs
+}
+
+/**
+ * Renders elements a container, and stores no information for future updates. **Future updates, and component functions
+ * from components created this way will not work unless the component instance is stored externally (using refs).**
+ *
+ * @return Refs refs from the given spec
+ */
+export function simpleCreateIn(parent: LuaGuiElement, specs: AnySpec[], refs: Refs = {}): Refs {
+  for (const spec of specs) {
+    instantiate(parent, 0, spec, refs)
+  }
   return refs
 }
 

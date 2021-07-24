@@ -1,8 +1,7 @@
-import Reactorio, { AnySpec, ReactiveComponent, registerComponent } from ".."
-import { FuncRef } from "../../funcRef"
+import Reactorio, { AnySpec, GuiFunc, ReactiveComponent, registerComponent } from ".."
 
 interface CloseButtonProps {
-  onClick: FuncRef<(element: SpriteButtonGuiElement, payload: OnGuiClickPayload) => void>
+  onClick: GuiFunc<(element: SpriteButtonGuiElement, payload: OnGuiClickPayload) => void>
 }
 
 @registerComponent()

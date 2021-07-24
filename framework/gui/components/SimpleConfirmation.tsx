@@ -2,8 +2,9 @@ import Reactorio, { callGuiFunc, ComponentSpec, destroyIn, renderIn } from "../i
 import { ReactiveComponent, registerComponent } from "../component"
 import { AnySpec } from "../spec"
 import { FuncRef } from "../../funcRef"
+import { ConfirmTags } from "../confirm"
 
-interface SimpleModalDialogueProps {
+interface SimpleModalDialogueProps<T> {
   title: LocalisedString
   text: LocalisedString
   /** text for back button */
@@ -12,32 +13,16 @@ interface SimpleModalDialogueProps {
   confirmText?: LocalisedString
   /** If true, then is a red confirmation button, and the onConfirm control onBack instead of onConfirm. */
   redConfirm?: boolean
-  onBack?: FuncRef<() => void>
-  onConfirm?: FuncRef<() => void>
+  onBack?: FuncRef<(data: T) => void>
+  onConfirm?: FuncRef<(data: T) => void>
+  data?: T
 }
 
 // unique name used in multiple contexts
 const SimpleConfirmationId = "reactorio:SimpleConfirmation"
 
 @registerComponent(SimpleConfirmationId)
-export class SimpleConfirmation extends ReactiveComponent<SimpleModalDialogueProps> {
-  static display(player: LuaPlayer, props: SimpleModalDialogueProps): void {
-    renderIn(player.gui.screen, SimpleConfirmationId, {
-      type: SimpleConfirmationId,
-      props,
-    } as ComponentSpec<SimpleModalDialogueProps>) // todo: jsx spread
-  }
-
-  onBack(): void {
-    if (this.props.onBack) callGuiFunc(this.props.onBack)
-    destroyIn(this.parentGuiElement, SimpleConfirmationId)
-  }
-
-  onConfirm(): void {
-    if (this.props.onConfirm) callGuiFunc(this.props.onConfirm)
-    destroyIn(this.parentGuiElement, SimpleConfirmationId)
-  }
-
+export class SimpleConfirmation extends ReactiveComponent<SimpleModalDialogueProps<unknown>> {
   protected create(): AnySpec | undefined {
     return (
       <frame
@@ -52,9 +37,12 @@ export class SimpleConfirmation extends ReactiveComponent<SimpleModalDialoguePro
           el.bring_to_front()
         }}
         onClosed={this.r(this.onBack)}
-        tags={{
-          onConfirmFunc: this.props.redConfirm ? this.r(this.onBack) : this.r(this.onConfirm),
-        }}
+        tags={
+          {
+            onConfirmFunc: this.props.redConfirm ? this.r(this.onBack) : this.r(this.onConfirm),
+            playConfirmSound: !this.props.redConfirm,
+          } as ConfirmTags
+        }
       >
         <scroll-pane
           horizontal_scroll_policy={"never"}
@@ -89,6 +77,23 @@ export class SimpleConfirmation extends ReactiveComponent<SimpleModalDialoguePro
         </flow>
       </frame>
     )
+  }
+
+  static display<T>(player: LuaPlayer, props: SimpleModalDialogueProps<T>): void {
+    renderIn(player.gui.screen, SimpleConfirmationId, {
+      type: SimpleConfirmationId,
+      props,
+    } as ComponentSpec<SimpleModalDialogueProps<T>>)
+  }
+
+  onBack(): void {
+    if (this.props.onBack) callGuiFunc(this.props.onBack, this.props.data)
+    destroyIn(this.parentGuiElement, SimpleConfirmationId)
+  }
+
+  onConfirm(): void {
+    if (this.props.onConfirm) callGuiFunc(this.props.onConfirm, this.props.data)
+    destroyIn(this.parentGuiElement, SimpleConfirmationId)
   }
 }
 

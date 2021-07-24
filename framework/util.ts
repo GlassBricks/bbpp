@@ -11,10 +11,18 @@ export function isEmpty(a: AnyTable | undefined): boolean {
   return !x
 }
 
-export function map<K extends keyof any, V, R>(obj: Record<K, V>, func: (key: K, value: V) => R): R[] {
+export function map<K extends keyof any, V, R>(obj: Record<K, V>, func: (key: K, value: NonNullable<V>) => R): R[] {
   const result: R[] = []
   for (const [k, v] of pairs(obj)) {
     result[result.length] = func(k, v)
+  }
+  return result
+}
+
+export function imap<V, R>(obj: Record<number, V>, func: (luaIndex: number, value: NonNullable<V>) => R): R[] {
+  const result: R[] = []
+  for (const [i, v] of ipairs(obj)) {
+    result[result.length] = func(i, v)
   }
   return result
 }
@@ -109,6 +117,12 @@ export function tableRemoveValue<T>(table: T, value: T[keyof T]): boolean {
     }
   }
   return false
+}
+
+export function swap<T>(array: T[], i: number, j: number): void {
+  const t = array[i]
+  array[i] = array[j]
+  array[j] = t
 }
 
 export function isValid(a: { valid: boolean } | undefined): a is { valid: true } {

@@ -42,21 +42,16 @@ registerHandlers({
   },
 })
 
-script.set_event_filter(defines.events.on_built_entity, [
-  {
-    filter: "name",
-    name: Prototypes.pasteAction,
-  },
-  {
-    filter: "ghost_name",
-    name: Prototypes.pasteAction,
-  },
-  {
-    filter: "name",
-    name: Prototypes.tileEntityWhite,
-  },
-  {
-    filter: "ghost_name",
-    name: Prototypes.tileEntityWhite,
-  },
-])
+script.set_event_filter(
+  defines.events.on_built_entity,
+  [Prototypes.pasteAction, Prototypes.tileEntityWhite, Prototypes.etherealTileEntityWhite].flatMap((name) => [
+    {
+      filter: "name",
+      name: name,
+    },
+    {
+      filter: "ghost_name",
+      name: name,
+    },
+  ])
+)

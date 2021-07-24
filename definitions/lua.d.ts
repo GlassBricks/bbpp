@@ -9,3 +9,5 @@ interface LuaReadonlyIndexing<Key, Value> {
   readonly get: LuaTableGetMethod<Key, Value>
   readonly has: LuaTableHasMethod<Key>
 }
+
+type ArrayAndTable<T, K, V> = Array<T> & LuaTable<K, V>

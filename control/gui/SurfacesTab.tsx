@@ -1,47 +1,16 @@
-import Reactorio, { AnySpec, NoUpdateComponent, registerComponent } from "../../framework/gui"
+import Reactorio, { AnySpec, registerComponent } from "../../framework/gui"
 import { HorizontalSpacer } from "../../framework/gui/components/Misc"
 import { displayNotice } from "../../framework/gui/components/SimpleConfirmation"
-import { BpGuiUpdate, WithBpGuiUpdate } from "./BpAreaEditorWindow"
 import { map } from "../../framework/util"
 import { createEmptySurface } from "../surfaces"
 import { r } from "../../framework/funcRef"
+import { AreasUpdate, BpGuiTab } from "./BpGuiTab"
 
 @registerComponent()
-export class SurfacesTab extends NoUpdateComponent implements WithBpGuiUpdate {
+export class SurfacesTab extends BpGuiTab {
   declare refs: {
     surfaceListBox: ListBoxGuiElement
     newSurfaceName: TextfieldGuiElement
-  }
-
-  static teleportPlayer(el: ListBoxGuiElement): void {
-    const player = game.get_player(el.player_index)
-    const surface = game.get_surface(el.items[el.selected_index - 1] as string)
-    player.teleport(player.position, surface)
-  }
-
-  onCreated(): void {
-    this.updateSurfaceListBox()
-  }
-
-  bpGuiUpdate(update: BpGuiUpdate): void {
-    if (update.surfaceCreated || update.surfaceDeleted || update.surfaceRenamed) {
-      this.updateSurfaceListBox()
-    } else if (update.playerChangedSurface) {
-      this.updateSelectedSurface()
-    }
-  }
-
-  createBpSurface(): void {
-    const surfaceName = this.refs.newSurfaceName.text
-    const player = this.getPlayer()
-    if (surfaceName.length === 0) {
-      return displayNotice(player, "A surface name is required to create a blueprint surface.")
-    }
-    if (game.get_surface(surfaceName)) {
-      return displayNotice(player, "A surface with the given name already exists.")
-    }
-    const surface = createEmptySurface(surfaceName)
-    player.teleport([0, 0], surface)
   }
 
   protected create(): AnySpec | undefined {
@@ -52,7 +21,7 @@ export class SurfacesTab extends NoUpdateComponent implements WithBpGuiUpdate {
           <label caption={"All surfaces"} tooltip={"Click to teleport to surface"} style={"caption_label"} />
           <list-box
             ref={"surfaceListBox"}
-            onSelectionStateChanged={r(SurfacesTab.teleportPlayer)}
+            onSelectionStateChanged={r(SurfacesTab.teleportPlayerToSurface)}
             styleMod={{
               maximal_height: 300,
             }}
@@ -73,6 +42,41 @@ export class SurfacesTab extends NoUpdateComponent implements WithBpGuiUpdate {
         </flow>
       </table>
     )
+  }
+
+  onCreated(): void {
+    this.updateSurfaceListBox()
+  }
+
+  areasUpdate(update: AreasUpdate): void {
+    if (update.surfaceCreated || update.surfaceDeleted || update.surfaceRenamed) {
+      this.updateSurfaceListBox()
+    } else if (update.playerChangedSurface) {
+      this.updateSelectedSurface()
+    }
+  }
+
+  protected propsChanged(): void {
+    // noop
+  }
+
+  private static teleportPlayerToSurface(el: ListBoxGuiElement): void {
+    const player = game.get_player(el.player_index)
+    const surface = game.get_surface(el.items[el.selected_index - 1] as string)
+    player.teleport(player.position, surface)
+  }
+
+  createBpSurface(): void {
+    const surfaceName = this.refs.newSurfaceName.text
+    const player = this.getPlayer()
+    if (surfaceName.length === 0) {
+      return displayNotice(player, "A surface name is required to create a blueprint surface.")
+    }
+    if (game.get_surface(surfaceName)) {
+      return displayNotice(player, "A surface with the given name already exists.")
+    }
+    const surface = createEmptySurface(surfaceName)
+    player.teleport([0, 0], surface)
   }
 
   private updateSurfaceListBox(): void {

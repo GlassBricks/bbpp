@@ -24,8 +24,8 @@ function exclude(e: OnPlayerAltSelectedAreaPayload) {
     const entityData = getEntityData<BpAreaEntityData>(entity)
     if (!entityData) continue
     if (entity.force === includeForce) {
-      const isViewing = entityData.area.relations[entityData.relationLuaIndex - 1].viewing
-      if (isViewing) {
+      const inclusion = entityData.inclusion
+      if (inclusion && inclusion.ghosts) {
         entity.force = viewForce
         configureView(entity)
       } else {

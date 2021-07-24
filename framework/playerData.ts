@@ -91,6 +91,10 @@ export class ObservablePlayerData<T> {
     return this.data[player.index]
   }
 
+  getByIndex(playerIndex: number): T {
+    return this.data[playerIndex]
+  }
+
   set(player: LuaPlayer, newValue: T): void {
     const oldValue = this.data[player.index]
     if (oldValue === newValue) return

@@ -6,6 +6,10 @@ type ReadonlyRecord<K extends keyof any, V> = {
   readonly [P in K]: V
 }
 
+type ReadonlyPRecord<K extends keyof any, V> = {
+  readonly [P in K]?: V
+}
+
 type Mutable<T> = {
   -readonly [P in keyof T]: T[P]
 }
@@ -45,3 +49,5 @@ type Empty = Record<any, never>
 interface Class<T> extends Function {
   new (...args: any): T
 }
+
+type OneOrMany<T> = T | T[]

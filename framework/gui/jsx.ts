@@ -136,24 +136,28 @@ function createElementSpec(
 
 function createComponentSpec<Props>(
   type: Class<Component<Props>>,
-  props?: Props & JSX.IntrinsicAttributes,
-  flattenedChildren?: (AnySpec | undefined)[]
+  props: (Props & JSX.IntrinsicAttributes) | undefined,
+  semiFlattenedChildren: OneOrMany<AnySpec> | undefined
 ): ComponentSpec<Props> {
   const theProps: any = props || {}
-  theProps.children = flattenedChildren
+  theProps.children = semiFlattenedChildren
+  const name = theProps.name
+  const ref = theProps.ref
+  theProps.name = undefined
+  theProps.ref = undefined
   return {
-    type:
-      getRegisteredComponentName(type) ??
-      error(`The component of class type ${type.constructor.name} is not registered!`),
+    type: getRegisteredComponentName(type) ?? error(`The component of class name "${type?.name}" is not registered!`),
+    name,
+    ref,
     props: theProps,
-    name: theProps.name,
-    ref: theProps.ref,
   }
 }
 
-function flattenChildren(children: JsxChildren | undefined): AnySpec[] | undefined {
+function flattenChildren(children: JsxChildren | undefined, alwaysAsArray: true): AnySpec[] | undefined
+function flattenChildren(children: JsxChildren | undefined, alwaysAsArray: false): AnySpec[] | AnySpec | undefined
+function flattenChildren(children: JsxChildren | undefined, alwaysAsArray: boolean): AnySpec[] | AnySpec | undefined {
   if (!children) return undefined
-  if (!Array.isArray(children)) return [children]
+  if (!Array.isArray(children)) return alwaysAsArray ? [children] : children
   const result: AnySpec[] = []
   for (const elem of children) {
     if (!elem) continue
@@ -165,7 +169,7 @@ function flattenChildren(children: JsxChildren | undefined): AnySpec[] | undefin
       result[result.length] = elem
     }
   }
-  return result.length === 0 ? undefined : result
+  return result.length === 0 ? undefined : !alwaysAsArray && result.length === 1 ? result[0] : result
 }
 
 const typeFunc = type
@@ -196,23 +200,22 @@ export function createElement(
   props?: Record<any, any>,
   children?: JsxChildren
 ): AnySpec | undefined {
-  const flattenedChildren = flattenChildren(children)
   const typeofType = typeFunc(type)
   if (typeofType === "string") {
     if (type === "blank") {
       return {
         type: "blank",
         name: props && props.name,
-        children: flattenedChildren,
+        children: flattenChildren(children, true),
       } as BlankSpec
     }
-    return createElementSpec(type as GuiElementType, props, flattenedChildren)
+    return createElementSpec(type as GuiElementType, props, flattenChildren(children, true))
   } else if (typeofType === "function") {
     props = props || {}
-    props.children = children
+    props.children = flattenChildren(children, false)
     return (type as (this: unknown, props: unknown) => AnySpec | undefined)(props)
   } else if (typeofType === "table") {
-    return createComponentSpec(type as Class<Component<unknown>>, props, flattenedChildren)
+    return createComponentSpec(type as Class<Component<unknown>>, props, flattenChildren(children, false))
   } else {
     error(`component of type ${globalThis.type(type)} not supported`)
   }

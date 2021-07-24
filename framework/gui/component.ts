@@ -33,11 +33,11 @@ export abstract class Component<Props> {
 
   parentGuiElement!: LuaGuiElement
   firstGuiElement!: LuaGuiElement
-  readonly refs: Refs = {}
+  refs: Refs = {}
   public readonly __id: number
   __componentName!: string
   __internalInstance!: unknown
-  protected props!: Props
+  props!: Props
 
   constructor() {
     this.__id = global.nextInstanceId
@@ -49,6 +49,8 @@ export abstract class Component<Props> {
 
   static __isValid?(this: void, component: Component<unknown>): boolean
 
+  protected abstract create(): AnySpec | undefined
+
   onCreated?(): void
 
   createWith(props: Props): AnySpec | undefined {
@@ -56,15 +58,16 @@ export abstract class Component<Props> {
     return this.create()
   }
 
-  protected abstract create(): AnySpec | undefined
-
-  protected abstract update(prevProps: Props): void
-
-  updateWith(props: Props): void {
-    const prevProps = this.props
-    this.props = props
-    this.update(prevProps)
+  protected rerender(): void {
+    this.applySpec(this.create())
+    if (this.onCreated) this.onCreated()
   }
+
+  updateProps(props: Props): void {
+    this.mergeProps(props)
+  }
+
+  abstract mergeProps(props: Partial<Props>): void
 
   protected applySpec(spec: AnySpec | undefined): void {
     Component.__applySpec!(this, spec)
@@ -74,28 +77,54 @@ export abstract class Component<Props> {
     return game.get_player(this.parentGuiElement.player_index)
   }
 
-  protected r<F extends (this: this, ...args: any) => any>(func: F): ComponentBoundFunc<F> {
-    const name = (this.constructor as typeof Component).__funcNames!.get(func)
+  protected getPlayerIndex(): number {
+    return this.parentGuiElement.player_index
+  }
+
+  protected r<F extends (this: this, ...args: any) => any>(func: F): ComponentBoundFunc<F>
+  protected r<T, K extends keyof T>(this: T, key: K): T[K] extends Function ? ComponentBoundFunc<T[K]> : never
+  protected r(func: Function | string): ComponentBoundFunc<any> {
+    const name = typeof func === "string" ? func : (this.constructor as typeof Component).__funcNames!.get(func)
     if (!name) error("The function given was not bindable (not part of prototype):" + func)
     return {
       componentId: this.__id,
       funcName: name,
-    } as Partial<ComponentBoundFunc<F>> as ComponentBoundFunc<F>
+    } as Partial<ComponentBoundFunc<any>> as ComponentBoundFunc<any>
   }
 }
 
-export abstract class NoUpdateComponent<Props = {}> extends Component<Props> {
-  protected update(): void {
+export abstract class NoPropComponent extends Component<{}> {
+  mergeProps(): void {
     // noop
   }
+}
+
+export abstract class ManualReactiveComponent<Props> extends Component<Props> {
+  mergeProps(props: Partial<Props>): void {
+    Object.assign(this.props, props)
+    this.propsChanged(props)
+  }
+
+  protected abstract propsChanged(change: Partial<Props>): void
 }
 
 /**
  * A component that behaves like normal react. This comes with a performance warning.
  */
 export abstract class ReactiveComponent<Props> extends Component<Props> {
-  update(): void {
-    this.applySpec(this.create())
+  updateProps(props: Props): void {
+    const prevProps = this.props
+    this.props = props
+    if (this.shouldComponentUpdate(prevProps)) this.applySpec(this.create())
+  }
+
+  mergeProps(props: Partial<Props>): void {
+    this.updateProps({ ...this.props, ...props })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected shouldComponentUpdate(prevProps: Props): boolean {
+    return true
   }
 }
 
@@ -108,15 +137,15 @@ export type ComponentBoundFunc<F extends Function> = {
 
 export type GuiFunc<F extends Function> = ComponentBoundFunc<F> | FuncRef<F>
 
-export function callGuiFunc<F extends (...a: any) => any>(
+export function callGuiFunc<F extends (this: any, ...a: any) => any>(
   ref: GuiFunc<F> | undefined,
   ...args: Parameters<F>
 ): ReturnType<F>
-export function callGuiFunc<F extends (...a: any) => any>(
+export function callGuiFunc<F extends (this: any, ...a: any) => any>(
   ref: GuiFunc<F>,
   ...args: Parameters<F>
 ): ReturnType<F> | undefined
-export function callGuiFunc<F extends (...a: any) => any>(
+export function callGuiFunc<F extends (this: any, ...a: any) => any>(
   ref: GuiFunc<F> | undefined,
   ...args: Parameters<F>
 ): ReturnType<F> | undefined {
@@ -166,7 +195,11 @@ export function registerComponent<C extends Component<any>>(asName?: string) {
 function getRegisteredComponent(name: string): Class<Component<unknown>> {
   const componentClass = registeredComponents[name]
   if (!componentClass) {
-    error(`Component class with name ${name} not found. Did you register the class and perform migrations properly?`)
+    error(
+      `Component class with name ${tostring(
+        name
+      )} not found. Did you register the class and perform migrations properly?`
+    )
   }
   return componentClass
 }

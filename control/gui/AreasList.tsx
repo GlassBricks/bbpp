@@ -1,96 +1,87 @@
-import Reactorio, { AnySpec, callGuiFunc, GuiFunc, NoUpdateComponent, registerComponent } from "../../framework/gui"
-import { BpArea, BpSurface } from "../BpArea"
-import { BpGuiUpdate, WithBpGuiUpdate } from "./BpAreaEditorWindow"
-import { PlayerArea } from "../playerAreaTracking"
+import Reactorio, {
+  AnySpec,
+  callGuiFunc,
+  GuiFunc,
+  ManualReactiveComponent,
+  registerComponent,
+} from "../../framework/gui"
+import { BpArea } from "../BpArea"
+import { isEmpty, map } from "../../framework/util"
+import { AreasUpdate, WithAreasUpdate } from "./BpGuiTab"
+import { GuiConstants } from "../../constants"
 
 export interface AreasListProps {
   kind: "list-box" | "drop-down"
+  selectedArea: BpArea | false
+
   onSelectedAreaChanged?: GuiFunc<(area: BpArea | undefined) => void>
-  autoSelect?: boolean
 }
 
-/**
- * Only prop update supported is _autoSelect_
- */
 @registerComponent()
-export class AreasList extends NoUpdateComponent<AreasListProps> implements WithBpGuiUpdate {
-  private autoSelect?: boolean
-
+export class AreasList extends ManualReactiveComponent<AreasListProps> implements WithAreasUpdate {
   declare refs: {
     listBox: ListBoxGuiElement | DropDownGuiElement
   }
 
-  onCreated(): void {
-    this.autoSelect = this.props.autoSelect
-    if (this.autoSelect) this.autoSelectAreaId(false)
-  }
-
-  bpGuiUpdate(update: BpGuiUpdate): void {
-    const bpSurface = BpSurface.get(this.getPlayer().surface)
-    if (
-      update.playerChangedSurface ||
-      (update.areaCreated && update.areaCreated.bpSurface === bpSurface) ||
-      (update.areaDeleted && update.areaDeleted.bpSurface === bpSurface)
-    ) {
-      this.applySpec(this.create())
-      return
-    }
-    if (this.autoSelect && update.playerChangedArea) {
-      this.autoSelectAreaId(true)
-    }
-  }
-
-  setAutoSelect(autoSelect: boolean): void {
-    this.autoSelect = autoSelect
-    if (autoSelect) this.autoSelectAreaId(false)
-  }
-
-  getSelectedArea(): BpArea | undefined {
-    const index = this.refs.listBox.selected_index
-    if (index === 0) return undefined
-    const surface = BpSurface.get(this.getPlayer().surface)
-    return surface.areas[index - 1]
-  }
+  // todo: better indexing
+  private areas!: BpArea[]
 
   protected create(): AnySpec | undefined {
-    const bpSurface = BpSurface.get(this.getPlayer().surface)
-    const areas = bpSurface.areas
+    const areas = BpArea.areasById()
     return (
       <this.props.kind
         ref={"listBox"}
         onSelectionStateChanged={this.r(this.onSelectionStateChanged)}
         onUpdate={(element) => {
-          element.items = areas.map((x) => x.name)
+          this.areas = map(areas, (_, value) => value)
+          element.items = map(areas, (_, area) => area.name)
+          element.enabled = !isEmpty(areas)
         }}
         styleMod={{
-          maximal_height: 300,
+          maximal_height: GuiConstants.areaListHeight,
+          minimal_width: GuiConstants.areaListWidth,
+          horizontally_stretchable: true,
         }}
       />
     )
   }
 
-  private onSelectionStateChanged(): void {
-    if (this.props.onSelectedAreaChanged) this.raiseSelectedArea(this.getSelectedArea())
+  onCreated(): void {
+    this.setSelectedArea(this.props.selectedArea)
   }
 
-  private autoSelectAreaId(raiseEvent: boolean): void {
+  areasUpdate(update: AreasUpdate): void {
+    if (update.areaDeleted) {
+      if (this.props.selectedArea && update.areaDeleted.id === this.props.selectedArea.id) {
+        this.rerender()
+        callGuiFunc(this.props.onSelectedAreaChanged, undefined)
+      }
+    }
+    if (update.areaCreated || update.areaRenamed) {
+      this.rerender()
+    }
+  }
+
+  protected propsChanged(change: Partial<AreasListProps>): void {
+    if (change.selectedArea !== undefined) {
+      this.setSelectedArea(change.selectedArea)
+      this.props.selectedArea = change.selectedArea
+    }
+  }
+
+  private onSelectionStateChanged(): void {
+    const index = this.refs.listBox.selected_index
+    const selectedArea = index !== 0 ? this.areas[index - 1] : undefined
+    callGuiFunc(this.props.onSelectedAreaChanged, selectedArea)
+  }
+
+  private setSelectedArea(bpArea: BpArea | false) {
     const list = this.refs.listBox
-    const player = this.getPlayer()
-    const bpArea = PlayerArea.get(player)
-    const selectedIndex = bpArea === undefined ? 0 : BpSurface.get(player.surface).areas.indexOf(bpArea) + 1
-    const oldSelectedIndex = list.selected_index
+    const selectedIndex = bpArea ? this.areas.indexOf(bpArea) + 1 : 0
 
     list.selected_index = selectedIndex
     if (selectedIndex !== 0 && list.type === "list-box") {
       list.scroll_to_item(selectedIndex)
     }
-    if (raiseEvent && selectedIndex !== oldSelectedIndex) {
-      this.raiseSelectedArea(bpArea)
-    }
-  }
-
-  private raiseSelectedArea(area: BpArea | undefined) {
-    const func = this.props.onSelectedAreaChanged
-    callGuiFunc(func, area)
   }
 }
