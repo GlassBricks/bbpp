@@ -13,6 +13,10 @@ export function getEntityData<T>(entity: LuaEntity): T | undefined {
   return unitNumber && global.entityData[unitNumber]
 }
 
+export function getEntityDataByUnitNumber<T>(unitNumber: number): T | undefined {
+  return global.entityData[unitNumber]
+}
+
 export function setEntityData<T>(entity: LuaEntity, value: T): boolean {
   const unitNumber = entity.unit_number
   if (!unitNumber) return false

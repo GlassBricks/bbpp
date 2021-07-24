@@ -22,11 +22,12 @@ export class InclusionsTable extends ManualReactiveComponent<InclusionsTableProp
   protected create(): AnySpec | undefined {
     const area = this.props.selectedArea
     return (
-      <table column_count={5} style={Styles.inclusionsTable}>
+      <table column_count={6} style={Styles.inclusionsTable}>
         <empty-widget />
         <label caption={"Source area name"} style={"heading_3_label"} />
         <label caption={"Ghost"} style={"heading_3_label"} />
-        <label caption={"Include mode"} style={"heading_3_label"} />
+        <label caption={"Mode"} style={"heading_3_label"} />
+        <label caption={"Filters"} style={"heading_3_label"} />
         <empty-widget />
 
         {area &&
@@ -67,6 +68,7 @@ export class InclusionsTable extends ManualReactiveComponent<InclusionsTableProp
                 tags={{ index }}
                 onSelectionStateChanged={this.r(this.setIncludeMode)}
               />,
+              <button caption={"..."} style={"tool_button"} tags={{ index }} onClick={this.r(this.showFilters)} />,
               <button
                 caption={"X"}
                 style={"tool_button_red"}
@@ -89,7 +91,7 @@ export class InclusionsTable extends ManualReactiveComponent<InclusionsTableProp
   }
 
   areasUpdate(update: AreasUpdate): void {
-    if (update.inclusionsChanged || update.areaRenamed) {
+    if ((update.inclusionsChanged && update.inclusionsChanged.area === this.props.selectedArea) || update.areaRenamed) {
       this.rerender()
     }
   }
@@ -129,6 +131,12 @@ export class InclusionsTable extends ManualReactiveComponent<InclusionsTableProp
     const inclusion = this.getInclusion(element)
     if (!inclusion) return
     inclusion.includeMode = element.selected_index
+  }
+
+  private showFilters(element: ButtonGuiElement) {
+    const inclusion = this.getInclusion(element)
+    if (!inclusion) return
+    inclusion.destinationArea.openInclusionFilters(this.getPlayer(), inclusion)
   }
 
   private showDeleteInclusionConfirmation(element: ButtonGuiElement) {

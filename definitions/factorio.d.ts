@@ -2092,8 +2092,8 @@ interface LuaBurnerPrototype {
 }
 
 /** @noSelf **/
-interface LuaChunkIterator {
-  "operator ()": () => void
+interface LuaChunkIterator extends LuaIterable<ChunkPositionAndArea> {
+  (): ChunkPositionAndArea
   readonly valid: boolean
   readonly object_name: string
 
@@ -2277,8 +2277,8 @@ interface LuaCustomInputPrototype {
 
 /** @noSelf **/
 interface LuaCustomTable {
-  "operator []": any
-  readonly "operator #": number
+  readonly length: LuaLengthMethod<number>
+  [key: string]: any
   readonly valid: boolean
   readonly object_name: string
 
@@ -2791,7 +2791,7 @@ interface LuaEntityPrototype {
   readonly selection_priority: number
   readonly weight: number
   readonly resistances: Resistances
-  readonly fast_replaceable_group: string
+  readonly fast_replaceable_group?: string
   readonly next_upgrade: LuaEntityPrototype
   readonly loot: Loot
   readonly repair_speed_modifier: number
@@ -3119,10 +3119,8 @@ interface LuaFlowStatistics {
 }
 
 /** @noSelf **/
-interface LuaFluidBox {
-  readonly "operator #": number
+interface LuaFluidBox extends ReadonlyArray<Fluid | undefined> {
   readonly owner: LuaEntity
-  readonly "operator []": Fluid | undefined
   readonly valid: boolean
   readonly object_name: string
 
@@ -4507,7 +4505,7 @@ interface LuaRailPath {
 
 /** @noSelf **/
 interface LuaRandomGenerator {
-  "operator ()": () => void
+  (): number
   readonly valid: boolean
   readonly object_name: string
 
@@ -5615,12 +5613,10 @@ interface LuaTrain {
 }
 
 /** @noSelf **/
-interface LuaTransportLine {
-  readonly "operator #": number
+interface LuaTransportLine extends ReadonlyArray<LuaItemStack> {
   readonly owner: LuaEntity
   readonly output_lines: LuaTransportLine[]
   readonly input_lines: LuaTransportLine[]
-  readonly "operator []": LuaItemStack
   readonly valid: boolean
   readonly object_name: string
 
@@ -7613,4 +7609,4 @@ type Waypoint = {
 /** hacks */
 /** unimplented!
  * @see {https://lua-api.factorio.com/latest/Event-Filters.html Filters} */
-type Filters = unknown
+type Filters = unknown[]

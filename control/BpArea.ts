@@ -3,12 +3,13 @@ import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty, swap } from "../framework/util"
 import { add, Area, contract, getCenter, multiply, subtract } from "../framework/position"
 import { Prototypes } from "../constants"
-import { get, VectorTable } from "../framework/VectorTable"
+import { get, put, VectorTable } from "../framework/VectorTable"
 import { getEntityData, setEntityData } from "../framework/entityData"
-import { getBpForce } from "./forces"
 import { configureIncluded, configureView } from "./viewInclude"
 import { Result } from "../framework/result"
 import { Event } from "../framework/Event"
+import { getEditableIncludeForce, getEditableViewForce } from "./forces"
+import entity_filter_mode = defines.deconstruction_item.entity_filter_mode
 
 // global
 interface BpAreasGlobal {
@@ -176,7 +177,7 @@ export class BpSurface {
     )
 
     BpArea.onCreated.raise(bpArea)
-    bpArea.commitChanges()
+    bpArea.saveChanges()
     return bpArea
   }
 
@@ -217,23 +218,20 @@ export interface AreaInclusion {
 }
 
 interface AreaInclusionInternal extends AreaInclusion {
-  readonly includeBpIndex: number
+  readonly inventoryIndex: number
+  lastUpdatedForSelectMode: number
+  lastUpdatedForAllMode: number
 }
 
 export interface BpAreaEntityData {
   readonly area: BpArea
-  readonly inclusion: AreaInclusion
+  readonly inclusion: AreaInclusion | undefined
 }
 
 export class BpArea {
   static onCreated = new Event<BpArea>()
-  static onDeleted = new Event<{
-    id: number
-    bpSurface: BpSurface
-  }>()
-
+  static onDeleted = new Event<{ id: number; bpSurface: BpSurface }>()
   static onRenamed = new Event<BpArea>()
-
   static onInclusionsModified = new Event<{ area: BpArea }>()
 
   readonly id: number
@@ -244,11 +242,15 @@ export class BpArea {
   readonly area: Area
   readonly center: Position
 
-  readonly inventory: LuaInventory = game.create_inventory(8)
-  readonly dataBp = this.inventory[0]
-  private readonly includeBps: LuaInventory
+  readonly dataBpInventory: LuaInventory = game.create_inventory(4)
+  readonly dataBp = this.dataBpInventory[0]
+  private readonly includeSelectBps = game.create_inventory(4)
+  private readonly includeAllBps = game.create_inventory(4)
+  private readonly includeFilters = game.create_inventory(4)
 
   private readonly inclusions: ArrayAndTable<AreaInclusionInternal, AreaInclusionInternal, boolean> = [] as any
+
+  updateNumber: number = 0
 
   // <editor-fold desc="Creation and deletion">
 
@@ -267,8 +269,6 @@ export class BpArea {
     this.center = getCenter(this.area)
 
     this.dataBp.set_stack({ name: "blueprint" })
-    this.inventory[1].set_stack({ name: "blueprint-book" })
-    this.includeBps = this.inventory[1].get_inventory(defines.inventory.item_main)!
 
     global.bpAreaById[this.id] = this
   }
@@ -302,7 +302,10 @@ export class BpArea {
   delete(): void {
     if (!this.valid) return
     this.valid = false
-    this.inventory.destroy()
+    this.dataBpInventory.destroy()
+    this.includeSelectBps.destroy()
+    this.includeAllBps.destroy()
+    this.includeFilters.destroy()
     global.bpAreaById[this.id] = undefined
     this.bpSurface._areaDeleted(this)
     if (this.bpSurface.valid) {
@@ -313,7 +316,32 @@ export class BpArea {
     }
   }
 
-  // <editor-fold desc="Relations">
+  // </editor-fold>
+
+  // <editor-fold desc="Inclusions">
+
+  getInclusions(): ReadonlyArray<AreaInclusion> {
+    return this.inclusions
+  }
+
+  private findIncludeBpSlot(): number {
+    let index: number
+    const [, luaIndex] = this.includeSelectBps.find_empty_stack()
+    if (luaIndex) {
+      index = luaIndex - 1
+    } else {
+      const length = this.includeSelectBps.length
+      this.includeSelectBps.resize(length + 4)
+      this.includeAllBps.resize(length + 4)
+      this.includeFilters.resize(length + 4)
+      index = length
+    }
+    this.includeSelectBps[index].set_stack({ name: "blueprint" })
+    this.includeAllBps[index].set_stack({ name: "blueprint" })
+    this.includeFilters[index].set_stack({ name: Prototypes.inclusionFiltersItem })
+    return index
+  }
+
   addInclusion(sourceArea: BpArea, relativePosition: Position = { x: 0, y: 0 }): AreaInclusion {
     const inclusion: AreaInclusionInternal = {
       sourceArea,
@@ -321,16 +349,22 @@ export class BpArea {
       relativePosition,
       ghosts: false,
       includeMode: InclusionMode.All,
-      includeBpIndex: this.findIncludeBpSlot(),
+      inventoryIndex: this.findIncludeBpSlot(),
+      lastUpdatedForSelectMode: sourceArea.updateNumber, // starts empty
+      lastUpdatedForAllMode: sourceArea.updateNumber,
     }
     this.inclusions[this.inclusions.length] = inclusion
+    this.inclusions.set(inclusion, true)
     BpArea.onInclusionsModified.raise({ area: this })
     return inclusion
   }
 
-  deleteInclusion(i: AreaInclusion): boolean {
-    if (!arrayRemoveValue(this.inclusions, i)) return false
-    this.includeBps[(i as AreaInclusionInternal).includeBpIndex].clear()
+  deleteInclusion(inclusion: AreaInclusion): boolean {
+    if (!arrayRemoveValue(this.inclusions, inclusion)) return false
+    this.inclusions.delete(inclusion as AreaInclusionInternal)
+    const inventoryIndex = (inclusion as AreaInclusionInternal).inventoryIndex
+    this.includeSelectBps[inventoryIndex].clear()
+    this.includeFilters[inventoryIndex].clear()
     BpArea.onInclusionsModified.raise({ area: this })
     return true
   }
@@ -354,24 +388,33 @@ export class BpArea {
     return true
   }
 
-  getInclusions(): ReadonlyArray<AreaInclusion> {
-    return this.inclusions
-  }
-
-  commitChanges(): void {
-    this.writeBlueprint(this.dataBp, "player", undefined)
-    for (const inclusion of this.inclusions) {
-      if (inclusion.includeMode !== InclusionMode.Select) continue
-      this.writeBlueprint(this.includeBps[inclusion.includeBpIndex], getBpForce("include", true), inclusion)
-      // TODO: detect entities deleted
-    }
+  openInclusionFilters(player: LuaPlayer, inclusion: AreaInclusion): boolean {
+    const inclusion1 = inclusion as AreaInclusionInternal
+    if (!this.inclusions.has(inclusion1)) return false
+    player.opened = this.includeFilters[inclusion1.inventoryIndex]
+    const lastUpdated = inclusion1.sourceArea.updateNumber - 1 // guarantee update
+    inclusion1.lastUpdatedForSelectMode = lastUpdated
+    inclusion1.lastUpdatedForAllMode = lastUpdated
+    return true
   }
 
   // </editor-fold>
 
+  // <editor-fold desc="Editing/placement">
   reset(): void {
     this.deleteAllEntities()
-    this.placeInclusions()
+    this.placeAllBlueprints()
+  }
+
+  saveChanges(): void {
+    this.writeBlueprint(this.dataBp, "player", undefined)
+    for (const inclusion of this.inclusions) {
+      if (inclusion.includeMode === InclusionMode.Select) {
+        this.writeBlueprint(this.includeSelectBps[inclusion.inventoryIndex], getEditableIncludeForce(), inclusion)
+        // todo: checking
+      }
+    }
+    this.updateNumber++
   }
 
   private rawPlaceBlueprint(bp: LuaItemStack, position: Position, force: ForceSpecification, forceBuild: boolean) {
@@ -384,34 +427,6 @@ export class BpArea {
     })
   }
 
-  deleteViewOnlyEntities(): void {
-    this.surface
-      .find_entities_filtered({
-        area: this.area,
-        force: getBpForce("view", false),
-      })
-      .forEach((x) => x.destroy())
-
-    this.surface
-      .find_entities_filtered({
-        area: this.area,
-        force: getBpForce("view", true),
-      })
-      .forEach((x) => x.destroy())
-  }
-
-  private findIncludeBpSlot(): number {
-    const [, luaIndex] = this.includeBps.find_empty_stack()
-    if (luaIndex) {
-      this.includeBps[luaIndex - 1].set_stack({ name: "blueprint" })
-      return luaIndex - 1
-    }
-    const index = this.includeBps.length
-    this.includeBps.insert({ name: "blueprint" })
-    return index
-  }
-
-  // <editor-fold desc="Area editing">
   private deleteAllEntities() {
     const entities = this.surface.find_entities_filtered({
       area: this.area,
@@ -430,7 +445,7 @@ export class BpArea {
     revive: boolean
   ): LuaEntity[] {
     if (!bp.get_blueprint_entities()) return []
-    const position = relativePosition ? add(this.center, relativePosition) : { x: 0, y: 0 }
+    const position = relativePosition ? add(this.center, relativePosition) : this.center
     let ghosts = this.rawPlaceBlueprint(bp, position, force, false)
     if (isEmpty(ghosts)) {
       userWarning(
@@ -457,10 +472,15 @@ export class BpArea {
     return entities
   }
 
-  private configureEntities(entities: LuaEntity[], mod: (entity: LuaEntity) => void, inclusion: AreaInclusion): void {
-    for (const entity of entities) {
-      mod(entity)
-    }
+  private configureEntities(
+    entities: LuaEntity[],
+    mod: ((entity: LuaEntity) => void) | undefined,
+    inclusion: AreaInclusion | undefined
+  ): void {
+    if (mod)
+      for (const entity of entities) {
+        mod(entity)
+      }
     if (inclusion !== undefined) {
       const data: BpAreaEntityData = {
         area: this,
@@ -472,25 +492,41 @@ export class BpArea {
     }
   }
 
-  private placeInclusions() {
+  private placeAllBlueprints() {
     for (const i of $range(1, this.inclusions.length)) {
       const inclusion = this.inclusions[i - 1]
-      const otherArea = inclusion.sourceArea
-      if (!otherArea || !otherArea.valid) {
+      const sourceArea = inclusion.sourceArea
+      if (!sourceArea.valid) {
         userWarning(
-          "Area inclusion includes an invalid area. This shouldn't happen, please report to the mod author. Skipping..."
+          "Area inclusion includes an invalid/deleted area. " +
+            "This shouldn't happen, please report to the mod author. Skipping..."
         )
         continue
       }
+      const includeFilters = this.includeFilters[inclusion.inventoryIndex]
       switch (inclusion.includeMode) {
         case InclusionMode.None:
           break
-        case InclusionMode.Select:
+        case InclusionMode.Select: {
+          const includeBp = this.includeSelectBps[inclusion.inventoryIndex]
+          if (inclusion.lastUpdatedForSelectMode < sourceArea.updateNumber) {
+            BpArea.updateSelectInclusion(includeBp, sourceArea.dataBp, includeFilters)
+            inclusion.lastUpdatedForSelectMode = sourceArea.updateNumber
+          }
+          this.configureEntities(
+            this.placeBlueprint(includeBp, inclusion.relativePosition, getEditableIncludeForce(), true),
+            configureIncluded,
+            inclusion
+          )
+
+          break
+        }
+        case InclusionMode.All: {
           this.configureEntities(
             this.placeBlueprint(
-              this.includeBps[inclusion.includeBpIndex],
+              this.getIncludeAllBp(inclusion, includeFilters),
               inclusion.relativePosition,
-              getBpForce("include", true),
+              "player",
               true
             ),
             configureIncluded,
@@ -498,21 +534,15 @@ export class BpArea {
           )
 
           break
-        case InclusionMode.All:
-          this.configureEntities(
-            this.placeBlueprint(otherArea.dataBp, inclusion.relativePosition, getBpForce("include", false), true),
-            configureIncluded,
-            inclusion
-          )
-          break
+        }
       }
       if (inclusion.ghosts && inclusion.includeMode !== InclusionMode.All) {
         // todo: make ghosts
         this.configureEntities(
           this.placeBlueprint(
-            otherArea.dataBp,
+            this.getIncludeAllBp(inclusion, includeFilters),
             inclusion.relativePosition,
-            getBpForce("view", inclusion.includeMode === InclusionMode.Select),
+            inclusion.includeMode === InclusionMode.Select ? getEditableViewForce() : "player",
             false
           ),
           configureView,
@@ -520,7 +550,22 @@ export class BpArea {
         )
       }
     }
-    this.placeBlueprint(this.dataBp, undefined, "player", true)
+    this.configureEntities(this.placeBlueprint(this.dataBp, undefined, "player", true), undefined, undefined)
+  }
+
+  private getIncludeAllBp(inclusion: AreaInclusionInternal, includeFilters: LuaItemStack) {
+    let bp: LuaItemStack
+    const sourceArea = inclusion.sourceArea
+    if (includeFilters.entity_filters.length === 0) {
+      bp = sourceArea.dataBp
+    } else {
+      bp = this.includeAllBps[inclusion.inventoryIndex]
+      if (inclusion.lastUpdatedForAllMode < sourceArea.updateNumber) {
+        BpArea.updateAllInclusion(bp, sourceArea.dataBp, includeFilters)
+        inclusion.lastUpdatedForAllMode = sourceArea.updateNumber
+      }
+    }
+    return bp
   }
 
   private writeBlueprint(bp: LuaItemStack, force: ForceSpecification, inclusion: AreaInclusion | undefined) {
@@ -541,18 +586,89 @@ export class BpArea {
     for (let i = 1; i <= l; i++) {
       const bpEntity = bpEntities[i - 1]!
       const entity = entityMapping[i]
-      if (inclusion) {
-        const entityData = getEntityData<BpAreaEntityData>(entity)
-        if (!entityData || entityData.inclusion !== inclusion) {
-          bpEntities[i - 1] = undefined as any
-          continue
-        }
+      const entityData = getEntityData<BpAreaEntityData>(entity)
+      if (!entityData || entityData.inclusion !== inclusion) {
+        bpEntities[i - 1] = undefined as any
+        continue
       }
-      bpEntity.position = subtract(entity.position, this.center) // todo: replace center with actual location
+      bpEntity.position = subtract(entity.position, this.center)
     }
     bp.set_blueprint_entities(bpEntities)
     bp.blueprint_snap_to_grid = [1, 1]
     bp.blueprint_absolute_snapping = true
+  }
+
+  private static updateAllInclusion(includeBp: LuaItemStack, sourceBp: LuaItemStack, filters: LuaItemStack): void {
+    const sourceEntities = sourceBp.get_blueprint_entities()
+    if (!sourceEntities) {
+      includeBp.clear_blueprint()
+      return
+    }
+
+    const filtersAsSet = new LuaTable<string, true | undefined>()
+    for (const [, entityFilter] of pairs(filters.entity_filters)) {
+      filtersAsSet.set(entityFilter as string, true)
+    }
+    const isWhitelist = filters.entity_filter_mode === entity_filter_mode.whitelist
+
+    for (const [luaIndex, sourceEntity] of ipairs(sourceEntities)) {
+      const sourceName = sourceEntity.name
+      const matches = filtersAsSet.has(sourceName) === isWhitelist
+      if (!matches) {
+        sourceEntities[luaIndex - 1] = undefined as any
+      }
+    }
+
+    includeBp.set_blueprint_entities(sourceEntities)
+    includeBp.blueprint_snap_to_grid = [1, 1]
+    includeBp.blueprint_absolute_snapping = true
+  }
+
+  private static updateSelectInclusion(includeBp: LuaItemStack, sourceBp: LuaItemStack, filters: LuaItemStack): void {
+    const sourceEntities = sourceBp.get_blueprint_entities()
+    if (!sourceEntities) {
+      includeBp.clear_blueprint()
+      return
+    }
+
+    const thisEntities = includeBp.get_blueprint_entities()
+    if (!thisEntities) return
+
+    const entitiesByPosition: VectorTable<string> | undefined = {}
+    for (const thisEntity of thisEntities) {
+      const position = thisEntity.position as Position
+      put(entitiesByPosition, position.x, position.y, thisEntity.name)
+    }
+
+    const filtersAsSet = new LuaTable<string, true | undefined>()
+    for (const [, entityFilter] of pairs(filters.entity_filters)) {
+      filtersAsSet.set(entityFilter as string, true)
+    }
+    // empty filters is empty blacklist
+    const isBlacklist = filters.entity_filter_mode !== entity_filter_mode.whitelist || isEmpty(filtersAsSet)
+
+    for (const [luaIndex, sourceEntity] of ipairs(sourceEntities)) {
+      const position = sourceEntity.position as Position
+      const sourceName = sourceEntity.name
+      const includedName = get(entitiesByPosition, position.x, position.y)
+      let matches: boolean
+      if (!includedName || filtersAsSet.has(sourceName) === isBlacklist) {
+        matches = false
+      } else if (includedName === sourceName) {
+        matches = true
+      } else {
+        const group1 = game.entity_prototypes[includedName].fast_replaceable_group
+        const group2 = game.entity_prototypes[sourceName].fast_replaceable_group
+        matches = group1 !== undefined && group1 === group2
+      }
+      if (!matches) {
+        sourceEntities[luaIndex - 1] = undefined as any
+      }
+    }
+
+    includeBp.set_blueprint_entities(sourceEntities)
+    includeBp.blueprint_snap_to_grid = [1, 1]
+    includeBp.blueprint_absolute_snapping = true
   }
 
   // </editor-fold>

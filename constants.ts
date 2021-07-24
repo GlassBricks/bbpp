@@ -10,6 +10,11 @@ export const Prototypes = {
   inclusionTool: "bbpp:inclusion-tool",
   inclusionToolShortcut: "bbpp:inclusion-tool-shortcut",
 
+  inclusionFiltersItem: "bbpp:inclusion-filters-item",
+  inclusionFiltersItemFilterCount: 50,
+
+  inclusionFiltersInventory: "bbpp:inclusion-filters-inventory",
+
   guiConfirmInput: "bbpp:confirm-gui-linked" as CustomInputName,
 }
 export const Styles = {
@@ -27,7 +32,7 @@ export const GuiConstants = {
     moveButtonsWidth: 20,
     nameWidth: 200,
     inclusionModeSelectionWidth: 80,
-    checkboxWidth: 35,
-    smallButtonWidth: 28,
+    checkboxWidth: 30,
+    smallButtonWidth: 24,
   },
 }

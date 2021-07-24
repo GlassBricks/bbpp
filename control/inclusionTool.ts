@@ -1,41 +1,75 @@
 import { registerHandlers } from "../framework/events"
 import { Prototypes } from "../constants"
-import { getBpForce } from "./forces"
 import { BpAreaEntityData } from "./BpArea"
-import { getEntityData } from "../framework/entityData"
-import { configureIncluded, configureView } from "./viewInclude"
+import { getEntityData, getEntityDataByUnitNumber, setEntityData } from "../framework/entityData"
+import { configureIncluded } from "./viewInclude"
+import {
+  editableIncludeForceName,
+  editableViewForceName,
+  getEditableIncludeForce,
+  getEditableViewForce,
+} from "./forces"
+import { userWarning } from "../framework/logging"
 
 /** @noSelf */
 function include(e: OnPlayerSelectedAreaPayload) {
-  const viewForce = getBpForce("view", true)
-  const includeForce = getBpForce("include", true)
+  const viewForce = getEditableViewForce()
+  const includeForce = getEditableIncludeForce()
   for (const entity of e.entities) {
-    if (entity.force === viewForce) {
-      entity.force = includeForce
-      configureIncluded(entity)
+    if (entity.force !== viewForce) continue
+    const data = getEntityData<BpAreaEntityData>(entity)
+    if (!data) continue
+
+    const [, revived] = entity.silent_revive()
+    if (!revived) {
+      userWarning("Could not revive ghost (something in the way?)")
+    } else {
+      setEntityData(revived, data)
+      revived.force = includeForce
+      configureIncluded(revived)
     }
   }
 }
 
 function exclude(e: OnPlayerAltSelectedAreaPayload) {
-  const viewForce = getBpForce("view", true)
-  const includeForce = getBpForce("include", true)
+  const includeForce = getEditableIncludeForce()
   for (const entity of e.entities) {
-    const entityData = getEntityData<BpAreaEntityData>(entity)
-    if (!entityData) continue
-    if (entity.force === includeForce) {
-      const inclusion = entityData.inclusion
-      if (inclusion && inclusion.ghosts) {
-        entity.force = viewForce
-        configureView(entity)
-      } else {
-        entity.destroy()
-      }
+    if (entity.force !== includeForce) continue
+    const data = getEntityData<BpAreaEntityData>(entity)
+    if (!data) continue
+
+    const inclusion = data.inclusion
+    if (inclusion && inclusion.ghosts) {
+      entity.die(includeForce)
+    } else {
+      entity.destroy()
     }
   }
 }
 
-// todo: actually check if view/include mode is correct
+function setupGhost(e: OnPostEntityDiedPayload) {
+  for (const corpse of e.corpses) {
+    corpse.destroy()
+  }
+  for (const explosion of game.get_surface(e.surface_index)!.find_entities_filtered({
+    position: e.position,
+    type: "explosion",
+  })) {
+    explosion.destroy()
+  }
+  for (const luaEntity of game.get_surface(e.surface_index)!.find_entities_filtered({
+    position: e.position,
+    radius: 1,
+  })) {
+    print(luaEntity.type)
+  }
+  const data = assert(getEntityDataByUnitNumber<BpAreaEntityData>(e.unit_number!))
+  const ghost = e.ghost!
+  ghost.time_to_live = 4_294_967_295 // = never expire
+  setEntityData(ghost, data)
+  ghost.force = editableViewForceName
+}
+
 registerHandlers({
   on_player_selected_area(e) {
     if (e.item === Prototypes.inclusionTool) {
@@ -46,5 +80,8 @@ registerHandlers({
     if (e.item === Prototypes.inclusionTool) {
       exclude(e)
     }
+  },
+  on_post_entity_died(e) {
+    if (e.ghost && e.unit_number && e.force && e.force.name === editableIncludeForceName) setupGhost(e)
   },
 })

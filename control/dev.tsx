@@ -54,13 +54,11 @@ function getArea(player: LuaPlayer): BpArea | undefined {
 DevButton("Open bp", (player) => {
   const area = getArea(player)
   if (!area) return
-  player.opened = area.inventory[0]
+  player.opened = area.dataBpInventory[0]
 })
 
 DevButton("Open include bps", (player) => {
   const area = getArea(player)
   if (!area) return
-  player.opened = area.inventory[1]
+  player.opened = area.dataBpInventory[1]
 })
-// todo move
-// const devWindow = AreaNavigator.window

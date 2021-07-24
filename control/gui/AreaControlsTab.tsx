@@ -29,6 +29,7 @@ export class AreaControlsTab extends BpGuiTab {
           <flow ref={"editButtonsFlow"}>
             <button
               caption={"Save changes"}
+              style={"green_button"}
               styleMod={{ horizontally_stretchable: true }}
               onClick={this.r(this.commitChanges)}
             />
@@ -70,7 +71,7 @@ export class AreaControlsTab extends BpGuiTab {
 
   private commitChanges(): void {
     if (!this.props.selectedArea) return
-    this.props.selectedArea.commitChanges()
+    this.props.selectedArea.saveChanges()
   }
 
   private showResetAreaConfirmation() {

@@ -28,7 +28,7 @@ registerHandlers({
   on_built_entity(e) {
     const createdEntity = e.created_entity
     const position = createdEntity.position
-    const tags = (createdEntity.type === "entity-ghost" ? createdEntity.tags : e.tags) as PasteActionTags | undefined
+    const tags = (createdEntity.name === "entity-ghost" ? createdEntity.tags : e.tags) as PasteActionTags | undefined
     createdEntity.destroy()
     if (!tags || !tags.action) return
     const action = PasteActions[tags.action]

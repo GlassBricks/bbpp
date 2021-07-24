@@ -42,7 +42,7 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
         </flow>
         <line direction={"horizontal"} />
         <flow>
-          <label caption={"Add inclusion: "} />
+          <label caption={"Add inclusion from: "} />
           <flow direction={"vertical"}>
             <AreasList
               ref={"addNewInclusionList"}

@@ -24,9 +24,10 @@ const inclusionTool = {
     g: 85,
     b: 85,
   },
-  selection_mode: ["buildable-type", "enemy", "not-same-force"],
-  alt_selection_mode: ["buildable-type", "friend", "not-same-force"],
-  selection_cursor_box_type: "entity",
+  selection_mode: ["not-same-force", "enemy", "any-entity"],
+  alt_selection_mode: ["not-same-force", "friend", "buildable-type"],
+
+  selection_cursor_box_type: "copy",
   alt_selection_cursor_box_type: "entity",
 }
 const inclusionToolShortcut = {
@@ -42,20 +43,24 @@ const inclusionToolShortcut = {
     size: 32,
   },
 }
-
 data.extend([inclusionTool, inclusionToolShortcut])
+
+const inclusionFilters = table.deepcopy(data.raw["deconstruction-item"]["deconstruction-planner"])
+inclusionFilters.name = Prototypes.inclusionFiltersItem
+inclusionFilters.entity_filter_count = Prototypes.inclusionFiltersItemFilterCount
+;(inclusionFilters.flags as string[]).push("hidden", "only-in-cursor")
+data.extend([inclusionFilters])
+
+const temporaryBlueprint = table.deepcopy(data.raw.blueprint.blueprint)
+temporaryBlueprint.name = Prototypes.temporaryBlueprint
+;(temporaryBlueprint.flags as string[]).push("hidden", "only-in-cursor")
+data.extend([temporaryBlueprint])
 
 const boundaryTile = table.deepcopy(data.raw.tile["lab-white"])
 boundaryTile.name = Prototypes.boundaryTileWhite
 boundaryTile.order = "z[other]-d[bbpp]-[boundary]"
 boundaryTile.collision_mask = ["ground-tile", "object-layer"]
-
 data.extend([boundaryTile])
-
-const temporaryBlueprint = table.deepcopy(data.raw.blueprint.blueprint)
-temporaryBlueprint.name = Prototypes.temporaryBlueprint
-;(temporaryBlueprint.flags as string[]).push("only-in-cursor")
-data.extend([temporaryBlueprint])
 
 function createTileEntity(name: string, collisionMask?: string[]) {
   const labWhite = "__base__/graphics/terrain/lab-tiles/lab-white.png"
@@ -154,7 +159,6 @@ const pasteActionItem = {
   place_result: Prototypes.pasteAction,
   stack_size: 1,
 }
-
 data.extend([pasteAction, pasteActionItem])
 
 const confirmInput = {
@@ -170,6 +174,7 @@ const columnWidths = [
   GuiConstants.Inclusions.nameWidth,
   GuiConstants.Inclusions.checkboxWidth,
   GuiConstants.Inclusions.inclusionModeSelectionWidth,
+  GuiConstants.Inclusions.smallButtonWidth,
   GuiConstants.Inclusions.smallButtonWidth,
 ]
 
