@@ -1,5 +1,5 @@
 - [x] Proper deletion of areas: referenced inclusions
-- [ ] Fix item request proxy
+- [x] Fix item request proxy
 
 
 - [ ] Maybe make area auto update (with toggle?)

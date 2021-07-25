@@ -47,6 +47,10 @@ export function shift(area: Area, by: Position): Area {
   return [add(area[0], by), add(area[1], by)]
 }
 
+export function shiftNegative(area: Area, by: Position): Area {
+  return [subtract(area[0], by), subtract(area[1], by)]
+}
+
 export function contract(area: Area, by: number): Area {
   return [
     {

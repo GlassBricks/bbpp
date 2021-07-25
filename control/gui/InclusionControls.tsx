@@ -79,6 +79,7 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
     if (change.selectedArea !== undefined) {
       this.refs.inclusionsTable.mergeProps(change)
       this.refs.resetButton.enabled = change.selectedArea !== false
+      this.setAreaToInclude(this.areaToInclude)
     }
   }
 
