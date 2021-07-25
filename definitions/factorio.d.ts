@@ -2502,13 +2502,10 @@ interface LuaEntity extends LuaControl {
   readonly valid: boolean
   readonly object_name: string
 
-  get_output_inventory(): void
-
-  get_module_inventory(): void
-
-  get_fuel_inventory(): void
-
-  get_burnt_result_inventory(): void
+  get_output_inventory(): LuaInventory | undefined
+  get_module_inventory(): LuaInventory | undefined
+  get_fuel_inventory(): LuaInventory | undefined
+  get_burnt_result_inventory(): LuaInventory | undefined
 
   damage(damage: number, force: ForceSpecification, type?: string, dealer?: LuaEntity): number
 

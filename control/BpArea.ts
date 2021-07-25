@@ -495,8 +495,22 @@ export class BpArea {
       ghosts = this.rawPlaceBlueprint(bp, position, force, true)
     }
     const entities: LuaEntity[] = []
+    const retryRevive: LuaEntity[] = []
     for (const ghost of ghosts) {
-      entities[entities.length] = (revive && fullyRevive(ghost)) || ghost
+      const entity = !revive ? ghost : fullyRevive(ghost)
+      if (!entity) {
+        retryRevive[retryRevive.length] = ghost
+      } else {
+        entities[entities.length] = entity
+      }
+    }
+    for (const ghost of retryRevive) {
+      let entity = fullyRevive(ghost)
+      if (!entity) {
+        userWarning("could not revive ghost (something in the way?)")
+        entity = ghost
+      }
+      entities[entities.length] = entity
     }
     return entities
   }
