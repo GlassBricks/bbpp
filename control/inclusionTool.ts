@@ -10,17 +10,18 @@ import {
   getEditableViewForce,
 } from "./forces"
 import { userWarning } from "../framework/logging"
+import { fullyRevive } from "./revive"
 
 /** @noSelf */
 function include(e: OnPlayerSelectedAreaPayload) {
   const viewForce = getEditableViewForce()
   const includeForce = getEditableIncludeForce()
-  for (const entity of e.entities) {
-    if (entity.force !== viewForce) continue
-    const data = getEntityData<BpAreaEntityData>(entity)
+  for (const ghost of e.entities) {
+    if (ghost.force !== viewForce || ghost.name !== "entity-ghost") continue
+    const data = getEntityData<BpAreaEntityData>(ghost)
     if (!data) continue
 
-    const [, revived] = entity.silent_revive()
+    const revived = fullyRevive(ghost)
     if (!revived) {
       userWarning("Could not revive ghost (something in the way?)")
     } else {
@@ -57,13 +58,7 @@ function setupGhost(e: OnPostEntityDiedPayload) {
   })) {
     explosion.destroy()
   }
-  for (const luaEntity of game.get_surface(e.surface_index)!.find_entities_filtered({
-    position: e.position,
-    radius: 1,
-  })) {
-    print(luaEntity.type)
-  }
-  const data = assert(getEntityDataByUnitNumber<BpAreaEntityData>(e.unit_number!))
+  const data = getEntityDataByUnitNumber<BpAreaEntityData>(e.unit_number!)
   const ghost = e.ghost!
   ghost.time_to_live = 4_294_967_295 // = never expire
   setEntityData(ghost, data)

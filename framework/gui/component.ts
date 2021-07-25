@@ -2,7 +2,6 @@
 import { AnySpec } from "./spec"
 import { derefFuncOrNil, FuncRef, registerFuncs } from "../funcRef"
 import { registerHandlers } from "../events"
-import { vlog } from "../logging"
 
 interface ComponentsGlobal {
   componentInstances: Record<number, Component<any>>
@@ -188,7 +187,7 @@ export function registerComponent<C extends Component<any>>(asName?: string) {
     }
     componentClass.__funcNames = binds
 
-    vlog("registered class1", componentName)
+    // vlog("registered class", componentName)
   }
 }
 

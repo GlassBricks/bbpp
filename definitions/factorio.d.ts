@@ -2584,12 +2584,12 @@ interface LuaEntity extends LuaControl {
   revive(opts?: {
     return_item_request_proxy?: boolean
     raise_revive?: boolean
-  }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined]>
+  }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined, LuaEntity | undefined]>
 
   silent_revive(opts?: {
     return_item_request_proxy?: boolean
     raise_revive?: boolean
-  }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined]>
+  }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined, LuaEntity| undefined]>
 
   get_connected_rail(table_0: {
     rail_direction: defines.rail_direction

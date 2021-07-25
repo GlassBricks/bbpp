@@ -1,6 +1,5 @@
 /** @noSelfInFile */
 import { isFunction } from "./util"
-import { vlog } from "./logging"
 
 export type FuncRef<F extends Function> = string & {
   "#funcType": F
@@ -22,7 +21,7 @@ export function registerFunc<F extends Function>(func: F, name: string): FuncRef
   }
   nameToFunc[name] = func
   funcToName.set(func, name)
-  vlog("registered function", name)
+  // vlog("registered function", name)
   return name as FuncRef<F>
 }
 

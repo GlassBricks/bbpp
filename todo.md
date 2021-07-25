@@ -1,4 +1,4 @@
-- [ ] Proper deletion of areas: referenced inclusions
+- [x] Proper deletion of areas: referenced inclusions
 - [ ] Fix item request proxy
 
 
@@ -9,6 +9,9 @@
 
 - [ ] Simple blueprint creation
 - [ ] Grid size/location for blueprints
+
+
+- [ ] Report the strange bug
 
 
 - [x] Make inclusion tool work

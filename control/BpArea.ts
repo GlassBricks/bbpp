@@ -1,4 +1,4 @@
-import { userWarning } from "../framework/logging"
+import { dlog, userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty, swap } from "../framework/util"
 import { add, Area, contract, getCenter, multiply, subtract } from "../framework/position"
@@ -9,6 +9,7 @@ import { configureIncluded, configureView } from "./viewInclude"
 import { Result } from "../framework/result"
 import { Event } from "../framework/Event"
 import { getEditableIncludeForce, getEditableViewForce } from "./forces"
+import { fullyRevive } from "./revive"
 import entity_filter_mode = defines.deconstruction_item.entity_filter_mode
 
 // global
@@ -138,7 +139,6 @@ export class BpSurface {
   }
 
   _areaDeleted(area: BpArea): void {
-    // todo: go to EVERY area referenced and delete
     assert(!area.valid)
     if (!this.valid) return
 
@@ -252,6 +252,8 @@ export class BpArea {
 
   updateNumber: number = 0
 
+  readonly includedBy: Record<number, number> = {}
+
   // <editor-fold desc="Creation and deletion">
 
   private constructor(
@@ -271,6 +273,7 @@ export class BpArea {
     this.dataBp.set_stack({ name: "blueprint" })
 
     global.bpAreaById[this.id] = this
+    dlog("Bp area created:", name)
   }
 
   static _create(
@@ -302,18 +305,20 @@ export class BpArea {
   delete(): void {
     if (!this.valid) return
     this.valid = false
+    dlog("deleting area:", this.name)
     this.dataBpInventory.destroy()
     this.includeSelectBps.destroy()
     this.includeAllBps.destroy()
     this.includeFilters.destroy()
     global.bpAreaById[this.id] = undefined
-    this.bpSurface._areaDeleted(this)
-    if (this.bpSurface.valid) {
-      BpArea.onDeleted.raise({
-        id: this.id,
-        bpSurface: this.bpSurface,
-      })
+    for (const [areaId] of pairs(this.includedBy)) {
+      global.bpAreaById[areaId]!.removeAllInclusions(this)
     }
+    this.bpSurface._areaDeleted(this)
+    BpArea.onDeleted.raise({
+      id: this.id,
+      bpSurface: this.bpSurface,
+    })
   }
 
   // </editor-fold>
@@ -324,7 +329,7 @@ export class BpArea {
     return this.inclusions
   }
 
-  private findIncludeBpSlot(): number {
+  private findInclusionInventoryIndex(): number {
     let index: number
     const [, luaIndex] = this.includeSelectBps.find_empty_stack()
     if (luaIndex) {
@@ -349,24 +354,57 @@ export class BpArea {
       relativePosition,
       ghosts: false,
       includeMode: InclusionMode.All,
-      inventoryIndex: this.findIncludeBpSlot(),
-      lastUpdatedForSelectMode: sourceArea.updateNumber, // starts empty
-      lastUpdatedForAllMode: sourceArea.updateNumber,
+      inventoryIndex: this.findInclusionInventoryIndex(),
+      lastUpdatedForSelectMode: sourceArea.updateNumber - 1,
+      lastUpdatedForAllMode: sourceArea.updateNumber - 1,
     }
     this.inclusions[this.inclusions.length] = inclusion
     this.inclusions.set(inclusion, true)
+
+    sourceArea.includedBy[this.id] = sourceArea.includedBy[this.id] || 0
+    sourceArea.includedBy[this.id]++
+
     BpArea.onInclusionsModified.raise({ area: this })
     return inclusion
   }
 
   deleteInclusion(inclusion: AreaInclusion): boolean {
     if (!arrayRemoveValue(this.inclusions, inclusion)) return false
-    this.inclusions.delete(inclusion as AreaInclusionInternal)
-    const inventoryIndex = (inclusion as AreaInclusionInternal).inventoryIndex
-    this.includeSelectBps[inventoryIndex].clear()
-    this.includeFilters[inventoryIndex].clear()
+    this.doDeleteInclusions(inclusion as AreaInclusionInternal)
+
     BpArea.onInclusionsModified.raise({ area: this })
     return true
+  }
+
+  // already gone from array
+  private removeAllInclusions(area: BpArea): void {
+    const length = this.inclusions.length()
+    let j = 0
+    for (let i = 0; i < length; i++) {
+      if (this.inclusions[i].sourceArea === area) {
+        this.doDeleteInclusions(this.inclusions[i])
+      } else {
+        this.inclusions[j] = this.inclusions[i]
+        j++
+      }
+    }
+    for (let i = j; i < length; i++) {
+      this.inclusions[i] = undefined as any
+    }
+    BpArea.onInclusionsModified.raise({ area: this })
+  }
+
+  private doDeleteInclusions(inclusion: AreaInclusionInternal) {
+    this.inclusions.delete(inclusion)
+    const inventoryIndex = inclusion.inventoryIndex
+    this.includeSelectBps[inventoryIndex].clear()
+    this.includeFilters[inventoryIndex].clear()
+
+    const sourceArea = inclusion.sourceArea
+    sourceArea.includedBy[this.id]--
+    if (sourceArea.includedBy[this.id] === 0) {
+      sourceArea.includedBy[this.id] = undefined as any
+    }
   }
 
   private swapInclusions(i: number, j: number) {
@@ -407,6 +445,7 @@ export class BpArea {
   }
 
   saveChanges(): void {
+    dlog("Saving changes for area: ", this.name)
     this.writeBlueprint(this.dataBp, "player", undefined)
     for (const inclusion of this.inclusions) {
       if (inclusion.includeMode === InclusionMode.Select) {
@@ -457,17 +496,7 @@ export class BpArea {
     }
     const entities: LuaEntity[] = []
     for (const ghost of ghosts) {
-      let entity: LuaEntity | undefined
-      if (!revive) {
-        entity = ghost
-      } else {
-        ;[, entity] = ghost.silent_revive()
-        if (!entity) {
-          userWarning("could not revive ghost (something in the way?)")
-          entity = ghost
-        }
-      }
-      entities[entities.length] = entity
+      entities[entities.length] = (revive && fullyRevive(ghost)) || ghost
     }
     return entities
   }
@@ -493,6 +522,7 @@ export class BpArea {
   }
 
   private placeAllBlueprints() {
+    dlog("Replacing all blueprints for area:", this.name)
     for (const i of $range(1, this.inclusions.length)) {
       const inclusion = this.inclusions[i - 1]
       const sourceArea = inclusion.sourceArea
@@ -587,15 +617,20 @@ export class BpArea {
       const bpEntity = bpEntities[i - 1]!
       const entity = entityMapping[i]
       const entityData = getEntityData<BpAreaEntityData>(entity)
-      if (!entityData || entityData.inclusion !== inclusion) {
+      const entityInclusion = entityData && entityData.inclusion
+      if (entityInclusion !== inclusion) {
         bpEntities[i - 1] = undefined as any
         continue
       }
       bpEntity.position = subtract(entity.position, this.center)
     }
-    bp.set_blueprint_entities(bpEntities)
-    bp.blueprint_snap_to_grid = [1, 1]
-    bp.blueprint_absolute_snapping = true
+    if (isEmpty(bpEntities)) {
+      bp.clear_blueprint()
+    } else {
+      bp.set_blueprint_entities(bpEntities)
+      bp.blueprint_snap_to_grid = [1, 1]
+      bp.blueprint_absolute_snapping = true
+    }
   }
 
   private static updateAllInclusion(includeBp: LuaItemStack, sourceBp: LuaItemStack, filters: LuaItemStack): void {

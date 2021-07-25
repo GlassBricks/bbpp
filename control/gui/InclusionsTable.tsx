@@ -144,7 +144,7 @@ export class InclusionsTable extends ManualReactiveComponent<InclusionsTableProp
     if (!inclusion) return
     SimpleConfirmation.display(this.getPlayer(), {
       title: "Confirmation",
-      text: `Are you sure you want to remove the inclusion of "${inclusion.sourceArea.name}?"`,
+      text: `Are you sure you want to delete the inclusion of "${inclusion.sourceArea.name}?"`,
       backText: "Back",
       confirmText: "Delete",
       redConfirm: true,
