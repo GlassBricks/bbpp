@@ -26,7 +26,7 @@ export class InclusionsTable extends ManualReactiveComponent<InclusionsTableProp
       <table column_count={6} style={Styles.inclusionsTable}>
         <empty-widget />
         <label caption={"Source area name"} style={"heading_3_label"} />
-        <label caption={"Ghost"} style={"heading_3_label"} />
+        <label caption={"Ghosts"} style={"heading_3_label"} />
         <label caption={"Mode"} style={"heading_3_label"} />
         <label caption={"Filters"} style={"heading_3_label"} />
         <empty-widget />

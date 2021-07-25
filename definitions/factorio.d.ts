@@ -2015,12 +2015,12 @@ interface LuaBootstrap {
 
   on_configuration_changed(f: (d: ConfigurationChangedData) => void): void
 
-  on_event<Payload>(this: void, eventId: EventId<Payload>, f: (event: Payload) => void, filters?: Filters): void
-  on_event(this: void, eventName: string, f: (event: CustomInputEvent) => void): void
+  on_event<Payload>(this: void, eventId: EventId<Payload>, f?: (event: Payload) => void, filters?: Filters): void
+  on_event(this: void, eventName: string, f?: (event: CustomInputEvent) => void): void
   on_event<Events extends (EventId<any> | string)[]>(
     this: void,
-    events: Events,
-    f: (event: GetPayload<Events[number]>) => void
+    events?: Events,
+    f?: (event: GetPayload<Events[number]>) => void
   ): void
 
   on_nth_tick(tick: number | number[], f: (...args: any[]) => any): void

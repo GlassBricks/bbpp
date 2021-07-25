@@ -2,13 +2,12 @@ import { dlog, userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty, shallowEquals, swap } from "../framework/util"
 import { add, Area, contract, getCenter, isIn, multiply, negate, shiftNegative, subtract } from "../framework/position"
-import { Prototypes } from "../constants"
+import { Forces, Prototypes } from "../constants"
 import { get, put, VectorTable } from "../framework/VectorTable"
 import { getEntityData, setEntityData } from "../framework/entityData"
 import { configureIncluded, configureView } from "./viewInclude"
 import { Result } from "../framework/result"
 import { Event } from "../framework/Event"
-import { getEditableIncludeForce, getEditableViewForce } from "./forces"
 import { fullyRevive } from "./revive"
 import { PlayerData } from "../framework/playerData"
 import entity_filter_mode = defines.deconstruction_item.entity_filter_mode
@@ -210,6 +209,7 @@ export enum InclusionMode {
   All,
 }
 
+// todo: should make this another class?
 export interface AreaInclusion {
   readonly sourceArea: BpArea
   readonly destinationArea: BpArea
@@ -222,11 +222,12 @@ interface AreaInclusionInternal extends AreaInclusion {
   readonly inventoriesIndex: number
   lastUpdatedForSelectMode: number
   lastUpdatedForAllMode: number
+  isPastedAsEditableInclude: boolean
 }
 
 export interface BpAreaEntityData {
   readonly area: BpArea
-  readonly inclusion: AreaInclusion | undefined
+  readonly inclusion: AreaInclusion
 }
 
 interface OpenedFilter {
@@ -236,10 +237,13 @@ interface OpenedFilter {
 }
 
 export class BpArea {
+  // todo: better gui framework
   static onCreated = new Event<BpArea>()
   static onDeleted = new Event<{ id: number; bpSurface: BpSurface }>()
   static onRenamed = new Event<BpArea>()
   static onInclusionsModified = new Event<{ area: BpArea }>()
+  // todo: replace with observable properties!!!
+  static onOutdatedChanged = new Event<BpArea>()
 
   private static PlayerCurrentlyOpenedFilter = PlayerData<OpenedFilter>("PlayerCurrentlyOpenedFilter")
 
@@ -253,15 +257,15 @@ export class BpArea {
   readonly areaRelativeToCenter: Area
 
   readonly bpInventory: LuaInventory = game.create_inventory(8)
-  readonly dataBp = this.bpInventory[0]
-  private readonly includeSelectBps = game.create_inventory(4)
-  private readonly includeAllBps = game.create_inventory(4)
-  private readonly includeFilters = game.create_inventory(4)
+  readonly dataBp: LuaItemStack = this.bpInventory[0]
+  readonly includeSelectBps: LuaInventory = game.create_inventory(4)
+  readonly includeAllBps: LuaInventory = game.create_inventory(4)
+  readonly includeFilters: LuaInventory = game.create_inventory(4)
 
   private readonly inclusions: ArrayAndTable<AreaInclusionInternal, AreaInclusionInternal, boolean> = [] as any
+  private outdated: boolean = false
 
   updateNumber: number = 0
-
   readonly includedBy: Record<number, number> = {}
 
   // <editor-fold desc="Creation and deletion">
@@ -369,6 +373,7 @@ export class BpArea {
       inventoriesIndex: this.findInclusionInventoryIndex(),
       lastUpdatedForSelectMode: sourceArea.updateNumber - 1,
       lastUpdatedForAllMode: sourceArea.updateNumber - 1,
+      isPastedAsEditableInclude: false,
     }
     this.inclusions[this.inclusions.length] = inclusion
     this.inclusions.set(inclusion, true)
@@ -377,7 +382,9 @@ export class BpArea {
     sourceArea.includedBy[this.id]++
 
     BpArea.onInclusionsModified.raise({ area: this })
-    this.saveAndReset()
+    this.saveChanges()
+    this.placeInclusion(inclusion)
+    this.placeSelf()
     return inclusion
   }
 
@@ -484,17 +491,34 @@ export class BpArea {
     dlog("Saving changes for area: ", this.name)
     this.writeBlueprint(this.dataBp, "player", undefined)
     for (const inclusion of this.inclusions) {
-      if (inclusion.includeMode === InclusionMode.Select) {
-        this.writeBlueprint(this.includeSelectBps[inclusion.inventoriesIndex], getEditableIncludeForce(), inclusion)
-        // todo: checking
+      if (inclusion.isPastedAsEditableInclude) {
+        this.writeBlueprint(this.includeSelectBps[inclusion.inventoriesIndex], Forces.editableInclude, inclusion)
       }
     }
     this.updateNumber++
+    for (const [id] of pairs(this.includedBy)) {
+      BpArea.getById(id).markOutdated()
+    }
   }
 
   saveAndReset(): void {
     this.saveChanges()
     this.reset()
+    if (this.outdated) {
+      this.outdated = false
+      BpArea.onOutdatedChanged.raise(this)
+    }
+  }
+
+  markOutdated(): void {
+    if (!this.outdated) {
+      this.outdated = true
+      BpArea.onOutdatedChanged.raise(this)
+    }
+  }
+
+  isOutdated(): boolean {
+    return this.outdated
   }
 
   private writeBlueprint(bp: LuaItemStack, force: ForceSpecification, inclusion: AreaInclusion | undefined) {
@@ -517,9 +541,14 @@ export class BpArea {
     for (let i = 1; i <= l; i++) {
       const bpEntity = bpEntities[i - 1]!
       const entity = entityMapping[i]
-      const entityData = getEntityData<BpAreaEntityData>(entity)
-      const entityInclusion = entityData && entityData.inclusion
-      if (entityInclusion !== inclusion) {
+      let valid: boolean
+      if (!entity.unit_number) {
+        valid = false
+      } else {
+        const entityData = getEntityData<BpAreaEntityData>(entity)
+        valid = inclusion === (entityData && entityData.inclusion)
+      }
+      if (!valid) {
         bpEntities[i - 1] = undefined as any
         continue
       }
@@ -563,14 +592,14 @@ export class BpArea {
   ): LuaEntity[] {
     if (!bp.get_blueprint_entities()) return []
     const position = relativePosition ? add(this.center, relativePosition) : this.center
-    const ghosts = this.rawPlaceBlueprint(bp, position, force, false)
+    let ghosts = this.rawPlaceBlueprint(bp, position, force, false)
     if (isEmpty(ghosts)) {
       userWarning(
         "Overlapping entities (blueprint failed to place without force-build). " +
           "Individual entity checking will be introduced in a future release (soon (TM))."
       )
       // todo: manual overlap detection
-      // ghosts = this.rawPlaceBlueprint(bp, position, force, true)
+      ghosts = this.rawPlaceBlueprint(bp, position, force, true)
     }
     const entities: LuaEntity[] = []
     const retryRevive: LuaEntity[] = []
@@ -613,60 +642,75 @@ export class BpArea {
     }
   }
 
-  private placeAllBlueprints() {
-    dlog("Placing all blueprints for area:", this.name)
-    for (const i of $range(1, this.inclusions.length)) {
-      const inclusion = this.inclusions[i - 1]
-      const sourceArea = inclusion.sourceArea
-      if (!sourceArea.valid) {
-        userWarning(
-          "Area inclusion includes an invalid/deleted area. " +
-            "This shouldn't happen, please report to the mod author. Skipping..."
-        )
-        continue
-      }
-      const includeFilters = this.includeFilters[inclusion.inventoriesIndex]
-      switch (inclusion.includeMode) {
-        case InclusionMode.None:
-          break
-        case InclusionMode.Select: {
-          const includeBp = this.includeSelectBps[inclusion.inventoriesIndex]
-          if (inclusion.lastUpdatedForSelectMode < sourceArea.updateNumber) {
-            this.updateInclusionBp(includeBp, true, sourceArea.dataBp, inclusion.relativePosition, includeFilters)
-            inclusion.lastUpdatedForSelectMode = sourceArea.updateNumber
-          }
-          this.configureEntities(
-            this.placeBlueprint(includeBp, inclusion.relativePosition, getEditableIncludeForce(), true),
-            configureIncluded,
-            inclusion
-          )
+  private placeSelf() {
+    this.configureEntities(this.placeBlueprint(this.dataBp, undefined, "player", true), undefined, undefined)
+  }
 
-          break
+  private placeInclusion(inclusion: AreaInclusionInternal) {
+    const sourceArea = inclusion.sourceArea
+    if (!sourceArea.valid) {
+      userWarning(
+        "Area inclusion includes an invalid/deleted area. " +
+          "This shouldn't happen, please report to the mod author. Skipping..."
+      )
+      return
+    }
+    const includeFilters = this.includeFilters[inclusion.inventoriesIndex]
+
+    const isEditableInclude = inclusion.includeMode === InclusionMode.Select && inclusion.ghosts
+    inclusion.isPastedAsEditableInclude = isEditableInclude
+    switch (inclusion.includeMode) {
+      case InclusionMode.None:
+        break
+      case InclusionMode.Select: {
+        const includeBp = this.includeSelectBps[inclusion.inventoriesIndex]
+        if (inclusion.lastUpdatedForSelectMode < sourceArea.updateNumber) {
+          this.updateInclusionBp(includeBp, true, sourceArea.dataBp, inclusion.relativePosition, includeFilters)
+          inclusion.lastUpdatedForSelectMode = sourceArea.updateNumber
         }
-        case InclusionMode.All: {
-          this.configureEntities(
-            this.placeBlueprint(this.getIncludeAllBp(inclusion), inclusion.relativePosition, "player", true),
-            configureIncluded,
-            inclusion
-          )
-          break
-        }
-      }
-      if (inclusion.ghosts && inclusion.includeMode !== InclusionMode.All) {
-        // todo: make ghosts
         this.configureEntities(
           this.placeBlueprint(
-            this.getIncludeAllBp(inclusion),
+            includeBp,
             inclusion.relativePosition,
-            inclusion.includeMode === InclusionMode.Select ? getEditableViewForce() : "player",
-            false
+            isEditableInclude ? Forces.editableInclude : "player",
+            true
           ),
-          configureView,
+          configureIncluded,
           inclusion
         )
+
+        break
+      }
+      case InclusionMode.All: {
+        this.configureEntities(
+          this.placeBlueprint(this.getIncludeAllBp(inclusion), inclusion.relativePosition, "player", true),
+          configureIncluded,
+          inclusion
+        )
+        break
       }
     }
-    this.configureEntities(this.placeBlueprint(this.dataBp, undefined, "player", true), undefined, undefined)
+    if (inclusion.ghosts && inclusion.includeMode !== InclusionMode.All) {
+      // todo: make ghosts
+      this.configureEntities(
+        this.placeBlueprint(
+          this.getIncludeAllBp(inclusion),
+          inclusion.relativePosition,
+          isEditableInclude ? Forces.editableView : "player",
+          false
+        ),
+        configureView,
+        inclusion
+      )
+    }
+  }
+
+  private placeAllBlueprints() {
+    dlog("Placing all blueprints for area:", this.name)
+    for (const inclusion of this.inclusions) {
+      this.placeInclusion(inclusion)
+    }
+    this.placeSelf()
   }
 
   private getIncludeAllBp(inclusion: AreaInclusionInternal): LuaItemStack {

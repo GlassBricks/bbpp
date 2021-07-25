@@ -12,9 +12,7 @@ registerHandlers({
     const bpSurface = BpSurface.get(surface)
     for (let i = 0; i < 2; i++) {
       for (let j = 0; j < 2; j++) {
-        const area = getValueOrError(
-          bpSurface.tryCreateNewArea(`foo ${i} ${j}`, { x: 2 * i - 1, y: 2 * j - 1 }, { x: 2, y: 2 }, 1)
-        )
+        getValueOrError(bpSurface.tryCreateNewArea(`foo ${i} ${j}`, { x: 2 * i - 1, y: 2 * j - 1 }, { x: 2, y: 2 }, 1))
       }
     }
   },
@@ -38,8 +36,14 @@ DevButton("Open bp", (player) => {
   if (!area) return
   player.opened = area.dataBp
 })
-DevButton("Get bp", (player) => {
+
+DevButton("Open include all bp", (player) => {
   const area = getArea(player)
   if (!area) return
-  if (player.clear_cursor()) player.cursor_stack.set_stack(area.dataBp)
+  player.opened = area.includeAllBps[0]
+})
+DevButton("Open include select bp", (player) => {
+  const area = getArea(player)
+  if (!area) return
+  player.opened = area.includeSelectBps[0]
 })

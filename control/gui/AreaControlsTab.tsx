@@ -13,6 +13,8 @@ export class AreaControlsTab extends BpGuiTab {
   declare refs: {
     areaSelector: AreaSelector
 
+    outdatedNotification: LabelGuiElement
+
     inclusionControls: InclusionControls
     editButtonsFlow: FlowGuiElement
 
@@ -24,7 +26,13 @@ export class AreaControlsTab extends BpGuiTab {
       <table style={"bordered_table"} column_count={1}>
         <AreaSelector ref={"areaSelector"} {...this.props} />
         <flow direction={"vertical"}>
-          <label style={"caption_label"} caption={"Save/reset"} />
+          <flow>
+            <label style={"caption_label"} caption={"Save/reset"} />
+            <label
+              ref={"outdatedNotification"}
+              caption={"Area may be outdated! Click Save or Reset to refresh the area."}
+            />
+          </flow>
           <flow ref={"editButtonsFlow"}>
             <button
               caption={"Save changes and reset"}
@@ -33,7 +41,7 @@ export class AreaControlsTab extends BpGuiTab {
               onClick={this.r(this.saveChanges)}
             />
             <button
-              caption={"Reset area"}
+              caption={"Reset"}
               style={"red_button"}
               styleMod={{ horizontally_stretchable: true }}
               onClick={this.r(this.showResetAreaConfirmation)}
@@ -52,10 +60,15 @@ export class AreaControlsTab extends BpGuiTab {
     )
   }
 
+  onCreated(): void {
+    this.setOutdatedLabel()
+  }
+
   protected propsChanged(change: Partial<SelectedAreaProps>): void {
     this.refs.areaSelector.mergeProps(change)
     if (change.selectedArea !== undefined) {
       this.refs.inclusionControls.mergeProps(change)
+      this.setOutdatedLabel()
       const enabled = change.selectedArea !== false
       for (const button of this.refs.editButtonsFlow.children) {
         button.enabled = enabled
@@ -67,6 +80,13 @@ export class AreaControlsTab extends BpGuiTab {
   areasUpdate(update: AreasUpdate): void {
     this.refs.areaSelector.areasUpdate(update)
     this.refs.inclusionControls.areasUpdate(update)
+    if (update.outdatedChanged && update.outdatedChanged === this.props.selectedArea) {
+      this.setOutdatedLabel()
+    }
+  }
+
+  private setOutdatedLabel(): void {
+    this.refs.outdatedNotification.visible = this.props.selectedArea && this.props.selectedArea.isOutdated()
   }
 
   private saveChanges(): void {

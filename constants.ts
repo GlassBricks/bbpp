@@ -13,11 +13,17 @@ export const Prototypes = {
   inclusionFiltersItemFilterCount: 50,
 
   guiConfirmInput: "bbpp:confirm-gui-linked" as CustomInputName,
-} as const
+}
+
+export const Forces = {
+  editableInclude: "bbpp:editable-include",
+  editableView: "bbpp:editable-view",
+}
+
 export const Styles = {
   inclusionsTable: "bbpp:inclusions-table",
   moveButton: "bbpp:move-button",
-} as const
+}
 
 export const GuiConstants = {
   windowWidth: 500,
@@ -32,7 +38,7 @@ export const GuiConstants = {
     checkboxWidth: 30,
     smallButtonWidth: 24,
   },
-} as const
+}
 // todo: find actual game colors
 export const Colors = {
   red: { r: 244, g: 85, b: 85 } as Color,

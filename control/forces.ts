@@ -1,20 +1,10 @@
 import { registerHandlers } from "../framework/events"
 import { isValid } from "../framework/util"
 import { userWarning } from "../framework/logging"
+import { Forces } from "../constants"
 
 // abusing forces as selection filters
 // hey; it works well
-
-export const editableIncludeForceName = "bbpp:editable-include"
-export const editableViewForceName = "bbpp:editable-view"
-
-export function getEditableIncludeForce(): LuaForce {
-  return game.forces[editableIncludeForceName]
-}
-
-export function getEditableViewForce(): LuaForce {
-  return game.forces[editableViewForceName]
-}
 
 function createForce(forceName: string, friend: boolean): LuaForce {
   let force = game.forces[forceName]
@@ -32,15 +22,15 @@ function createForce(forceName: string, friend: boolean): LuaForce {
 
 registerHandlers({
   on_init() {
-    const includeForce = createForce(editableIncludeForceName, true)
-    const viewForce = createForce(editableViewForceName, false)
+    const includeForce = createForce(Forces.editableInclude, true)
+    const viewForce = createForce(Forces.editableView, false)
 
     includeForce.set_friend(viewForce, true)
     viewForce.set_friend(includeForce, true)
   },
   on_forces_merged(e) {
-    if (e.source_name === editableIncludeForceName || e.source_name === editableViewForceName) {
-      userWarning("BBPP: A blueprint include force was removed. This will probably break stuff.")
+    if (e.source_name === Forces.editableInclude || e.source_name === Forces.editableView) {
+      userWarning("BBPP: A blueprint force was removed. This will probably break stuff.")
     }
   },
 })

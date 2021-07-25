@@ -6,6 +6,12 @@ declare const global: {
   pasteActionBpInventory: LuaInventory
 }
 
+registerHandlers({
+  on_init() {
+    global.pasteActionBpInventory = game.create_inventory(1)
+  },
+})
+
 export interface PasteActionTags {
   action: string
 }
@@ -21,16 +27,6 @@ export function setupPasteActionBp(player: LuaPlayer): LuaItemStack | undefined 
   return stack
 }
 
-let inDestroyMode = false
-
-registerHandlers({
-  on_init() {
-    global.pasteActionBpInventory = game.create_inventory(1)
-  },
-})
-
-// more performance critical, so direct script.on_event instead
-
 function tryDoPasteAction(player: LuaPlayer, event: OnPreBuildPayload) {
   const tags = player.cursor_stack.get_blueprint_entity_tags(1) as PasteActionTags
   if (!tags || !tags.action) return
@@ -40,43 +36,33 @@ function tryDoPasteAction(player: LuaPlayer, event: OnPreBuildPayload) {
   action(player, event, tags)
 }
 
+let inDestroyMode = false
+// runs a lot, so direct script.on_event instead
+// todo: optimize in events.ts instead
 script.on_event(defines.events.on_pre_build, (e) => {
   const player = game.get_player(e.player_index)
   if (player.cursor_stack.valid_for_read && player.cursor_stack.name === Prototypes.temporaryBlueprint) {
     if (!inDestroyMode) {
       inDestroyMode = true
-      clearFilters()
+      setDestroyMode()
     }
     tryDoPasteAction(player, e)
   } else {
     if (inDestroyMode) {
       inDestroyMode = false
-      resetFilters()
+      unsetDestroyMode()
     }
   }
 })
 
-script.on_event(defines.events.on_built_entity, (e) => {
+function destroyEntities(this: void, e: OnBuiltEntityPayload) {
   e.created_entity.destroy()
-})
-
-const normalFilters = [Prototypes.tileEntityWhite, Prototypes.etherealTileEntityWhite].flatMap((name) => [
-  {
-    filter: "name",
-    name: name,
-  },
-  {
-    filter: "ghost_name",
-    name: name,
-  },
-])
-
-function resetFilters(): void {
-  script.set_event_filter(defines.events.on_built_entity, normalFilters)
 }
 
-function clearFilters(): void {
-  script.set_event_filter(defines.events.on_built_entity, undefined)
+function unsetDestroyMode(): void {
+  script.on_event(defines.events.on_built_entity, undefined)
 }
 
-resetFilters()
+function setDestroyMode(): void {
+  script.on_event(defines.events.on_built_entity, destroyEntities)
+}

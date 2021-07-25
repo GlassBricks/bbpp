@@ -1,4 +1,3 @@
-- [ ] Outdated notification
 - [ ] Blueprint of everything + inclusions
 - [ ] Simple blueprint creation
     - [ ] Actual blueprint item
@@ -13,7 +12,7 @@
 - [ ] Report the strange bug
   
 
-- [ ] Including inclusions
+- [ ] Including inclusions?
   - [ ] Recursive outdating
   - [ ] Recursion guard
   
@@ -31,3 +30,4 @@
 - [x] Maybe make area auto update
   - [x] Make ghosts auto toggle
 - [x] Inclusion preview/paste
+- [x] Outdated notification

@@ -10,7 +10,7 @@ const inclusionTool = {
   order: "z[bbpp]-[inclusion-tool]",
   icon: "__bbpp__/graphics/icons/inclusion-tool.png",
   icon_size: 32,
-  flags: ["spawnable"],
+  flags: ["spawnable", "only-in-cursor"],
   stack_size: 1,
   stackable: false,
   draw_label_for_cursor_render: true,

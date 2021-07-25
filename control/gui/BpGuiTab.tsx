@@ -10,6 +10,7 @@ export interface SelectedAreaProps {
   setSyncAreaWithPlayer: GuiFunc<(area: boolean) => void>
 }
 
+// TODO: regret making reactive framework and switch to observable properties
 export interface AreasUpdate {
   surfaceCreated?: OnSurfaceCreatedPayload
   surfaceDeleted?: OnSurfaceDeletedPayload
@@ -26,6 +27,7 @@ export interface AreasUpdate {
   areaRenamed?: BpArea
 
   inclusionsChanged?: { area: BpArea }
+  outdatedChanged?: BpArea
 }
 
 export interface WithAreasUpdate {

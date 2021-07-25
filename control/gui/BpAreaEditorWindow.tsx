@@ -141,6 +141,9 @@ BpArea.onRenamed.subscribe((e) => {
 BpArea.onInclusionsModified.subscribe((e) => {
   BpAreaEditorWindow.updateAllPlayers({ inclusionsChanged: e })
 })
+BpArea.onOutdatedChanged.subscribe((e) => {
+  BpAreaEditorWindow.updateAllPlayers({ outdatedChanged: e })
+})
 PlayerArea.subscribe((e) => {
   BpAreaEditorWindow.updateFor(e.player.index, { playerChangedArea: e })
 })
