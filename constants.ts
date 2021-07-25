@@ -5,7 +5,6 @@ export const Prototypes = {
   tileEntityWhite: "bbpp:tile-entity-white",
   etherealTileEntityWhite: "bbpp:ethereal-tile-entity-white",
   // referencePoint: "bbpp:reference-point",
-  pasteAction: "bbpp:paste-action",
 
   inclusionTool: "bbpp:inclusion-tool",
   inclusionToolShortcut: "bbpp:inclusion-tool-shortcut",
@@ -13,14 +12,12 @@ export const Prototypes = {
   inclusionFiltersItem: "bbpp:inclusion-filters-item",
   inclusionFiltersItemFilterCount: 50,
 
-  inclusionFiltersInventory: "bbpp:inclusion-filters-inventory",
-
   guiConfirmInput: "bbpp:confirm-gui-linked" as CustomInputName,
-}
+} as const
 export const Styles = {
   inclusionsTable: "bbpp:inclusions-table",
   moveButton: "bbpp:move-button",
-}
+} as const
 
 export const GuiConstants = {
   windowWidth: 500,
@@ -35,4 +32,10 @@ export const GuiConstants = {
     checkboxWidth: 30,
     smallButtonWidth: 24,
   },
+} as const
+// todo: find actual game colors
+export const Colors = {
+  red: { r: 244, g: 85, b: 85 } as Color,
+  green: { r: 155, g: 244, b: 122 } as Color,
+  yellow: { r: 255, g: 204, b: 20 } as Color,
 }

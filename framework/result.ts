@@ -1,3 +1,5 @@
+import { Colors } from "../constants"
+
 export type Result<T> =
   | {
       result: "ok"
@@ -10,7 +12,7 @@ export type Result<T> =
 
 export function getValueOrReport<T>(result: Result<T>, player: LuaPlayer): T | undefined {
   if (result.result === "error") {
-    player.print(result.message)
+    player.print(result.message, Colors.red)
     return undefined
   } else {
     return result.value

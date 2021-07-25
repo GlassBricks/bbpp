@@ -1,6 +1,6 @@
 import { dlog, userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
-import { arrayRemoveValue, isEmpty, swap } from "../framework/util"
+import { arrayRemoveValue, isEmpty, shallowEquals, swap } from "../framework/util"
 import { add, Area, contract, getCenter, isIn, multiply, negate, shiftNegative, subtract } from "../framework/position"
 import { Prototypes } from "../constants"
 import { get, put, VectorTable } from "../framework/VectorTable"
@@ -10,6 +10,7 @@ import { Result } from "../framework/result"
 import { Event } from "../framework/Event"
 import { getEditableIncludeForce, getEditableViewForce } from "./forces"
 import { fullyRevive } from "./revive"
+import { PlayerData } from "../framework/playerData"
 import entity_filter_mode = defines.deconstruction_item.entity_filter_mode
 
 // global
@@ -177,7 +178,7 @@ export class BpSurface {
     )
 
     BpArea.onCreated.raise(bpArea)
-    bpArea.saveChanges()
+    bpArea.saveAndReset()
     return bpArea
   }
 
@@ -228,11 +229,19 @@ export interface BpAreaEntityData {
   readonly inclusion: AreaInclusion | undefined
 }
 
+interface OpenedFilter {
+  inclusion: AreaInclusionInternal
+  oldFilters: string[]
+  autoApply: boolean
+}
+
 export class BpArea {
   static onCreated = new Event<BpArea>()
   static onDeleted = new Event<{ id: number; bpSurface: BpSurface }>()
   static onRenamed = new Event<BpArea>()
   static onInclusionsModified = new Event<{ area: BpArea }>()
+
+  private static PlayerCurrentlyOpenedFilter = PlayerData<OpenedFilter>("PlayerCurrentlyOpenedFilter")
 
   readonly id: number
   valid: boolean = true
@@ -243,8 +252,8 @@ export class BpArea {
   readonly center: Position
   readonly areaRelativeToCenter: Area
 
-  readonly dataBpInventory: LuaInventory = game.create_inventory(4)
-  readonly dataBp = this.dataBpInventory[0]
+  readonly bpInventory: LuaInventory = game.create_inventory(8)
+  readonly dataBp = this.bpInventory[0]
   private readonly includeSelectBps = game.create_inventory(4)
   private readonly includeAllBps = game.create_inventory(4)
   private readonly includeFilters = game.create_inventory(4)
@@ -309,7 +318,7 @@ export class BpArea {
     if (!this.valid) return
     this.valid = false
     dlog("deleting area:", this.name)
-    this.dataBpInventory.destroy()
+    this.bpInventory.destroy()
     this.includeSelectBps.destroy()
     this.includeAllBps.destroy()
     this.includeFilters.destroy()
@@ -368,6 +377,7 @@ export class BpArea {
     sourceArea.includedBy[this.id]++
 
     BpArea.onInclusionsModified.raise({ area: this })
+    this.saveAndReset()
     return inclusion
   }
 
@@ -376,6 +386,7 @@ export class BpArea {
     this.doDeleteInclusions(inclusion as AreaInclusionInternal)
 
     BpArea.onInclusionsModified.raise({ area: this })
+    this.saveAndReset()
     return true
   }
 
@@ -429,14 +440,36 @@ export class BpArea {
     return true
   }
 
-  openInclusionFilters(player: LuaPlayer, inclusion: AreaInclusion): boolean {
+  openInclusionFilters(player: LuaPlayer, inclusion: AreaInclusion, autoApply: boolean): boolean {
     const inclusion1 = inclusion as AreaInclusionInternal
     if (!this.inclusions.has(inclusion1)) return false
-    player.opened = this.includeFilters[inclusion1.inventoriesIndex]
-    const lastUpdated = inclusion1.sourceArea.updateNumber - 1 // guarantee update
-    inclusion1.lastUpdatedForSelectMode = lastUpdated
-    inclusion1.lastUpdatedForAllMode = lastUpdated
+    const filter = this.includeFilters[inclusion1.inventoriesIndex]
+    player.opened = filter
+    BpArea.PlayerCurrentlyOpenedFilter.data[player.index] = {
+      inclusion: inclusion1,
+      autoApply,
+      oldFilters: filter.entity_filters,
+    }
     return true
+  }
+
+  static onFiltersClosed(this: unknown, e: OnGuiClosedPayload): void {
+    const openedFilter = BpArea.PlayerCurrentlyOpenedFilter.data[e.player_index]
+    if (!openedFilter) return
+    BpArea.PlayerCurrentlyOpenedFilter.data[e.player_index] = undefined
+    const inclusion = openedFilter.inclusion
+    const area = inclusion.destinationArea
+    const sourceArea = inclusion.sourceArea
+    if (!area.valid || !area.inclusions.has(inclusion)) return
+    dlog("Updating filters for inclusion:", sourceArea.name, "->", area.name)
+    if (!shallowEquals(openedFilter.oldFilters, area.includeFilters[inclusion.inventoriesIndex].entity_filters)) {
+      const lastUpdated = sourceArea.updateNumber - 1 // guarantee update
+      inclusion.lastUpdatedForSelectMode = lastUpdated
+      inclusion.lastUpdatedForAllMode = lastUpdated
+    }
+    if (openedFilter.autoApply) {
+      area.saveAndReset()
+    }
   }
 
   // </editor-fold>
@@ -447,7 +480,7 @@ export class BpArea {
     this.placeAllBlueprints()
   }
 
-  saveChanges(): void {
+  private saveChanges(): void {
     dlog("Saving changes for area: ", this.name)
     this.writeBlueprint(this.dataBp, "player", undefined)
     for (const inclusion of this.inclusions) {
@@ -457,6 +490,11 @@ export class BpArea {
       }
     }
     this.updateNumber++
+  }
+
+  saveAndReset(): void {
+    this.saveChanges()
+    this.reset()
   }
 
   private writeBlueprint(bp: LuaItemStack, force: ForceSpecification, inclusion: AreaInclusion | undefined) {
@@ -472,6 +510,8 @@ export class BpArea {
     })
     if (isEmpty(entityMapping)) return
 
+    const inclusionCenter = inclusion ? add(this.center, inclusion.relativePosition) : this.center
+
     const bpEntities = bp.get_blueprint_entities()!
     const l = bpEntities.length
     for (let i = 1; i <= l; i++) {
@@ -483,7 +523,7 @@ export class BpArea {
         bpEntities[i - 1] = undefined as any
         continue
       }
-      bpEntity.position = subtract(entity.position, this.center)
+      bpEntity.position = subtract(entity.position, inclusionCenter)
     }
     if (isEmpty(bpEntities)) {
       bp.clear_blueprint()
@@ -629,15 +669,14 @@ export class BpArea {
     this.configureEntities(this.placeBlueprint(this.dataBp, undefined, "player", true), undefined, undefined)
   }
 
-  private getIncludeAllBp(inclusion: AreaInclusionInternal) {
-    const sourceArea = inclusion.sourceArea
+  private getIncludeAllBp(inclusion: AreaInclusionInternal): LuaItemStack {
     const bp = this.includeAllBps[inclusion.inventoriesIndex]
+    const sourceArea = inclusion.sourceArea
     if (inclusion.lastUpdatedForAllMode < sourceArea.updateNumber) {
       const filters = this.includeFilters[inclusion.inventoriesIndex]
       this.updateInclusionBp(bp, false, sourceArea.dataBp, inclusion.relativePosition, filters)
       inclusion.lastUpdatedForAllMode = sourceArea.updateNumber
     }
-
     return bp
   }
 
@@ -705,3 +744,7 @@ export class BpArea {
 
   // </editor-fold>
 }
+
+registerHandlers({
+  on_gui_closed: BpArea.onFiltersClosed,
+})

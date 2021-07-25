@@ -1,12 +1,13 @@
 /** @noSelfInFile */
 import { DEV } from "./DEV"
+import { Colors } from "../constants"
 
 // TODO: better logging
 export function userWarning(...args: any[]): void {
   const msg = getMessage(args)
   log(debugSrc() + msg)
   if (game) {
-    game.print(msg, { r: 255, g: 204, b: 20 })
+    game.print(msg, Colors.yellow)
   }
 }
 

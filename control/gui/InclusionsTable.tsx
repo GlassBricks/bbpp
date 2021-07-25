@@ -9,6 +9,7 @@ import { AreasUpdate, WithAreasUpdate } from "./BpGuiTab"
 
 interface InclusionsTableProps {
   selectedArea: BpArea | false
+  autoApply: boolean
 }
 
 interface InclusionControlTags {
@@ -113,30 +114,34 @@ export class InclusionsTable extends ManualReactiveComponent<InclusionsTableProp
     const inclusion = this.getInclusion(element)
     if (!inclusion) return
     inclusion.destinationArea.moveInclusionUp(inclusion)
+    if (this.props.autoApply) inclusion.destinationArea.saveAndReset()
   }
 
   private moveInclusionDown(element: BaseGuiElement) {
     const inclusion = this.getInclusion(element)
     if (!inclusion) return
     inclusion.destinationArea.moveInclusionDown(inclusion)
+    if (this.props.autoApply) inclusion.destinationArea.saveAndReset()
   }
 
   private setGhost(element: CheckboxGuiElement) {
     const inclusion = this.getInclusion(element)
     if (!inclusion) return
     inclusion.ghosts = element.state
+    if (this.props.autoApply) inclusion.destinationArea.saveAndReset()
   }
 
   private setIncludeMode(element: DropDownGuiElement) {
     const inclusion = this.getInclusion(element)
     if (!inclusion) return
     inclusion.includeMode = element.selected_index
+    if (this.props.autoApply) inclusion.destinationArea.saveAndReset()
   }
 
   private showFilters(element: ButtonGuiElement) {
     const inclusion = this.getInclusion(element)
     if (!inclusion) return
-    inclusion.destinationArea.openInclusionFilters(this.getPlayer(), inclusion)
+    inclusion.destinationArea.openInclusionFilters(this.getPlayer(), inclusion, this.props.autoApply)
   }
 
   private showDeleteInclusionConfirmation(element: ButtonGuiElement) {

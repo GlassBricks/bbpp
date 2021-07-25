@@ -5,7 +5,6 @@ import { BpArea } from "../BpArea"
 import { displayNotice } from "../../framework/gui/components/SimpleConfirmation"
 import { startInclusionPlacement } from "../inclusionPlacement"
 import { AreasUpdate, WithAreasUpdate } from "./BpGuiTab"
-import { showResetAreaConfirmation } from "./resetAreaConfirmation"
 import { HorizontalSpacer } from "../../framework/gui/components/Misc"
 
 interface InclusionControlsProps {
@@ -19,7 +18,7 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
   declare refs: {
     inclusionsTable: InclusionsTable
 
-    resetButton: ButtonGuiElement
+    autoApplyCheckbox: CheckboxGuiElement
 
     addNewInclusionList: AreasList
 
@@ -31,14 +30,15 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
     return (
       <flow direction={"vertical"}>
         <label style="caption_label" caption={"Inclusions"} />
-        <InclusionsTable ref="inclusionsTable" selectedArea={this.props.selectedArea} />
+        <InclusionsTable ref="inclusionsTable" selectedArea={this.props.selectedArea} autoApply={true} />
         <flow>
-          <HorizontalSpacer />
-          <button
-            ref={"resetButton"}
-            caption={"Apply inclusion changes (resets area)"}
-            onClick={this.r(this.showResetAreaConfirmation)}
+          <checkbox
+            ref={"autoApplyCheckbox"}
+            state={true}
+            caption={"Auto-apply changes (save and reset to apply manually)"}
+            onCheckedStateChanged={this.r(this.setAutoApply)}
           />
+          <HorizontalSpacer />
         </flow>
         <line direction={"horizontal"} />
         <flow>
@@ -78,7 +78,6 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
   protected propsChanged(change: Partial<InclusionControlsProps>): void {
     if (change.selectedArea !== undefined) {
       this.refs.inclusionsTable.mergeProps(change)
-      this.refs.resetButton.enabled = change.selectedArea !== false
       this.setAreaToInclude(this.areaToInclude)
     }
   }
@@ -88,8 +87,9 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
     this.refs.addNewInclusionList.areasUpdate(update)
   }
 
-  private showResetAreaConfirmation() {
-    if (this.props.selectedArea) showResetAreaConfirmation(this.props.selectedArea, this.getPlayer())
+  private setAutoApply(element: CheckboxGuiElement) {
+    const autoApply = element.state
+    this.refs.inclusionsTable.mergeProps({ autoApply })
   }
 
   private setAreaToInclude(area: BpArea | undefined) {
@@ -97,7 +97,7 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
 
     let enabled: boolean
     let tooltip: LocalisedString
-    if (area === undefined) {
+    if (area === undefined || this.props.selectedArea === undefined) {
       enabled = false
       tooltip = ""
     } else if (area === this.props.selectedArea) {
@@ -114,10 +114,10 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
   }
 
   private addInclusionAtCenter() {
-    const thisArea = this.props.selectedArea
+    const destinationArea = this.props.selectedArea
     const sourceArea = this.areaToInclude
-    if (!thisArea || !sourceArea) return
-    thisArea.addInclusion(sourceArea)
+    if (!destinationArea || !sourceArea) return
+    destinationArea.addInclusion(sourceArea)
   }
 
   private tryStartInclusionPlacement() {

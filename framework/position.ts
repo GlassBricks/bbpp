@@ -36,6 +36,20 @@ export function negate(a: Position): Position {
   }
 }
 
+export function round(a: Position): Position {
+  return {
+    x: Math.round(a.x),
+    y: Math.round(a.y),
+  }
+}
+
+export function floor(a: Position): Position {
+  return {
+    x: Math.floor(a.x),
+    y: Math.floor(a.y),
+  }
+}
+
 export function getCenter(area: Area): Position {
   return {
     x: (area[0].x + area[1].x) / 2,

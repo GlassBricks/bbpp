@@ -23,15 +23,14 @@ export class AreaControlsTab extends BpGuiTab {
     return (
       <table style={"bordered_table"} column_count={1}>
         <AreaSelector ref={"areaSelector"} {...this.props} />
-        <InclusionControls ref={"inclusionControls"} selectedArea={this.props.selectedArea} />
         <flow direction={"vertical"}>
           <label style={"caption_label"} caption={"Save/reset"} />
           <flow ref={"editButtonsFlow"}>
             <button
-              caption={"Save changes"}
+              caption={"Save changes and reset"}
               style={"green_button"}
               styleMod={{ horizontally_stretchable: true }}
-              onClick={this.r(this.commitChanges)}
+              onClick={this.r(this.saveChanges)}
             />
             <button
               caption={"Reset area"}
@@ -41,11 +40,12 @@ export class AreaControlsTab extends BpGuiTab {
             />
           </flow>
         </flow>
+
+        <InclusionControls ref={"inclusionControls"} selectedArea={this.props.selectedArea} />
         <button
           ref="deleteButton"
           caption={"Delete area"}
           style={"red_button"}
-          styleMod={{ horizontally_stretchable: true }}
           onClick={this.r(this.showDeleteAreaConfirmation)}
         />
       </table>
@@ -69,9 +69,9 @@ export class AreaControlsTab extends BpGuiTab {
     this.refs.inclusionControls.areasUpdate(update)
   }
 
-  private commitChanges(): void {
+  private saveChanges(): void {
     if (!this.props.selectedArea) return
-    this.props.selectedArea.saveChanges()
+    this.props.selectedArea.saveAndReset()
   }
 
   private showResetAreaConfirmation() {

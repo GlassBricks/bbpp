@@ -1,5 +1,5 @@
 import { Data } from "DataStage"
-import { GuiConstants, Prototypes, Styles } from "./constants"
+import { Colors, GuiConstants, Prototypes, Styles } from "./constants"
 
 declare const data: Data
 
@@ -14,16 +14,8 @@ const inclusionTool = {
   stack_size: 1,
   stackable: false,
   draw_label_for_cursor_render: true,
-  selection_color: {
-    r: 155,
-    g: 244,
-    b: 122,
-  },
-  alt_selection_color: {
-    r: 244,
-    g: 85,
-    b: 85,
-  },
+  selection_color: Colors.green,
+  alt_selection_color: Colors.red,
   selection_mode: ["not-same-force", "enemy", "any-entity"],
   alt_selection_mode: ["not-same-force", "friend", "buildable-type"],
 
@@ -132,34 +124,6 @@ const referencePointItem = {
   stack_size: 1,
 }
 */
-
-const emptyImage = "__core__/graphics/empty.png"
-const copyPasteIcon = "__base__/graphics/icons/copy-paste-tool.png"
-const emptySprite = {
-  filename: emptyImage,
-  priority: "extra-high",
-  size: 1,
-}
-const pasteAction = {
-  type: "simple-entity",
-  name: Prototypes.pasteAction,
-  icon: copyPasteIcon,
-  icon_size: 64,
-  picture: emptySprite,
-  collision_mask: ["doodad-layer"],
-  flags: ["hidden", "not-selectable-in-game", "placeable-off-grid", "player-creation"],
-}
-const pasteActionItem = {
-  // required for blueprinting
-  type: "item",
-  name: Prototypes.pasteAction,
-  icon: copyPasteIcon,
-  icon_size: 64,
-  flags: ["hidden"],
-  place_result: Prototypes.pasteAction,
-  stack_size: 1,
-}
-data.extend([pasteAction, pasteActionItem])
 
 const confirmInput = {
   type: "custom-input",
