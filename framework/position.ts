@@ -8,6 +8,12 @@ export function add(a: Position, b: Position): Position {
   }
 }
 
+export function addAssign(a: Position, b: Position): Position {
+  a.x += b.x
+  a.y += b.y
+  return a
+}
+
 export function subtract(a: Position, b: Position): Position {
   return {
     x: a.x - b.x,

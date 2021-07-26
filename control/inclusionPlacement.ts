@@ -1,6 +1,6 @@
 import { PasteActions, PasteActionTags, setupPasteActionBp } from "./pasteAction"
 import { BpArea, BpSurface } from "./BpArea"
-import { add, Area, floor, intersects, multiply, negate, subtract } from "../framework/position"
+import { Area, floor, intersects, negate, shift, subtract } from "../framework/position"
 import { Colors, Prototypes } from "../constants"
 import direction = defines.direction
 
@@ -59,9 +59,8 @@ PasteActions.placeInclusion = (player, event, tags: InclusionPlacementTags) => {
   if (event.flip_horizontal || event.flip_vertical || event.direction !== direction.north) {
     return player.print("Rotating and flipping inclusions is not yet supported.", Colors.red)
   }
-  const halfSize = multiply(sourceArea.chunkSize, 16)
   const center = floor(event.position)
-  const placementArea: Area = [subtract(center, halfSize), add(center, halfSize)]
+  const placementArea: Area = shift(sourceArea.areaRelativeToCenter, center)
 
   if (!intersects(placementArea, area.area)) {
     return player.print("Source area does not intersect current area.", Colors.red)

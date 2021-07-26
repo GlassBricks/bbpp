@@ -110,6 +110,7 @@ export class BpAreaEditorWindow extends NoPropComponent implements WithAreasUpda
   }
 }
 
+// todo: better eventing
 registerHandlers({
   on_surface_created(e) {
     BpAreaEditorWindow.updateAllPlayers({ surfaceCreated: e })
