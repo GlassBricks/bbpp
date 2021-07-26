@@ -1,6 +1,6 @@
 import { Prototypes } from "../constants"
 import { BpSurface } from "./BpArea"
-import { PasteActions, PasteActionTags, setupPasteActionBp } from "./pasteAction"
+import { getPasteActionBp, PasteActions, PasteActionTags } from "./pasteAction"
 import { getValueOrReport } from "../framework/result"
 import { divide, round, subtract } from "../framework/position"
 import direction = defines.direction
@@ -18,7 +18,7 @@ export function startAreaPlacement(
   chunkSize: Position,
   boundaryThickness: number
 ): void {
-  const bp = setupPasteActionBp(player)
+  const bp = getPasteActionBp(player)
   if (!bp) return
 
   const topLeft = {

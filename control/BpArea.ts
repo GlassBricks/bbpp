@@ -1,7 +1,18 @@
 import { dlog, userWarning } from "../framework/logging"
 import { registerHandlers } from "../framework/events"
 import { arrayRemoveValue, isEmpty, shallowEquals, swap } from "../framework/util"
-import { add, addAssign, Area, contract, getCenter, isIn, multiply, negate, subtract } from "../framework/position"
+import {
+  add,
+  addAssign,
+  Area,
+  contract,
+  copy,
+  getCenter,
+  isIn,
+  multiply,
+  shiftNegative,
+  subtract,
+} from "../framework/position"
 import { Forces, Prototypes } from "../constants"
 import { get, put, VectorTable } from "../framework/VectorTable"
 import { getEntityData, setEntityData } from "../framework/entityData"
@@ -236,6 +247,10 @@ interface OpenedFilter {
   autoApply: boolean
 }
 
+interface OpenedBp {
+  area: BpArea
+}
+
 export class BpArea {
   // todo: better gui framework
   static onCreated = new Event<BpArea>()
@@ -245,7 +260,8 @@ export class BpArea {
   // todo: replace with observable properties!!!
   static onOutdatedChanged = new Event<BpArea>()
 
-  private static PlayerCurrentlyOpenedFilter = PlayerData<OpenedFilter>("BpArea.CurrentlyOpenedFilter")
+  private static CurrentlyOpenedFilter = PlayerData<OpenedFilter>("BpArea.CurrentlyOpenedFilter")
+  private static CurrentlyOpenedUserBp = PlayerData<OpenedBp>("BpArea.CurrentlyOpenedUserBp")
 
   readonly id: number
   valid: boolean = true
@@ -259,12 +275,17 @@ export class BpArea {
   readonly bpInventory: LuaInventory = game.create_inventory(8)
   readonly dataBp: LuaItemStack = this.bpInventory[0]
   private readonly allBp: LuaItemStack = this.bpInventory[1]
+  private readonly userBp: LuaItemStack = this.bpInventory[2]
   readonly includeSelectBps: LuaInventory = game.create_inventory(4)
   readonly includeAllBps: LuaInventory = game.create_inventory(4)
   readonly includeFilters: LuaInventory = game.create_inventory(4)
 
+  private userBpNumEntities: number = 0
+  private userBpShift: Position = { x: 0, y: 0 }
+
   private readonly inclusions: ArrayAndTable<AreaInclusionInternal, AreaInclusionInternal, boolean> = [] as any
   private outdated: boolean = false
+  private userBpOutdated: boolean = false
 
   updateNumber: number = 0
   readonly includedBy: Record<number, number> = {}
@@ -284,11 +305,11 @@ export class BpArea {
     this.fullArea = [multiply(topLeft, 32), multiply(add(topLeft, chunkSize), 32)]
     this.area = contract(this.fullArea, boundaryThickness)
     this.center = getCenter(this.area)
-    const relativeTopLeft = add(multiply(this.chunkSize, -16), { x: boundaryThickness, y: boundaryThickness })
-    this.areaRelativeToCenter = [relativeTopLeft, negate(relativeTopLeft)]
+    this.areaRelativeToCenter = shiftNegative(this.area, this.center)
 
     this.dataBp.set_stack({ name: "blueprint" })
     this.allBp.set_stack({ name: "blueprint" })
+    this.userBp.set_stack({ name: "blueprint" })
 
     global.bpAreaById[this.id] = this
     dlog("Bp area created:", name)
@@ -330,7 +351,7 @@ export class BpArea {
     this.includeFilters.destroy()
     global.bpAreaById[this.id] = undefined
     for (const [areaId] of pairs(this.includedBy)) {
-      global.bpAreaById[areaId]!.removeAllInclusions(this)
+      global.bpAreaById[areaId]!.removeAllInclusionsFrom(this)
     }
     this.bpSurface._areaDeleted(this)
     BpArea.onDeleted.raise({
@@ -384,9 +405,7 @@ export class BpArea {
     sourceArea.includedBy[this.id]++
 
     BpArea.onInclusionsModified.raise({ area: this })
-    this.saveChanges()
-    this.placeInclusion(inclusion)
-    this.placeSelf()
+    this.saveAndReset()
     return inclusion
   }
 
@@ -399,8 +418,7 @@ export class BpArea {
     return true
   }
 
-  // already gone from array
-  private removeAllInclusions(area: BpArea): void {
+  private removeAllInclusionsFrom(area: BpArea): void {
     const length = this.inclusions.length()
     let j = 0
     for (let i = 0; i < length; i++) {
@@ -454,7 +472,7 @@ export class BpArea {
     if (!this.inclusions.has(inclusion1)) return false
     const filter = this.includeFilters[inclusion1.inventoriesIndex]
     player.opened = filter
-    BpArea.PlayerCurrentlyOpenedFilter.data[player.index] = {
+    BpArea.CurrentlyOpenedFilter.data[player.index] = {
       inclusion: inclusion1,
       autoApply,
       oldMode: filter.entity_filter_mode,
@@ -463,26 +481,23 @@ export class BpArea {
     return true
   }
 
-  static _on_gui_closed(this: unknown, e: OnGuiClosedPayload): void {
-    const openedFilter = BpArea.PlayerCurrentlyOpenedFilter.data[e.player_index]
-    if (!openedFilter) return
-    BpArea.PlayerCurrentlyOpenedFilter.data[e.player_index] = undefined
+  private onInclusionFilterClosed(openedFilter: OpenedFilter): void {
+    if (!this.valid) return
     const inclusion = openedFilter.inclusion
-    const area = inclusion.destinationArea
     const sourceArea = inclusion.sourceArea
-    if (!area.valid || !area.inclusions.has(inclusion)) return
-    dlog("Updating filters for inclusion:", sourceArea.name, "->", area.name)
-    const filter = area.includeFilters[inclusion.inventoriesIndex]
+    dlog("Updating filters for inclusion:", sourceArea.name, "->", this.name)
+
+    const filter = this.includeFilters[inclusion.inventoriesIndex]
     if (
       openedFilter.oldMode !== filter.entity_filter_mode ||
       !shallowEquals(openedFilter.oldFilters, filter.entity_filters)
     ) {
-      const lastUpdated = sourceArea.updateNumber - 1 // guarantee update
+      const lastUpdated = sourceArea.updateNumber - 1
       inclusion.lastUpdatedForSelectMode = lastUpdated
       inclusion.lastUpdatedForAllMode = lastUpdated
     }
     if (openedFilter.autoApply) {
-      area.saveAndReset()
+      this.saveAndReset()
     }
   }
 
@@ -508,6 +523,7 @@ export class BpArea {
     }
 
     this.updateNumber++
+    this.userBpOutdated = true
     for (const [id] of pairs(this.includedBy)) {
       BpArea.getById(id).markOutdated()
     }
@@ -548,8 +564,9 @@ export class BpArea {
       const entityData = getEntityData<BpAreaEntityData>(entity)
       if (!entityData) {
         bpEntitiesByInclusion.get(1)[luaIndex - 1] = bpEntity
-      } else if ((entityData.inclusion as AreaInclusionInternal).isPastedAsEditableInclude) {
-        bpEntitiesByInclusion.get(entityData.inclusion)[luaIndex - 1] = bpEntity
+      } else {
+        const entities = bpEntitiesByInclusion.get(entityData.inclusion)
+        if (entities) entities[luaIndex - 1] = bpEntity
       }
     }
     BpArea.setBpEntities(this.allBp, allBpEntities)
@@ -785,9 +802,11 @@ export class BpArea {
   saveAndReset(): void {
     this.saveChanges()
     this.reset()
+    this.saveChanges()
   }
 
   markOutdated(): void {
+    this.userBpOutdated = true
     if (!this.outdated) {
       this.outdated = true
       BpArea.onOutdatedChanged.raise(this)
@@ -799,6 +818,112 @@ export class BpArea {
   }
 
   // </editor-fold>
+
+  // <editor-fold desc="User bp">
+
+  private updateUserBp() {
+    const bpEntities = this.allBp.get_blueprint_entities()
+    if (!bpEntities || isEmpty(bpEntities)) {
+      // setting to no entities causes crash on save (bug to be reported).
+      // clearing blueprint clears all data, including user icons/settings, so we don't write.
+      this.userBpNumEntities = 0
+    } else {
+      const firstEntityPosition = copy(bpEntities![0].position as Position)
+      for (const bpEntity of bpEntities!) {
+        addAssign(bpEntity.position as Position, this.userBpShift)
+      }
+      const icons = this.userBp.blueprint_icons!
+      if (icons[0] && icons[0].signal.name === Prototypes.tileEntityWhite) {
+        // was empty, so now use default icons
+        this.userBp.blueprint_icons = this.userBp.default_icons.map((i) => ({
+          index: i.index,
+          signal: {
+            name: i.name,
+            type: "item",
+          },
+        }))
+      }
+      this.userBp.set_blueprint_entities(bpEntities!)
+      this.userBp.set_blueprint_entity_tag(1, "originalPosition", firstEntityPosition)
+      if (!this.userBp.blueprint_snap_to_grid) {
+        this.userBp.blueprint_snap_to_grid = [1, 1]
+      }
+      this.userBpNumEntities = bpEntities!.length
+    }
+
+    this.userBpOutdated = false
+  }
+
+  private getUserBp(): LuaItemStack | undefined {
+    if (this.userBpOutdated) {
+      this.updateUserBp()
+    }
+    return this.userBpNumEntities > 0 ? this.userBp : undefined
+  }
+
+  private getUserBpOrReportEmpty(player: LuaPlayer): LuaItemStack | undefined {
+    const userBp = this.getUserBp()
+    if (!userBp) {
+      player.create_local_flying_text({
+        text: "Blueprint contains no entities",
+        create_at_cursor: true,
+      })
+    }
+    return userBp
+  }
+
+  public giveUserBlueprint(player: LuaPlayer): void {
+    const bp = this.getUserBpOrReportEmpty(player)
+    if (bp) {
+      if (player.clear_cursor()) player.cursor_stack.set_stack(bp)
+    }
+  }
+
+  public openUserBp(player: LuaPlayer): void {
+    const bp = this.getUserBpOrReportEmpty(player)
+    if (bp) {
+      player.opened = bp
+      BpArea.CurrentlyOpenedUserBp.data[player.index] = { area: this }
+    }
+  }
+
+  private onUserBlueprintClosed(playerIndex: number) {
+    const entities = this.userBp.get_blueprint_entities()
+
+    if (!entities || entities.length !== this.userBpNumEntities) {
+      game
+        .get_player(playerIndex)
+        .print(
+          "An entity or entities was deleted from the blueprint. Some changes might not be saved properly. " +
+            "Don't delete entities from the blueprint, instead edit the area, as " +
+            "deleted entities from the blueprint will be restored once the area is saved."
+        )
+      this.userBpOutdated = true
+      return
+    }
+    const originalPosition = entities[0].tags.originalPosition as Position | undefined
+    if (!originalPosition) {
+      return game.get_player(playerIndex).print("Could not update grid position, please report this to the mod author.")
+    }
+    this.userBpShift = subtract(entities[0].position as Position, originalPosition)
+    dlog("On bp closed, userBpShift set to", this.userBpShift)
+  }
+
+  // </editor-fold>
+
+  static _on_gui_closed(this: unknown, e: OnGuiClosedPayload): void {
+    const openedFilter = BpArea.CurrentlyOpenedFilter.data[e.player_index]
+    if (openedFilter) {
+      BpArea.CurrentlyOpenedFilter.data[e.player_index] = undefined
+      openedFilter.inclusion.destinationArea.onInclusionFilterClosed(openedFilter)
+    }
+
+    const openedBp = BpArea.CurrentlyOpenedUserBp.data[e.player_index]
+    if (openedBp) {
+      BpArea.CurrentlyOpenedUserBp.data[e.player_index] = undefined
+      openedBp.area.onUserBlueprintClosed(e.player_index)
+    }
+  }
 }
 
 registerHandlers({

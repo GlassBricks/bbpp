@@ -941,6 +941,16 @@ interface Alert {
   message?: LocalisedString
 }
 
+interface BlueprintItemIcon {
+  index: 1 | 2 | 3 | 4
+  name?: string,
+}
+
+interface BlueprintSignalIcon {
+  index: 1 | 2 | 3 | 4
+  signal: SignalID
+}
+
 type LocalisedString = [string, ...LocalisedString[]] | string | number
 
 /** @noSelf **/
@@ -1238,7 +1248,7 @@ interface MapGenSettings {
 
 /** @noSelf **/
 interface SignalID {
-  type: string
+  type: "item" | "fluid" | "virtual"
   name?: string
 }
 
@@ -3881,7 +3891,7 @@ interface LuaItemStack {
   health: number
   durability: number
   ammo: number
-  blueprint_icons: any[]
+  blueprint_icons?: BlueprintSignalIcon[]
   blueprint_snap_to_grid?: PositionIn
   blueprint_position_relative_to_grid?: PositionIn
   blueprint_absolute_snapping: boolean
@@ -3891,7 +3901,7 @@ interface LuaItemStack {
   readonly cost_to_build: Record<string, number>
   extends_inventory: boolean
   prioritize_insertion_mode: string
-  readonly default_icons: any[]
+  readonly default_icons: BlueprintItemIcon[]
   tags: Tags
   custom_description: LocalisedString
   entity_filters: string[]

@@ -20,7 +20,7 @@ export const PasteActions: {
   [P in string]?: (player: LuaPlayer, event: OnPreBuildPayload, tags: any) => void
 } = {}
 
-export function setupPasteActionBp(player: LuaPlayer): LuaItemStack | undefined {
+export function getPasteActionBp(player: LuaPlayer): LuaItemStack | undefined {
   if (!player.clear_cursor()) return undefined
   const stack = global.pasteActionBpInventory[0]
   stack.set_stack({ name: Prototypes.temporaryBlueprint })

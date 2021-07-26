@@ -47,3 +47,7 @@ DevButton("Open include select bp", (player) => {
   if (!area) return
   player.opened = area.includeSelectBps[0]
 })
+
+DevButton("delete area", (player) => {
+  getArea(player)?.delete()
+})

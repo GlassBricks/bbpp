@@ -1,10 +1,4 @@
-- [ ] Blueprint of everything + inclusions
-- [ ] Simple blueprint creation
-    - [ ] Actual blueprint item
-    - [ ] Gui to get/configure
-    - [ ] Grid size/location selection
-
-  
+- [ ] Add tooltips
 - [ ] simple docs
 - [ ] Publish
 
@@ -31,3 +25,7 @@
   - [x] Make ghosts auto toggle
 - [x] Inclusion preview/paste
 - [x] Outdated notification
+- [x] Blueprint of everything + inclusions
+- [x] Simple blueprint creation
+  - [x] Actual blueprint item
+  - [x] Gui to get/configure

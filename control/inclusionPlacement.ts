@@ -1,4 +1,4 @@
-import { PasteActions, PasteActionTags, setupPasteActionBp } from "./pasteAction"
+import { getPasteActionBp, PasteActions, PasteActionTags } from "./pasteAction"
 import { BpArea, BpSurface } from "./BpArea"
 import { Area, floor, intersects, negate, shift, subtract } from "../framework/position"
 import { Colors, Prototypes } from "../constants"
@@ -11,7 +11,7 @@ interface InclusionPlacementTags extends PasteActionTags {
 }
 
 export function startInclusionPlacement(player: LuaPlayer, area: BpArea, sourceArea: BpArea): void {
-  const bp = setupPasteActionBp(player)
+  const bp = getPasteActionBp(player)
   if (!bp) return
 
   const entities = sourceArea.dataBp.get_blueprint_entities() || []

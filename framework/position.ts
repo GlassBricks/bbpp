@@ -1,6 +1,10 @@
 /** @noSelfInFile */
 export type Area = readonly [topLeft: Position, bottomRight: Position]
 
+export function copy(a: Position): Position {
+  return { x: a.x, y: a.y }
+}
+
 export function add(a: Position, b: Position): Position {
   return {
     x: a.x + b.x,
@@ -19,6 +23,12 @@ export function subtract(a: Position, b: Position): Position {
     x: a.x - b.x,
     y: a.y - b.y,
   }
+}
+
+export function subtractAssign(a: Position, b: Position): Position {
+  a.x -= b.x
+  a.y -= b.y
+  return a
 }
 
 export function multiply(a: Position, b: number): Position {

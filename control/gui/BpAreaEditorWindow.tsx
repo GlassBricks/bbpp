@@ -12,6 +12,7 @@ import { SimpleTitlebar } from "../../framework/gui/components/SimpleTitlebar"
 import { onPlayerInit } from "../../framework/onPlayerInit"
 import * as modGui from "mod-gui"
 import { DEV } from "../../framework/DEV"
+import { BlueprintTab } from "./BlueprintTab"
 
 @registerComponent()
 export class BpAreaEditorWindow extends NoPropComponent implements WithAreasUpdate {
@@ -54,6 +55,8 @@ export class BpAreaEditorWindow extends NoPropComponent implements WithAreasUpda
             <AreasTab ref={2} {...initialTabProps} />
             <tab caption="Area controls" />
             <AreaControlsTab ref={3} {...initialTabProps} />
+            <tab caption="Blueprint" />
+            <BlueprintTab ref={4} {...initialTabProps} />
           </tabbed-pane>
         </frame>
       </frame>
