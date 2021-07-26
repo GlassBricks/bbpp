@@ -3,15 +3,13 @@
 
 
 - [ ] Report the strange bug
-  
+
+
+- [ ] New todo as issues instead
 
 - [ ] Including inclusions?
   - [ ] Recursive outdating
   - [ ] Recursion guard
-  
-
-- [ ] New todo as issues instead
-
 
 - [x] Make inclusion tool work
 - [x] Make inclusion detect changes of source

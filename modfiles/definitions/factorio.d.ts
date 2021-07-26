@@ -943,7 +943,7 @@ interface Alert {
 
 interface BlueprintItemIcon {
   index: 1 | 2 | 3 | 4
-  name?: string,
+  name?: string
 }
 
 interface BlueprintSignalIcon {
@@ -2596,7 +2596,7 @@ interface LuaEntity extends LuaControl {
   silent_revive(opts?: {
     return_item_request_proxy?: boolean
     raise_revive?: boolean
-  }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined, LuaEntity| undefined]>
+  }): LuaMultiReturn<[Record<string, number> | undefined, LuaEntity | undefined, LuaEntity | undefined]>
 
   get_connected_rail(table_0: {
     rail_direction: defines.rail_direction

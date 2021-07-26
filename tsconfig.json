@@ -18,7 +18,9 @@
       {
         "name": "typescript-tstl-plugin"
       }
-    ]
+    ],
+    "rootDir": "./modfiles",
+    "outDir": "./modfiles"
   },
   "tstl": {
     "luaTarget": "5.2",
@@ -30,9 +32,7 @@
     ]
   },
   "include": [
-    "./**/*"
+    "./modfiles/**/*"
   ],
-  "exclude": [
-    "./luaPlugins/*"
-  ]
+  "exclude": []
 }

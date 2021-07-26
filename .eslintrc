@@ -1,10 +1,10 @@
 {
+  "root": true,
   "env": {
     "es2021": true
   },
   "ignorePatterns": [
-    "**/*.d.ts",
-    "luaPlugins/*"
+    "**/*.d.ts"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
