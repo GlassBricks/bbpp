@@ -49,21 +49,27 @@ PasteActions.placeInclusion = (player, event, tags: InclusionPlacementTags) => {
   const area = BpArea.getByIdOrNil(tags.areaId)
   if (!area) {
     player.clear_cursor()
-    return player.print("Original area was deleted.", Colors.red)
+    return player.create_local_flying_text({ text: "Original area was deleted.", create_at_cursor: true })
   }
   const sourceArea = BpArea.getByIdOrNil(tags.sourceAreaId)
   if (!sourceArea) {
     player.clear_cursor()
-    return player.print("Source area was deleted.", Colors.red)
+    return player.create_local_flying_text({ text: "Source area was deleted.", create_at_cursor: true })
   }
   if (event.flip_horizontal || event.flip_vertical || event.direction !== direction.north) {
-    return player.print("Rotating and flipping inclusions is not yet supported.", Colors.red)
+    return player.create_local_flying_text({
+      text: "Rotating and flipping inclusions is not yet supported.",
+      color: Colors.red,
+    })
   }
   const center = floor(event.position)
   const placementArea: Area = shift(sourceArea.areaRelativeToCenter, center)
 
   if (!intersects(placementArea, area.area)) {
-    return player.print("Source area does not intersect current area.", Colors.red)
+    return player.create_local_flying_text({
+      text: "Source area does not intersect current area.",
+      create_at_cursor: true,
+    })
   }
   player.clear_cursor()
   area.addInclusion(sourceArea, subtract(center, area.center))

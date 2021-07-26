@@ -1,4 +1,4 @@
-import { Colors, Prototypes } from "../constants"
+import { Prototypes } from "../constants"
 import { BpSurface } from "./BpArea"
 import { PasteActions, PasteActionTags, setupPasteActionBp } from "./pasteAction"
 import { getValueOrReport } from "../framework/result"
@@ -58,7 +58,10 @@ export function startAreaPlacement(
 
 PasteActions.placeArea = (player, event, tags: PlaceAreaTags) => {
   if (event.direction !== direction.north)
-    return player.print("Rotating area placement is not yet supported.", Colors.red)
+    return player.create_local_flying_text({
+      text: "Rotating area placement is not yet supported.",
+      create_at_cursor: true,
+    })
 
   const topLeft = round(subtract(divide(event.position, 32), divide(tags.chunkSize, 2)))
 
