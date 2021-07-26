@@ -27,7 +27,15 @@ export class InclusionsTable extends ManualReactiveComponent<InclusionsTableProp
         <empty-widget />
         <label caption={"Source area name"} style={"heading_3_label"} />
         <label caption={"Ghosts"} style={"heading_3_label"} />
-        <label caption={"Mode"} style={"heading_3_label"} />
+        <label
+          caption={"Mode"}
+          tooltip={
+            "None: including no entities. Used to temporarily hide entities or show only ghosts\n" +
+            "Select: select only specific entities to include using the inclusion planner.\n" +
+            "All: all entities are included."
+          }
+          style={"heading_3_label"}
+        />
         <label caption={"Filters"} style={"heading_3_label"} />
         <empty-widget />
 

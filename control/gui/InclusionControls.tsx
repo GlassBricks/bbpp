@@ -36,6 +36,7 @@ export class InclusionControls extends ManualReactiveComponent<InclusionControls
             ref={"autoApplyCheckbox"}
             state={true}
             caption={"Auto-apply changes (save and reset to apply manually)"}
+            tooltip={"Automatically save and reset whenever any inclusion setting is changed. Turn off to improve ups."}
             onCheckedStateChanged={this.r(this.setAutoApply)}
           />
           <HorizontalSpacer />

@@ -30,6 +30,10 @@ export class AreaSelector extends ManualReactiveComponent<SelectedAreaProps> imp
             ref="sync"
             state={true}
             caption={"Sync selected area with player"}
+            tooltip={
+              "When selected, when the player moves to an area, the selected area will update." +
+              "If you select an area manually, the player will be teleported to that area."
+            }
             onCheckedStateChanged={this.r(this.setSync)}
           />
           <button

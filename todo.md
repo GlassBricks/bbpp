@@ -1,4 +1,3 @@
-- [ ] Add tooltips
 - [ ] simple docs
 - [ ] Publish
 
@@ -29,3 +28,4 @@
 - [x] Simple blueprint creation
   - [x] Actual blueprint item
   - [x] Gui to get/configure
+- [x] Add tooltips
