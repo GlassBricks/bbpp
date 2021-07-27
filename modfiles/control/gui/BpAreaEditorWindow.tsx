@@ -33,7 +33,6 @@ export class BpAreaEditorWindow extends NoPropComponent implements WithAreasUpda
     return (
       <frame
         direction="vertical"
-        auto_center
         styleMod={{
           maximal_height: 1000,
           maximal_width: 500,

@@ -7,5 +7,11 @@
   "dependencies": [
     "base",
     "flib >= 0.7.0"
-  ]
+  ],
+  "package": {
+    "scripts": {
+      "prepackage": "yarn run clean && yarn run build"
+    },
+    "git_publish_branch": "main"
+  }
 }
