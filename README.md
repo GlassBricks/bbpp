@@ -6,10 +6,10 @@ especially for blueprints in [100% speedruns](https://www.speedrun.com/factorio#
 This mod (v0.1.0) is currently in **alpha**. That means, expect bugs, and changes in the future without backwards
 compatibility. As such, feel free to play around and provide feedback, but use separate save files and backups.
 
-Your feedback is critical at this stage, as now is the last chance to easily make major changes. Are the controls or
+Feedback is critical at this stage, as now is the last chance to easily make major changes. Are the controls or
 features hard to use or unintuitive? Is there one particular feature that you really want to see? Are there any other
 suggestions on how to improve the functionality? I would greatly appreciate all feedback of all types, which you can
-give on the [mod portal](https://mods.factorio.com/mod/bbpp).
+give on the [mod forums](https://mods.factorio.com/mod/bbpp).
 
 ## Feature overview
 
