@@ -11,6 +11,8 @@ features hard to use or unintuitive? Is there one particular feature that you re
 suggestions on how to improve the functionality? I would greatly appreciate all feedback of all types, which you can
 give on the [mod forums](https://mods.factorio.com/mod/bbpp).
 
+Public trello board (for what I'm considering/working on): https://trello.com/b/tHQtoUDA/bbpp
+
 ## Feature overview
 
 This mod is created for designing blueprints, as such it is intended to be used with cheats or editor mode.
