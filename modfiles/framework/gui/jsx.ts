@@ -12,7 +12,8 @@ import { Component, getRegisteredComponentName } from "./component"
 import { EventHandlerTags, GuiEventName } from "./guievents"
 import { FuncRef } from "../funcRef"
 
-type JsxChildren = AnySpec | false | (AnySpec | false | (AnySpec | false)[])[]
+type OneOrMany<T> = T | T[]
+export type JsxChild = OneOrMany<AnySpec | undefined | false>
 
 type IntrinsicElement<
   Element extends BaseGuiElement,
@@ -23,7 +24,7 @@ type IntrinsicElement<
   GuiEventHandlers<GuiEvents, Element> & // event handlers for this gui element
   // elementMod (directly as props)
   ModOf<Element> & {
-    children?: JsxChildren
+    children?: JsxChild | JsxChild[]
   } & ({ updateOnly: true; onCreated?: never } | ({ updateOnly?: false } & Omit<AddSpec, "type" | "index">))
 
 // Union instead of intersection of ModableKeys
@@ -153,13 +154,12 @@ function createComponentSpec<Props>(
   }
 }
 
-function flattenChildren(children: JsxChildren | undefined, alwaysAsArray: true): AnySpec[] | undefined
-function flattenChildren(children: JsxChildren | undefined, alwaysAsArray: false): AnySpec[] | AnySpec | undefined
-function flattenChildren(children: JsxChildren | undefined, alwaysAsArray: boolean): AnySpec[] | AnySpec | undefined {
-  if (!children) return undefined
-  if (!Array.isArray(children)) return alwaysAsArray ? [children] : children
+function flattenChildren(alwaysAsArray: true, ...children: JsxChild[]): AnySpec[] | undefined
+function flattenChildren(alwaysAsArray: false, ...children: JsxChild[]): AnySpec[] | AnySpec | undefined
+function flattenChildren(alwaysAsArray: boolean, ...children: JsxChild[]): AnySpec[] | AnySpec | undefined {
   const result: AnySpec[] = []
-  for (const elem of children) {
+  for (const luaIndex of $range(0, select("#", ...children))) {
+    const elem = children[luaIndex - 1]
     if (!elem) continue
     if (Array.isArray(elem)) {
       for (const spec of elem) {
@@ -169,7 +169,8 @@ function flattenChildren(children: JsxChildren | undefined, alwaysAsArray: boole
       result[result.length] = elem
     }
   }
-  return result.length === 0 ? undefined : !alwaysAsArray && result.length === 1 ? result[0] : result
+  const length = result.length
+  return length === 0 ? undefined : !alwaysAsArray && length === 1 ? result[0] : result
 }
 
 const typeFunc = type
@@ -178,27 +179,27 @@ const typeFunc = type
 export function createElement<Type extends GuiElementType>(
   type: Type,
   props: JSX.IntrinsicElements[Type],
-  children?: JsxChildren
+  ...children: JsxChild[]
 ): ElementSpecByType[Type]
 // noinspection JSUnusedGlobalSymbols
-export function createElement(type: "blank", props?: { name?: string }, children?: JsxChildren): BlankSpec
+export function createElement(type: "blank", props?: { name?: string }, ...children: JsxChild[]): BlankSpec
 // noinspection JSUnusedGlobalSymbols
 export function createElement<Props>(
   type: Class<Component<Props>>,
   props: Props,
-  children?: JsxChildren
+  ...children: JsxChild[]
 ): ComponentSpec<Props>
 // noinspection JSUnusedGlobalSymbols
 export function createElement<Props>(
   type: (this: unknown, props: Props) => AnySpec,
   props: Props,
-  children?: JsxChildren
+  ...children: JsxChild[]
 ): AnySpec | undefined
 // noinspection JSUnusedGlobalSymbols
 export function createElement(
   type: GuiElementType | Class<Component<unknown>> | "blank" | ((this: unknown, props: unknown) => AnySpec | undefined),
   props?: Record<any, any>,
-  children?: JsxChildren
+  ...children: JsxChild[]
 ): AnySpec | undefined {
   const typeofType = typeFunc(type)
   if (typeofType === "string") {
@@ -206,16 +207,16 @@ export function createElement(
       return {
         type: "blank",
         name: props && props.name,
-        children: flattenChildren(children, true),
+        children: flattenChildren(true, ...children),
       } as BlankSpec
     }
-    return createElementSpec(type as GuiElementType, props, flattenChildren(children, true))
+    return createElementSpec(type as GuiElementType, props, flattenChildren(true, ...children))
   } else if (typeofType === "function") {
     props = props || {}
-    props.children = flattenChildren(children, false)
+    props.children = flattenChildren(false, ...children)
     return (type as (this: unknown, props: unknown) => AnySpec | undefined)(props)
   } else if (typeofType === "table") {
-    return createComponentSpec(type as Class<Component<unknown>>, props, flattenChildren(children, false))
+    return createComponentSpec(type as Class<Component<unknown>>, props, flattenChildren(false, ...children))
   } else {
     error(`component of type ${globalThis.type(type)} not supported`)
   }

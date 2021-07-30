@@ -10,7 +10,8 @@
   ],
   "package": {
     "scripts": {
-      "prepackage": "yarn run clean && yarn run build"
+      "prepackage": "yarn run clean && yarn run build",
+      "postpublish": "ln -s ${pwd}/modfiles ~/factorio/mods/${FACTORIO_MODPACKAGE}"
     },
     "git_publish_branch": "main"
   }
