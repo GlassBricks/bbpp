@@ -12,7 +12,11 @@ registerHandlers({
     const player = game.get_player(e.player_index)
     const opened = player.opened as LuaGuiElement | undefined
     if (!opened) return
-    const tags = (player.opened as LuaGuiElement).tags as ConfirmTags | undefined
+    const asGuiElement = player.opened as LuaGuiElement
+    const tags =
+      asGuiElement.object_name === "LuaGuiElement" &&
+      asGuiElement.valid &&
+      (asGuiElement.tags as ConfirmTags | undefined)
     if (!tags) return
     const func = tags.onConfirmFunc
     if (func) {
